@@ -146,23 +146,23 @@ const Properties = () => {
   }
 
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={false}>
       <div className="min-h-screen flex w-full">
         <AdminSidebar />
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col min-w-0">
           <DashboardHeader userName="Admin" />
-          <main className="flex-1 p-6 space-y-6">
+          <main className="flex-1 p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 overflow-x-hidden">
             <div>
-              <h1 className="text-3xl font-bold mb-2 flex items-center gap-2">
-                <Building2 className="h-8 w-8" />
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2 flex items-center gap-2">
+                <Building2 className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8" />
                 Property Management
               </h1>
-              <p className="text-muted-foreground">
+              <p className="text-sm sm:text-base text-muted-foreground">
                 Add and manage cooperative properties
               </p>
             </div>
 
-            <div className="grid lg:grid-cols-3 gap-6">
+            <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
               <Card className="lg:col-span-1">
                 <CardHeader>
                   <CardTitle>{editing ? "Edit Property" : "Add New Property"}</CardTitle>
@@ -261,9 +261,10 @@ const Properties = () => {
                 </CardHeader>
                 <CardContent>
                   {properties.length === 0 ? (
-                    <p className="text-center text-muted-foreground py-8">No properties yet</p>
+                    <p className="text-center text-muted-foreground py-8 text-sm sm:text-base">No properties yet</p>
                   ) : (
-                    <Table>
+                    <div className="overflow-x-auto -mx-3 sm:mx-0">
+                      <Table>
                       <TableHeader>
                         <TableRow>
                           <TableHead>Name</TableHead>
@@ -293,9 +294,10 @@ const Properties = () => {
                               </Button>
                             </TableCell>
                           </TableRow>
-                        ))}
+                       ))}
                       </TableBody>
                     </Table>
+                    </div>
                   )}
                 </CardContent>
               </Card>

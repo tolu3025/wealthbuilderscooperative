@@ -76,12 +76,12 @@ const Contributions = () => {
   }
 
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={false}>
       <div className="min-h-screen flex w-full">
         <AdminSidebar />
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col min-w-0">
           <DashboardHeader userName="Admin" />
-          <main className="flex-1 p-6 space-y-6">
+          <main className="flex-1 p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 overflow-x-hidden">
             <div>
               <h1 className="text-3xl font-bold mb-2">Contribution Approvals</h1>
               <p className="text-muted-foreground">
@@ -98,9 +98,10 @@ const Contributions = () => {
               </CardHeader>
               <CardContent>
                 {pendingContribs.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">No pending contributions</p>
+                  <p className="text-center text-muted-foreground py-8 text-sm sm:text-base">No pending contributions</p>
                 ) : (
-                  <Table>
+                  <div className="overflow-x-auto -mx-3 sm:mx-0">
+                    <Table>
                     <TableHeader>
                       <TableRow>
                         <TableHead>Member</TableHead>
@@ -153,6 +154,7 @@ const Contributions = () => {
                       ))}
                     </TableBody>
                   </Table>
+                  </div>
                 )}
               </CardContent>
             </Card>

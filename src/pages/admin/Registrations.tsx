@@ -93,31 +93,32 @@ const Registrations = () => {
   }
 
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={false}>
       <div className="min-h-screen flex w-full">
         <AdminSidebar />
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col min-w-0">
           <DashboardHeader userName="Admin" />
-          <main className="flex-1 p-6 space-y-6">
+          <main className="flex-1 p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 overflow-x-hidden">
             <div>
-              <h1 className="text-3xl font-bold mb-2">Registration Approvals</h1>
-              <p className="text-muted-foreground">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2">Registration Approvals</h1>
+              <p className="text-sm sm:text-base text-muted-foreground">
                 Review payment proofs and approve new member registrations
               </p>
             </div>
 
             <Card>
               <CardHeader>
-                <CardTitle>Pending Registrations ({pendingRegs.length})</CardTitle>
-                <CardDescription>
+                <CardTitle className="text-base sm:text-lg md:text-xl">Pending Registrations ({pendingRegs.length})</CardTitle>
+                <CardDescription className="text-xs sm:text-sm">
                   Verify payment receipts and generate activation PINs
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 {pendingRegs.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">No pending registrations</p>
+                  <p className="text-center text-muted-foreground py-8 text-sm sm:text-base">No pending registrations</p>
                 ) : (
-                  <Table>
+                  <div className="overflow-x-auto -mx-3 sm:mx-0">
+                    <Table>
                     <TableHeader>
                       <TableRow>
                         <TableHead>Name</TableHead>
@@ -168,6 +169,7 @@ const Registrations = () => {
                       ))}
                     </TableBody>
                   </Table>
+                  </div>
                 )}
               </CardContent>
             </Card>

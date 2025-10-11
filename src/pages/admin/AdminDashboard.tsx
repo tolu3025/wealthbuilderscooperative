@@ -98,29 +98,29 @@ const AdminDashboard = () => {
   }
 
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={false}>
       <div className="min-h-screen flex w-full">
         <AdminSidebar />
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col min-w-0">
           <DashboardHeader userName="Admin" />
-          <main className="flex-1 p-6 space-y-6">
+          <main className="flex-1 p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 overflow-x-hidden">
             <div>
-              <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
-              <p className="text-muted-foreground">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2">Admin Dashboard</h1>
+              <p className="text-sm sm:text-base text-muted-foreground">
                 Manage cooperative operations and finances
               </p>
             </div>
 
-            <div className="grid gap-4 md:gap-6 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
+            <div className="grid gap-3 sm:gap-4 md:gap-6 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
               <Card className="border-l-4 border-l-primary">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                    <Users className="h-4 w-4" />
-                    Total Members
+                  <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground flex items-center gap-1 sm:gap-2">
+                    <Users className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="hidden sm:inline">Total</span> Members
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{stats.totalMembers}</div>
+                  <div className="text-lg sm:text-xl md:text-2xl font-bold">{stats.totalMembers}</div>
                 </CardContent>
               </Card>
 

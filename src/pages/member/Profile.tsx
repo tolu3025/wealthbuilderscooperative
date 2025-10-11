@@ -122,12 +122,12 @@ const Profile = () => {
   const initials = `${profile.first_name[0]}${profile.last_name[0]}`.toUpperCase();
 
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={false}>
       <div className="min-h-screen flex w-full">
         <MemberSidebar />
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col min-w-0">
           <DashboardHeader userName={userName} />
-          <main className="flex-1 p-6 space-y-6">
+          <main className="flex-1 p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 overflow-x-hidden">
             <div>
               <h1 className="text-3xl font-bold mb-2">Profile & Settings</h1>
               <p className="text-muted-foreground">

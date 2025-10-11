@@ -84,12 +84,12 @@ const Dividends = () => {
   }
 
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={false}>
       <div className="min-h-screen flex w-full">
         <MemberSidebar />
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col min-w-0">
           <DashboardHeader userName={userName} />
-          <main className="flex-1 p-6 space-y-6">
+          <main className="flex-1 p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 overflow-x-hidden">
             <div>
               <h1 className="text-3xl font-bold mb-2">Dividend History</h1>
               <p className="text-muted-foreground">
@@ -147,13 +147,14 @@ const Dividends = () => {
                 {dividends.length === 0 ? (
                   <div className="text-center py-12">
                     <TrendingUp className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">No dividends received yet</p>
-                    <p className="text-sm text-muted-foreground mt-2">
+                    <p className="text-sm sm:text-base text-muted-foreground">No dividends received yet</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-2">
                       Keep contributing to reach eligibility
                     </p>
                   </div>
                 ) : (
-                  <Table>
+                  <div className="overflow-x-auto -mx-3 sm:mx-0">
+                    <Table>
                     <TableHeader>
                       <TableRow>
                         <TableHead>Date</TableHead>
@@ -189,6 +190,7 @@ const Dividends = () => {
                       ))}
                     </TableBody>
                   </Table>
+                  </div>
                 )}
               </CardContent>
             </Card>

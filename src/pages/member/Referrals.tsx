@@ -118,12 +118,12 @@ const Referrals = () => {
   }
 
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={false}>
       <div className="min-h-screen flex w-full">
         <MemberSidebar />
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col min-w-0">
           <DashboardHeader userName={userName} />
-          <main className="flex-1 p-6 space-y-6">
+          <main className="flex-1 p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 overflow-x-hidden">
             <div>
               <h1 className="text-3xl font-bold mb-2">Referral Program</h1>
               <p className="text-muted-foreground">
@@ -210,13 +210,14 @@ const Referrals = () => {
                 {commissions.length === 0 ? (
                   <div className="text-center py-12">
                     <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">No commissions yet</p>
-                    <p className="text-sm text-muted-foreground mt-2">
+                    <p className="text-sm sm:text-base text-muted-foreground">No commissions yet</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-2">
                       Start referring to earn commissions
                     </p>
                   </div>
                 ) : (
-                  <Table>
+                  <div className="overflow-x-auto -mx-3 sm:mx-0">
+                    <Table>
                     <TableHeader>
                       <TableRow>
                         <TableHead>Date</TableHead>
@@ -246,6 +247,7 @@ const Referrals = () => {
                       ))}
                     </TableBody>
                   </Table>
+                  </div>
                 )}
               </CardContent>
             </Card>

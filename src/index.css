@@ -160,6 +160,41 @@ All colors MUST be HSL.
   .transition-smooth {
     transition: var(--transition-smooth);
   }
+  
+  /* Toast styling to match website design */
+  [data-sonner-toast] {
+    @apply bg-card border-border shadow-elegant;
+  }
+  
+  [data-sonner-toast][data-type="success"] {
+    @apply bg-secondary text-secondary-foreground border-secondary;
+  }
+  
+  [data-sonner-toast][data-type="error"],
+  [data-sonner-toast][data-type="destructive"] {
+    @apply bg-destructive text-destructive-foreground border-destructive;
+  }
+  
+  [data-sonner-toast][data-type="warning"] {
+    @apply bg-accent text-accent-foreground border-accent;
+  }
+  
+  [data-sonner-toast][data-type="info"] {
+    @apply bg-primary text-primary-foreground border-primary;
+  }
+  
+  [data-sonner-toast][data-title] {
+    @apply font-heading font-semibold;
+  }
+  
+  [data-sonner-toast][data-description] {
+    @apply text-sm opacity-90;
+  }
+  
+  .shadow-elegant {
+    box-shadow: 0 10px 30px -10px hsla(214, 100%, 40%, 0.15), 
+                0 0 0 1px hsla(214, 25%, 90%, 0.5);
+  }
 }
 
 /* Global Loading Bar Animation */

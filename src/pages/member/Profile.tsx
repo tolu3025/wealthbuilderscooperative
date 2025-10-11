@@ -16,6 +16,7 @@ import { NIGERIAN_STATES } from "@/lib/nigerianStates";
 
 interface ProfileData {
   id: string;
+  user_id: string;
   first_name: string;
   last_name: string;
   email: string;
@@ -161,17 +162,14 @@ const Profile = () => {
                   <div className="mt-4">
                     <Label>Upload Profile Picture</Label>
                     <FileUpload
-                      userId={profile.id}
+                      userId={profile.user_id || profile.id}
                       fileType="avatar"
                       bucket="avatars"
-                      label="Upload Profile Picture (JPG, PNG, or PDF)"
+                      label="Upload Profile Picture (JPG or PNG)"
                       onUploadComplete={(url) => {
                         setProfile({ ...profile, avatar_url: url });
                         setShowAvatarUpload(false);
-                        toast({
-                          title: "Success",
-                          description: "Avatar uploaded successfully",
-                        });
+                        handleSave();
                       }}
                     />
                   </div>

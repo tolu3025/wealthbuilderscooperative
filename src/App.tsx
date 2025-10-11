@@ -8,7 +8,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import LoadingBar from "@/components/LoadingBar";
 import ScrollToTop from "@/components/ScrollToTop";
 import Index from "./pages/Index";
-import Auth from "./pages/Auth";
+import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import Registrations from "./pages/admin/Registrations";
@@ -49,10 +49,10 @@ const App = () => (
             <Route path="/contact" element={<Contact />} />
             <Route path="/activate" element={<Activate />} />
             <Route
-              path="/auth"
+              path="/login"
               element={
                 <ProtectedRoute requireAuth={false}>
-                  <Auth />
+                  <Login />
                 </ProtectedRoute>
               }
             />

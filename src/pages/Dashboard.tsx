@@ -73,7 +73,7 @@ const Dashboard = () => {
           description: "Please log in to view your dashboard",
           variant: "destructive"
         });
-        navigate("/auth");
+        navigate("/login");
         return;
       }
 

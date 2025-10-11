@@ -70,7 +70,7 @@ const Activate = () => {
 
       // Redirect to login after 2 seconds
       setTimeout(() => {
-        navigate("/auth");
+        navigate("/login");
       }, 2000);
 
     } catch (error: any) {

@@ -26,8 +26,13 @@ const registerSchema = z.object({
   phone: z.string().min(10, "Phone number must be at least 10 digits"),
   address: z.string().min(10, "Address must be at least 10 characters"),
   state: z.string().min(1, "Please select a state"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+  confirmPassword: z.string(),
   breakdownType: z.enum(["80_20", "100_capital"]),
   inviteCode: z.string().optional(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"],
 });
 
 type RegisterFormData = z.infer<typeof registerSchema>;
@@ -49,6 +54,8 @@ const Register = () => {
       phone: "",
       address: "",
       state: "",
+      password: "",
+      confirmPassword: "",
       breakdownType: "80_20",
       inviteCode: "",
     },
@@ -61,7 +68,7 @@ const Register = () => {
       // Create user account first
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: data.email,
-        password: Math.random().toString(36).slice(-8) + "Aa1!", // Temporary password
+        password: data.password,
         options: {
           emailRedirectTo: `${window.location.origin}/`,
           data: {
@@ -281,6 +288,42 @@ const Register = () => {
 
                     <FormField
                       control={form.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Password *</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="password"
+                              placeholder="Create a secure password (min. 8 characters)" 
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="confirmPassword"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Confirm Password *</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="password"
+                              placeholder="Re-enter your password" 
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
                       name="inviteCode"
                       render={({ field }) => (
                         <FormItem>
@@ -303,7 +346,7 @@ const Register = () => {
 
                   <p className="text-sm text-muted-foreground text-center">
                   Already have an account?{" "}
-                  <Button variant="link" className="p-0 h-auto" onClick={() => navigate("/auth")}>
+                  <Button variant="link" className="p-0 h-auto" onClick={() => navigate("/login")}>
                     Login here
                   </Button>
                   </p>

@@ -75,7 +75,7 @@ const Navbar = () => {
               </>
             ) : (
               <>
-                <Link to="/auth">
+                <Link to="/login">
                   <Button variant="ghost" className="font-medium">
                     Login
                   </Button>
@@ -136,7 +136,7 @@ const Navbar = () => {
                   </>
                 ) : (
                   <>
-                    <Link to="/auth" onClick={() => setIsOpen(false)}>
+                    <Link to="/login" onClick={() => setIsOpen(false)}>
                       <Button variant="outline" className="w-full">
                         Login
                       </Button>

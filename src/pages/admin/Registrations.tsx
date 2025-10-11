@@ -26,7 +26,8 @@ const Registrations = () => {
           *,
           profiles!registration_fees_member_id_fkey(*)
         `)
-        .eq('status', 'pending');
+        .in('status', ['pending', 'approved'])
+        .order('created_at', { ascending: false });
 
       setPendingRegs(regFees || []);
     } catch (error: any) {
@@ -64,10 +65,13 @@ const Registrations = () => {
 
       if (profileError) throw profileError;
       
-      toast.success(`Registration approved! PIN: ${pin}`, {
-        description: `Send this PIN to the member via WhatsApp`,
-        duration: 10000
+      toast.success(`Registration approved!`, {
+        description: `PIN: ${pin} - Copy this and send via WhatsApp`,
+        duration: 15000
       });
+      
+      // Copy PIN to clipboard automatically
+      navigator.clipboard.writeText(pin);
       
       fetchPendingRegistrations();
     } catch (error: any) {
@@ -108,9 +112,11 @@ const Registrations = () => {
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-base sm:text-lg md:text-xl">Pending Registrations ({pendingRegs.length})</CardTitle>
+                <CardTitle className="text-base sm:text-lg md:text-xl">
+                  Registration Approvals ({pendingRegs.filter(r => r.status === 'pending').length} pending)
+                </CardTitle>
                 <CardDescription className="text-xs sm:text-sm">
-                  Verify payment receipts and generate activation PINs
+                  Verify payment receipts and generate activation PINs. PIN will be automatically copied to clipboard.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -126,6 +132,7 @@ const Registrations = () => {
                         <TableHead>State</TableHead>
                         <TableHead>Phone</TableHead>
                         <TableHead>Receipt</TableHead>
+                        <TableHead>Status</TableHead>
                         <TableHead>Date</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
@@ -155,15 +162,26 @@ const Registrations = () => {
                               <Badge variant="secondary">No receipt</Badge>
                             )}
                           </TableCell>
+                          <TableCell>
+                            <Badge variant={reg.status === 'approved' ? 'default' : 'secondary'}>
+                              {reg.status}
+                            </Badge>
+                          </TableCell>
                           <TableCell>{new Date(reg.created_at).toLocaleDateString()}</TableCell>
                           <TableCell className="text-right">
-                            <Button
-                              size="sm"
-                              onClick={() => approveRegistration(reg.id, reg.profiles.id)}
-                            >
-                              <CheckCircle className="h-4 w-4 mr-1" />
-                              Approve & Generate PIN
-                            </Button>
+                            {reg.status === 'approved' ? (
+                              <Badge variant="outline" className="text-green-600 border-green-600">
+                                ✓ Approved
+                              </Badge>
+                            ) : (
+                              <Button
+                                size="sm"
+                                onClick={() => approveRegistration(reg.id, reg.profiles.id)}
+                              >
+                                <CheckCircle className="h-4 w-4 mr-1" />
+                                Approve & Generate PIN
+                              </Button>
+                            )}
                           </TableCell>
                         </TableRow>
                       ))}

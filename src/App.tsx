@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { AdminRoute } from "@/components/AdminRoute";
 import LoadingBar from "@/components/LoadingBar";
 import ScrollToTop from "@/components/ScrollToTop";
 import Index from "./pages/Index";
@@ -116,14 +117,14 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
-            <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
-            <Route path="/admin/registrations" element={<ProtectedRoute><Registrations /></ProtectedRoute>} />
-            <Route path="/admin/contributions" element={<ProtectedRoute><Contributions /></ProtectedRoute>} />
-            <Route path="/admin/withdrawals" element={<ProtectedRoute><Withdrawals /></ProtectedRoute>} />
-            <Route path="/admin/dividends" element={<ProtectedRoute><AdminDividends /></ProtectedRoute>} />
-            <Route path="/admin/properties" element={<ProtectedRoute><Properties /></ProtectedRoute>} />
-            <Route path="/admin/state-reps" element={<ProtectedRoute><StateReps /></ProtectedRoute>} />
-            <Route path="/admin/blog" element={<ProtectedRoute><BlogManagement /></ProtectedRoute>} />
+            <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+            <Route path="/admin/registrations" element={<AdminRoute><Registrations /></AdminRoute>} />
+            <Route path="/admin/contributions" element={<AdminRoute><Contributions /></AdminRoute>} />
+            <Route path="/admin/withdrawals" element={<AdminRoute><Withdrawals /></AdminRoute>} />
+            <Route path="/admin/dividends" element={<AdminRoute><AdminDividends /></AdminRoute>} />
+            <Route path="/admin/properties" element={<AdminRoute><Properties /></AdminRoute>} />
+            <Route path="/admin/state-reps" element={<AdminRoute><StateReps /></AdminRoute>} />
+            <Route path="/admin/blog" element={<AdminRoute><BlogManagement /></AdminRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

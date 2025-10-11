@@ -56,6 +56,7 @@ const Dashboard = () => {
   const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -88,6 +89,7 @@ const Dashboard = () => {
 
       if (profile) {
         setUserName(`${profile.first_name} ${profile.last_name}`);
+        setAvatarUrl(profile.avatar_url || "");
 
         // Fetch contributions
         const { data: contributions } = await supabase
@@ -203,7 +205,7 @@ const Dashboard = () => {
         <div className="min-h-screen flex w-full">
           <MemberSidebar />
           <div className="flex-1 flex flex-col">
-            <DashboardHeader userName={userName} />
+            <DashboardHeader userName={userName} avatarUrl={avatarUrl} />
             <div className="flex-1 flex items-center justify-center bg-muted/30">
               <div className="text-center">
                 <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
@@ -222,7 +224,7 @@ const Dashboard = () => {
         <div className="min-h-screen flex w-full">
           <MemberSidebar />
           <div className="flex-1 flex flex-col">
-            <DashboardHeader userName={userName} />
+            <DashboardHeader userName={userName} avatarUrl={avatarUrl} />
             <div className="flex-1 flex items-center justify-center bg-muted/30">
               <div className="text-center">
                 <p className="text-muted-foreground mb-4">No member data found</p>
@@ -250,7 +252,7 @@ const Dashboard = () => {
       <div className="min-h-screen flex w-full">
         <MemberSidebar />
         <div className="flex-1 flex flex-col">
-          <DashboardHeader userName={userName} />
+          <DashboardHeader userName={userName} avatarUrl={avatarUrl} />
           <main className="flex-1 p-6 bg-muted/30 overflow-auto">
             {/* Welcome Section */}
             <div className="mb-6">

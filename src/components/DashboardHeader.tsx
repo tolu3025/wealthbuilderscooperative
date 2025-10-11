@@ -1,6 +1,6 @@
 import { Bell, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -20,6 +20,7 @@ import {
 
 interface DashboardHeaderProps {
   userName?: string;
+  avatarUrl?: string;
   notifications?: Array<{
     id: string;
     title: string;
@@ -28,7 +29,7 @@ interface DashboardHeaderProps {
   }>;
 }
 
-export function DashboardHeader({ userName = "User", notifications = [] }: DashboardHeaderProps) {
+export function DashboardHeader({ userName = "User", avatarUrl, notifications = [] }: DashboardHeaderProps) {
   const { signOut } = useAuth();
   const navigate = useNavigate();
 
@@ -50,10 +51,7 @@ export function DashboardHeader({ userName = "User", notifications = [] }: Dashb
     <header className="sticky top-0 z-40 flex h-14 sm:h-16 items-center gap-2 sm:gap-4 border-b bg-background px-3 sm:px-4 md:px-6">
       <div className="flex items-center gap-2">
         <SidebarTrigger />
-        <div className="flex items-center gap-2">
-          <div className="h-6 w-6 sm:h-8 sm:w-8 rounded-full bg-gradient-to-r from-primary to-secondary" />
-          <span className="font-bold text-sm sm:text-base md:text-lg hidden sm:inline">WealthBuilders</span>
-        </div>
+        <span className="font-bold text-sm sm:text-base md:text-lg hidden sm:inline">WealthBuilders</span>
       </div>
 
       <div className="ml-auto flex items-center gap-1 sm:gap-2">
@@ -99,6 +97,7 @@ export function DashboardHeader({ userName = "User", notifications = [] }: Dashb
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-8 w-8 sm:h-10 sm:w-10 rounded-full">
               <Avatar className="h-7 w-7 sm:h-9 sm:w-9">
+                {avatarUrl && <AvatarImage src={avatarUrl} alt={userName} />}
                 <AvatarFallback className="bg-gradient-to-r from-primary to-secondary text-white text-xs sm:text-sm">
                   {initials}
                 </AvatarFallback>

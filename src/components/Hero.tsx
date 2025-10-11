@@ -243,7 +243,7 @@ const Hero = () => {
                 </Button>
               </Link>
               <Link to="/about">
-                <Button size="lg" variant="outline" className="w-full sm:w-auto border-2 border-white text-white hover:bg-white hover:text-primary font-semibold px-6 md:px-8 py-5 md:py-6 text-base md:text-lg">
+                <Button size="lg" variant="outline" className="w-full sm:w-auto bg-transparent border-2 border-white text-white hover:bg-white hover:text-primary font-semibold px-6 md:px-8 py-5 md:py-6 text-base md:text-lg">
                   Learn More
                 </Button>
               </Link>

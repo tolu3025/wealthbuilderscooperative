@@ -204,6 +204,8 @@ const BlogManagement = () => {
                     <FileUpload
                       userId={userId}
                       fileType="blog-image"
+                      bucket="blog-images"
+                      label="Upload Featured Image (JPG, PNG, or PDF)"
                       onUploadComplete={handleImageUpload}
                     />
                   )}

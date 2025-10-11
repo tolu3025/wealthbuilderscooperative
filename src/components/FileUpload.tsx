@@ -10,9 +10,11 @@ interface FileUploadProps {
   onUploadComplete: (url: string) => void;
   userId: string;
   fileType?: string;
+  bucket?: string;
+  label?: string;
 }
 
-export const FileUpload = ({ onUploadComplete, userId, fileType = "receipt" }: FileUploadProps) => {
+export const FileUpload = ({ onUploadComplete, userId, fileType = "receipt", bucket = "payment-receipts", label = "Upload Payment Proof (JPG, PNG, or PDF)" }: FileUploadProps) => {
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
@@ -55,14 +57,14 @@ export const FileUpload = ({ onUploadComplete, userId, fileType = "receipt" }: F
       const fileName = `${userId}/${fileType}_${Date.now()}.${fileExt}`;
 
       const { data, error } = await supabase.storage
-        .from('payment-receipts')
+        .from(bucket)
         .upload(fileName, file);
 
       if (error) throw error;
 
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
-        .from('payment-receipts')
+        .from(bucket)
         .getPublicUrl(fileName);
 
       onUploadComplete(publicUrl);
@@ -87,7 +89,7 @@ export const FileUpload = ({ onUploadComplete, userId, fileType = "receipt" }: F
   return (
     <div className="space-y-4">
       <div>
-        <Label htmlFor="file-upload">Upload Payment Proof (JPG, PNG, or PDF)</Label>
+        <Label htmlFor="file-upload">{label}</Label>
         <div className="mt-2">
           <Input
             id="file-upload"

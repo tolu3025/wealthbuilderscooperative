@@ -233,6 +233,8 @@ const Properties = () => {
                         <FileUpload
                           userId={userId}
                           fileType="property-image"
+                          bucket="property-images"
+                          label="Upload Property Image (JPG, PNG, or PDF)"
                           onUploadComplete={(url) => setFormData({ ...formData, image_url: url })}
                         />
                       )}

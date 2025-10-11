@@ -163,6 +163,8 @@ const Profile = () => {
                     <FileUpload
                       userId={profile.id}
                       fileType="avatar"
+                      bucket="avatars"
+                      label="Upload Profile Picture (JPG, PNG, or PDF)"
                       onUploadComplete={(url) => {
                         setProfile({ ...profile, avatar_url: url });
                         setShowAvatarUpload(false);

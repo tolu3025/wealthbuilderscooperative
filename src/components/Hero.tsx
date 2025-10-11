@@ -1,10 +1,35 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Shield, TrendingUp, Users, Target, Award, Handshake } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/logo.png";
 import heroCommunity from "@/assets/hero-community.jpg";
 import propertyInvestment from "@/assets/property-investment.jpg";
+
 const Hero = () => {
+  const [memberCount, setMemberCount] = useState<number>(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchMemberCount = async () => {
+      try {
+        const { count, error } = await supabase
+          .from('profiles')
+          .select('*', { count: 'exact', head: true });
+        
+        if (error) throw error;
+        setMemberCount(count || 0);
+      } catch (error) {
+        console.error('Error fetching member count:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMemberCount();
+  }, []);
+
   return <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-primary via-primary-dark to-secondary">
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden">
@@ -217,7 +242,13 @@ const Hero = () => {
               Ready to Start Building Your Future?
             </h2>
             <p className="text-xl text-white/90 mb-8">
-              Join hundreds of Nigerians who are already growing their wealth with WealthBuilders
+              {loading ? (
+                "Join our growing community of wealth builders"
+              ) : memberCount > 0 ? (
+                `Join ${memberCount}+ Nigerians who are already growing their wealth with WealthBuilders`
+              ) : (
+                "Be among the first to start building wealth with WealthBuilders"
+              )}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/register">

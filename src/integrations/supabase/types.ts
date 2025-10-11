@@ -14,7 +14,258 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      blog_posts: {
+        Row: {
+          author_id: string | null
+          content: string
+          created_at: string | null
+          excerpt: string | null
+          id: string
+          image_url: string | null
+          published: boolean | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          author_id?: string | null
+          content: string
+          created_at?: string | null
+          excerpt?: string | null
+          id?: string
+          image_url?: string | null
+          published?: boolean | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          author_id?: string | null
+          content?: string
+          created_at?: string | null
+          excerpt?: string | null
+          id?: string
+          image_url?: string | null
+          published?: boolean | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_posts_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commissions: {
+        Row: {
+          amount: number
+          commission_type: string | null
+          created_at: string | null
+          id: string
+          invited_member_id: string
+          member_id: string
+          status: string | null
+        }
+        Insert: {
+          amount: number
+          commission_type?: string | null
+          created_at?: string | null
+          id?: string
+          invited_member_id: string
+          member_id: string
+          status?: string | null
+        }
+        Update: {
+          amount?: number
+          commission_type?: string | null
+          created_at?: string | null
+          id?: string
+          invited_member_id?: string
+          member_id?: string
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commissions_invited_member_id_fkey"
+            columns: ["invited_member_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commissions_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contributions: {
+        Row: {
+          amount: number
+          capital_amount: number
+          created_at: string | null
+          id: string
+          member_id: string
+          payment_date: string | null
+          payment_status: string | null
+          project_support_amount: number
+          savings_amount: number
+        }
+        Insert: {
+          amount: number
+          capital_amount: number
+          created_at?: string | null
+          id?: string
+          member_id: string
+          payment_date?: string | null
+          payment_status?: string | null
+          project_support_amount: number
+          savings_amount: number
+        }
+        Update: {
+          amount?: number
+          capital_amount?: number
+          created_at?: string | null
+          id?: string
+          member_id?: string
+          payment_date?: string | null
+          payment_status?: string | null
+          project_support_amount?: number
+          savings_amount?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contributions_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dividends: {
+        Row: {
+          amount: number
+          created_at: string | null
+          distribution_date: string | null
+          id: string
+          member_id: string
+          property_name: string | null
+          status: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          distribution_date?: string | null
+          id?: string
+          member_id: string
+          property_name?: string | null
+          status?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          distribution_date?: string | null
+          id?: string
+          member_id?: string
+          property_name?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dividends_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          email: string
+          first_name: string
+          id: string
+          last_name: string
+          member_number: string | null
+          phone: string | null
+          role: string | null
+          state: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          first_name: string
+          id?: string
+          last_name: string
+          member_number?: string | null
+          phone?: string | null
+          role?: string | null
+          state?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          first_name?: string
+          id?: string
+          last_name?: string
+          member_number?: string | null
+          phone?: string | null
+          role?: string | null
+          state?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      properties: {
+        Row: {
+          created_at: string | null
+          current_value: number | null
+          description: string | null
+          id: string
+          image_url: string | null
+          location: string | null
+          name: string
+          purchase_price: number | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          current_value?: number | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          location?: string | null
+          name: string
+          purchase_price?: number | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          current_value?: number | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          location?: string | null
+          name?: string
+          purchase_price?: number | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

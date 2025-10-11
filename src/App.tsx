@@ -16,6 +16,7 @@ import Contribute from "./pages/Contribute";
 import Withdraw from "./pages/Withdraw";
 import About from "./pages/About";
 import Blog from "./pages/Blog";
+import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +33,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/about" element={<About />} />
             <Route path="/blog" element={<Blog />} />
+            <Route path="/contact" element={<Contact />} />
             <Route path="/activate" element={<Activate />} />
             <Route
               path="/auth"

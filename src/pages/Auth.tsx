@@ -11,6 +11,7 @@ import { Loader2 } from "lucide-react";
 import { z } from "zod";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import authBg from "@/assets/auth-background.jpg";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -129,9 +130,17 @@ export default function Auth() {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 py-12 px-4">
-        <div className="container max-w-md mx-auto">
-          <Card className="shadow-xl">
+      <div 
+        className="min-h-screen relative py-12 px-4 pt-24 md:pt-28"
+        style={{
+          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 82, 204, 0.7)), url(${authBg})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundAttachment: 'fixed'
+        }}
+      >
+        <div className="container max-w-md mx-auto relative z-10">
+          <Card className="shadow-2xl backdrop-blur-sm bg-background/95">
             <CardHeader className="text-center">
               <CardTitle className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                 WealthBuilders Cooperative

@@ -5,7 +5,7 @@ import { Shield, Target, Users, TrendingUp } from "lucide-react";
 
 const About = () => {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pt-16 md:pt-20">
       <Navbar />
       
       {/* Hero Section */}

@@ -64,15 +64,19 @@ const Footer = () => {
             <ul className="space-y-3">
               <li className="flex items-start gap-2 text-white/80">
                 <MapPin className="h-5 w-5 mt-0.5 flex-shrink-0" />
-                <span className="text-sm">Lagos, Nigeria</span>
+                <span className="text-sm">Suit D119 New Orisumbare Complex, MDS Osogbo, Osun State, Nigeria</span>
               </li>
               <li className="flex items-center gap-2 text-white/80">
                 <Phone className="h-5 w-5 flex-shrink-0" />
-                <span className="text-sm">+234 XXX XXX XXXX</span>
+                <a href="tel:+2348033740309" className="text-sm hover:text-accent transition-colors">
+                  +234 803 374 0309
+                </a>
               </li>
               <li className="flex items-center gap-2 text-white/80">
                 <Mail className="h-5 w-5 flex-shrink-0" />
-                <span className="text-sm">info@wealthbuilders.coop</span>
+                <a href="mailto:support@wealthbuilderscooperative.com" className="text-sm hover:text-accent transition-colors">
+                  support@wealthbuilderscooperative.com
+                </a>
               </li>
             </ul>
           </div>

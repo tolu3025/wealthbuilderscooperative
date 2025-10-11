@@ -92,10 +92,10 @@ const Contact = () => {
                     <div>
                       <p className="font-semibold text-sm">Email</p>
                       <a 
-                        href="mailto:info@wealthbuilders.coop" 
-                        className="text-muted-foreground hover:text-primary transition-colors text-sm"
+                        href="mailto:support@wealthbuilderscooperative.com" 
+                        className="text-muted-foreground hover:text-primary transition-colors text-sm break-all"
                       >
-                        info@wealthbuilders.coop
+                        support@wealthbuilderscooperative.com
                       </a>
                     </div>
                   </div>
@@ -103,12 +103,14 @@ const Contact = () => {
                   <div className="flex items-start gap-3">
                     <Phone className="h-5 w-5 text-primary mt-1" />
                     <div>
-                      <p className="font-semibold text-sm">Phone</p>
+                      <p className="font-semibold text-sm">WhatsApp / Phone</p>
                       <a 
-                        href="tel:+2348012345678" 
+                        href="https://wa.me/2348033740309" 
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="text-muted-foreground hover:text-primary transition-colors text-sm"
                       >
-                        +234 801 234 5678
+                        +234 803 374 0309
                       </a>
                     </div>
                   </div>
@@ -116,9 +118,11 @@ const Contact = () => {
                   <div className="flex items-start gap-3">
                     <MapPin className="h-5 w-5 text-primary mt-1" />
                     <div>
-                      <p className="font-semibold text-sm">Office</p>
+                      <p className="font-semibold text-sm">Office Address</p>
                       <p className="text-muted-foreground text-sm">
-                        Lagos, Nigeria
+                        Suit D119 New Orisumbare Complex<br />
+                        MDS Osogbo, Osun State<br />
+                        Nigeria
                       </p>
                     </div>
                   </div>

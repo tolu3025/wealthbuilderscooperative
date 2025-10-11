@@ -96,7 +96,7 @@ const Activate = () => {
               </div>
               <CardTitle className="text-3xl font-bold">Activate Your Account</CardTitle>
               <CardDescription>
-                Enter your email and the PIN sent to you via WhatsApp
+                Enter your email and the PIN sent to you via WhatsApp (+234 803 374 0309)
               </CardDescription>
             </CardHeader>
             <CardContent>

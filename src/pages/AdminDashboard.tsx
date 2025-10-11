@@ -146,7 +146,10 @@ const AdminDashboard = () => {
 
       if (error) throw error;
       
-      toast.success(`Registration approved! PIN: ${pin}`);
+      toast.success(`Registration approved! PIN: ${pin}`, {
+        description: `Send this PIN to the member via WhatsApp: +234 803 374 0309`,
+        duration: 10000
+      });
       fetchDashboardData();
     } catch (error: any) {
       toast.error(error.message);
@@ -394,7 +397,9 @@ const AdminDashboard = () => {
             <Card>
               <CardHeader>
                 <CardTitle>Pending Registration Approvals</CardTitle>
-                <CardDescription>Review payment proofs and approve new members</CardDescription>
+                <CardDescription>
+                  Review payment proofs and approve new members. Send generated PINs via WhatsApp: +234 803 374 0309
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 {pendingRegs.length === 0 ? (

@@ -32,48 +32,76 @@ const Activate = () => {
       activateSchema.parse(formData);
       setLoading(true);
 
-      // Find profile by email and PIN
-      const { data: profile, error: profileError } = await supabase
+      // First, find profile by email only to check if it exists
+      const { data: profileCheck, error: profileCheckError } = await supabase
         .from('profiles')
-        .select('*')
+        .select('id, registration_pin, registration_status, email')
         .eq('email', formData.email)
-        .eq('registration_pin', formData.pin)
-        .eq('registration_status', 'pending_activation')
-        .single();
+        .maybeSingle();
 
-      if (profileError || !profile) {
-        throw new Error("Invalid PIN or email. Please check and try again.");
+      if (profileCheckError) throw profileCheckError;
+
+      if (!profileCheck) {
+        throw new Error("No account found with this email address.");
+      }
+
+      // Validate PIN matches this specific user
+      if (profileCheck.registration_pin !== formData.pin) {
+        throw new Error("Invalid PIN. Please check the PIN sent to you.");
+      }
+
+      // Check registration status
+      if (profileCheck.registration_status !== 'pending_activation') {
+        if (profileCheck.registration_status === 'active') {
+          throw new Error("This account is already activated. Please login.");
+        }
+        throw new Error("This account is not ready for activation. Please contact support.");
       }
 
       // Generate member number
       const { data: memberNumberData, error: memberNumberError } = await supabase
         .rpc('generate_member_number');
 
-      if (memberNumberError) throw memberNumberError;
+      if (memberNumberError) {
+        console.error('Member number generation error:', memberNumberError);
+        throw new Error("Failed to generate member number. Please try again.");
+      }
 
-      // Activate account
-      const { error: updateError } = await supabase
+      if (!memberNumberData) {
+        throw new Error("Failed to generate member number. Please try again.");
+      }
+
+      // Activate account with all necessary updates
+      const { data: updatedProfile, error: updateError } = await supabase
         .from('profiles')
         .update({
           registration_status: 'active',
           member_number: memberNumberData,
           registration_pin: null, // Clear the PIN for security
         })
-        .eq('id', profile.id);
+        .eq('id', profileCheck.id)
+        .select()
+        .single();
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error('Profile update error:', updateError);
+        throw new Error("Failed to activate account. Please try again.");
+      }
+
+      console.log('Account activated successfully:', updatedProfile);
 
       toast({
         title: "Account activated! 🎉",
         description: `Your member number is ${memberNumberData}. Please login to continue.`,
       });
 
-      // Redirect to login after 2 seconds
+      // Redirect to login after 3 seconds
       setTimeout(() => {
         navigate("/login");
-      }, 2000);
+      }, 3000);
 
     } catch (error: any) {
+      console.error('Activation error:', error);
       toast({
         title: "Activation failed",
         description: error.message || "Could not activate your account. Please try again.",

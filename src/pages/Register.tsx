@@ -58,7 +58,6 @@ const Register = () => {
     setLoading(true);
     
     try {
-
       // Create user account first
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: data.email,
@@ -70,6 +69,8 @@ const Register = () => {
             last_name: data.lastName,
             phone: data.phone,
             state: data.state,
+            address: data.address,
+            breakdown_type: data.breakdownType,
           },
         },
       });
@@ -77,12 +78,35 @@ const Register = () => {
       if (authError) throw authError;
 
       if (authData.user) {
-        setUserId(authData.user.id);
-        setShowUpload(true);
+        // Wait for profile to be created
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // Update profile with additional data
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('user_id', authData.user.id)
+          .single();
+
+        if (profile) {
+          await supabase
+            .from('profiles')
+            .update({
+              address: data.address,
+              breakdown_type: data.breakdownType,
+            })
+            .eq('id', profile.id);
+        }
+
         toast({
           title: "Account created!",
-          description: "Now please upload your payment receipt to complete registration.",
+          description: "Redirecting to upload payment receipt...",
         });
+
+        // Redirect to upload receipt page
+        setTimeout(() => {
+          navigate("/register/upload-receipt");
+        }, 1500);
       }
     } catch (error: any) {
       toast({
@@ -95,80 +119,6 @@ const Register = () => {
     }
   };
 
-  const handleCompleteRegistration = async () => {
-    if (!receiptUrl) {
-      toast({
-        title: "Payment proof required",
-        description: "Please upload your payment receipt",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setLoading(true);
-    try {
-      // Wait a moment for profile to be created by trigger
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Get the profile
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('user_id', userId)
-        .single();
-
-      if (profileError || !profile) {
-        throw new Error("Failed to create profile");
-      }
-
-      // Store form data for later use
-      const formData = form.getValues();
-      
-      // Update profile with additional data
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({
-          address: formData.address,
-          breakdown_type: formData.breakdownType,
-          registration_status: 'pending_approval',
-          invited_by: formData.inviteCode ? null : null, // TODO: Look up inviter by code
-        })
-        .eq('id', profile.id);
-
-      if (updateError) throw updateError;
-
-      // Create registration fee record
-      const { error: feeError } = await supabase
-        .from('registration_fees')
-        .insert({
-          member_id: profile.id,
-          payment_receipt_url: receiptUrl,
-          payment_date: new Date().toISOString(),
-        });
-
-      if (feeError) throw feeError;
-
-      // Create commission records if invite code provided
-      if (formData.inviteCode) {
-        // TODO: Look up inviter and create commission records
-      }
-
-      toast({
-        title: "Registration submitted!",
-        description: "Your registration has been submitted for approval. You'll receive a PIN via WhatsApp within 24 hours.",
-      });
-
-      navigate("/");
-    } catch (error: any) {
-      toast({
-        title: "Registration failed",
-        description: error.message || "Could not complete registration. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-background pt-16 md:pt-20">
@@ -198,10 +148,8 @@ const Register = () => {
               </Alert>
 
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(showUpload ? () => handleCompleteRegistration() : handleCreateAccount)} className="space-y-6">
-                {!showUpload && (
-                  <>
-                    <div className="grid md:grid-cols-2 gap-4">
+                <form onSubmit={form.handleSubmit(handleCreateAccount)} className="space-y-6">
+                  <div className="grid md:grid-cols-2 gap-4">
                       <FormField
                         control={form.control}
                         name="firstName"
@@ -349,39 +297,11 @@ const Register = () => {
                       )}
                     />
 
-                    <Button type="submit" className="w-full" size="lg" disabled={loading}>
-                      {loading ? "Creating Account..." : "Continue to Payment Upload"}
-                    </Button>
-                  </>
-                )}
+                  <Button type="submit" className="w-full" size="lg" disabled={loading}>
+                    {loading ? "Creating Account..." : "Continue to Payment Upload"}
+                  </Button>
 
-                {showUpload && (
-                  <>
-                    <Alert>
-                      <Info className="h-4 w-4" />
-                      <AlertDescription>
-                        Account created successfully! Now upload your payment receipt to complete your registration.
-                      </AlertDescription>
-                    </Alert>
-
-                    <FileUpload
-                      onUploadComplete={setReceiptUrl}
-                      userId={userId}
-                      fileType="registration"
-                    />
-
-                    <Button 
-                      type="submit" 
-                      className="w-full" 
-                      size="lg" 
-                      disabled={loading || !receiptUrl}
-                    >
-                      {loading ? "Submitting..." : "Complete Registration"}
-                    </Button>
-                  </>
-                )}
-
-                <p className="text-sm text-muted-foreground text-center">
+                  <p className="text-sm text-muted-foreground text-center">
                   Already have an account?{" "}
                   <Button variant="link" className="p-0 h-auto" onClick={() => navigate("/auth")}>
                     Login here

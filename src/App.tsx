@@ -13,6 +13,7 @@ import Dashboard from "./pages/Dashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import BlogManagement from "./pages/admin/BlogManagement";
 import Register from "./pages/Register";
+import UploadReceipt from "./pages/UploadReceipt";
 import Activate from "./pages/Activate";
 import Contribute from "./pages/Contribute";
 import Withdraw from "./pages/Withdraw";
@@ -53,6 +54,10 @@ const App = () => (
                   <Register />
                 </ProtectedRoute>
               }
+            />
+            <Route
+              path="/register/upload-receipt"
+              element={<UploadReceipt />}
             />
             <Route
               path="/dashboard"

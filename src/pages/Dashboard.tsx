@@ -9,15 +9,15 @@ import {
   PiggyBank, 
   Gift,
   ArrowUpRight,
-  ArrowDownRight,
   Loader2,
   Users,
   Phone,
-  Copy,
-  LogOut
+  Copy
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/AuthContext";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import { MemberSidebar } from "@/components/MemberSidebar";
+import { DashboardHeader } from "@/components/DashboardHeader";
 
 interface MemberData {
   id: string;
@@ -55,8 +55,8 @@ const Dashboard = () => {
   const [stateRep, setStateRep] = useState<StateRep | null>(null);
   const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
+  const [userName, setUserName] = useState("");
   const { toast } = useToast();
-  const { signOut } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -194,21 +194,6 @@ const Dashboard = () => {
     }
   };
 
-  const copyInviteCode = () => {
-    if (memberData?.inviteCode) {
-      navigator.clipboard.writeText(memberData.inviteCode);
-      toast({
-        title: "Copied!",
-        description: "Invite code copied to clipboard"
-      });
-    }
-  };
-
-  const handleSignOut = async () => {
-    await signOut();
-    navigate("/");
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-muted/30 flex items-center justify-center">
@@ -253,207 +238,211 @@ const Dashboard = () => {
       <div className="container mx-auto px-4 py-8">
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {/* Total Capital */}
-          <Card className="border-l-4 border-l-primary shadow-md hover:shadow-lg transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total Capital
-              </CardTitle>
-              <Wallet className="h-5 w-5 text-primary" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-primary">
-                ₦{memberData.totalCapital.toLocaleString()}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Building your wealth
-              </p>
-            </CardContent>
-          </Card>
-
-          {/* Total Savings */}
-          <Card className="border-l-4 border-l-secondary shadow-md hover:shadow-lg transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total Savings
-              </CardTitle>
-              <PiggyBank className="h-5 w-5 text-secondary" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-secondary">
-                ₦{memberData.totalSavings.toLocaleString()}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Withdrawable after 6 months
-              </p>
-            </CardContent>
-          </Card>
-
-          {/* Monthly Contribution */}
-          <Card className="border-l-4 border-l-accent shadow-md hover:shadow-lg transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Next Payment Due
-              </CardTitle>
-              <TrendingUp className="h-5 w-5 text-accent" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-xl font-bold">
-                {memberData.nextContributionDue}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                ₦{memberData.monthlyContribution.toLocaleString()} monthly
-              </p>
-            </CardContent>
-          </Card>
-
-          {/* Eligibility Status */}
-          <Card className="border-l-4 border-l-green-500 shadow-md hover:shadow-lg transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Dividend Status
-              </CardTitle>
-              <Gift className="h-5 w-5 text-green-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-xl font-bold text-green-500">
-                {memberData.eligibleForDividend ? "Eligible ✓" : "In Progress"}
-              </div>
-              <p className="text-xs text-green-600 mt-1">
-                {memberData.eligibleForDividend 
-                  ? "Qualified for dividends" 
-                  : "Build ₦50K + 6 months"}
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Three Column Layout */}
-        <div className="grid lg:grid-cols-3 gap-6 mb-8">
-          {/* Referral Info */}
-          <Card className="shadow-md">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5 text-primary" />
-                Referral Program
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <p className="text-sm text-muted-foreground mb-2">Your Invite Code</p>
-                <div className="flex items-center gap-2">
-                  <code className="flex-1 bg-muted px-3 py-2 rounded font-mono text-lg font-bold">
-                    {memberData.inviteCode}
-                  </code>
-                  <Button size="sm" variant="outline" onClick={copyInviteCode}>
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4 pt-4 border-t">
-                <div>
-                  <p className="text-2xl font-bold text-primary">{memberData.referralCount}</p>
-                  <p className="text-xs text-muted-foreground">Referrals</p>
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-secondary">₦{memberData.totalCommissions.toLocaleString()}</p>
-                  <p className="text-xs text-muted-foreground">Earned</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* State Rep Info */}
-          <Card className="shadow-md">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Phone className="h-5 w-5 text-secondary" />
-                State Representative
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {stateRep ? (
-                <>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Name</p>
-                    <p className="font-semibold">{stateRep.name}</p>
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+              {/* Total Capital */}
+              <Card className="border-l-4 border-l-primary shadow-md hover:shadow-lg transition-shadow">
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Total Capital
+                  </CardTitle>
+                  <Wallet className="h-5 w-5 text-primary" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-primary">
+                    ₦{memberData.totalCapital.toLocaleString()}
                   </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">WhatsApp</p>
-                    <p className="font-semibold">{stateRep.whatsapp}</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Building your wealth
+                  </p>
+                </CardContent>
+              </Card>
+
+              {/* Total Savings */}
+              <Card className="border-l-4 border-l-secondary shadow-md hover:shadow-lg transition-shadow">
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Total Savings
+                  </CardTitle>
+                  <PiggyBank className="h-5 w-5 text-secondary" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-secondary">
+                    ₦{memberData.totalSavings.toLocaleString()}
                   </div>
-                  <Button className="w-full" variant="outline" asChild>
-                    <a href={`https://wa.me/${stateRep.whatsapp.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer">
-                      Contact on WhatsApp
-                    </a>
-                  </Button>
-                </>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  No representative assigned for {memberData.state} yet.
-                </p>
-              )}
-            </CardContent>
-          </Card>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Withdrawable after 6 months
+                  </p>
+                </CardContent>
+              </Card>
 
-          {/* Quick Actions */}
-          <Card className="shadow-md">
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Button className="w-full gradient-primary text-white" asChild>
-                <Link to="/contribute">Make Contribution</Link>
-              </Button>
-              <Button variant="outline" className="w-full" asChild>
-                <Link to="/withdraw">Request Withdrawal</Link>
-              </Button>
-              <Button variant="outline" className="w-full">
-                View Dividend History
-              </Button>
-              <Button variant="outline" className="w-full">
-                Update Profile
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+              {/* Monthly Contribution */}
+              <Card className="border-l-4 border-l-accent shadow-md hover:shadow-lg transition-shadow">
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Next Payment Due
+                  </CardTitle>
+                  <TrendingUp className="h-5 w-5 text-accent" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-xl font-bold">
+                    {memberData.nextContributionDue}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    ₦{memberData.monthlyContribution.toLocaleString()} monthly
+                  </p>
+                </CardContent>
+              </Card>
 
-        {/* Recent Transactions */}
-        <Card className="shadow-md">
-          <CardHeader>
-            <CardTitle>Recent Transactions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {recentTransactions.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">No transactions yet</p>
-            ) : (
-              <div className="space-y-4">
-                {recentTransactions.map((transaction) => (
-                  <div
-                    key={transaction.id}
-                    className="flex items-center justify-between p-4 bg-muted/50 rounded-lg hover:bg-muted transition-colors"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="p-2 rounded-full bg-primary/10">
-                        <ArrowUpRight className="h-5 w-5 text-primary" />
+              {/* Eligibility Status */}
+              <Card className="border-l-4 border-l-green-500 shadow-md hover:shadow-lg transition-shadow">
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Dividend Status
+                  </CardTitle>
+                  <Gift className="h-5 w-5 text-green-500" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-xl font-bold text-green-500">
+                    {memberData.eligibleForDividend ? "Eligible ✓" : "In Progress"}
+                  </div>
+                  <p className="text-xs text-green-600 mt-1">
+                    {memberData.eligibleForDividend 
+                      ? "Qualified for dividends" 
+                      : "Build ₦50K + 6 months"}
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Three Column Layout */}
+            <div className="grid lg:grid-cols-3 gap-4 mb-6">
+              {/* Referral Info */}
+              <Card className="shadow-md">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-5 w-5 text-primary" />
+                    Referral Program
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-2">Your Invite Code</p>
+                    <div className="flex items-center gap-2">
+                      <code className="flex-1 bg-muted px-3 py-2 rounded font-mono text-lg font-bold">
+                        {memberData.inviteCode}
+                      </code>
+                      <Button size="sm" variant="outline" onClick={copyInviteCode}>
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 pt-4 border-t">
+                    <div>
+                      <p className="text-2xl font-bold text-primary">{memberData.referralCount}</p>
+                      <p className="text-xs text-muted-foreground">Referrals</p>
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-secondary">₦{memberData.totalCommissions.toLocaleString()}</p>
+                      <p className="text-xs text-muted-foreground">Earned</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* State Rep Info */}
+              <Card className="shadow-md">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Phone className="h-5 w-5 text-secondary" />
+                    State Representative
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {stateRep ? (
+                    <>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Name</p>
+                        <p className="font-semibold">{stateRep.name}</p>
                       </div>
                       <div>
-                        <p className="font-medium">{transaction.type}</p>
-                        <p className="text-sm text-muted-foreground">{transaction.date}</p>
+                        <p className="text-sm text-muted-foreground">WhatsApp</p>
+                        <p className="font-semibold">{stateRep.whatsapp}</p>
                       </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-semibold">₦{transaction.amount.toLocaleString()}</p>
-                      <p className="text-xs text-green-600 capitalize">{transaction.status}</p>
-                    </div>
+                      <Button className="w-full" variant="outline" asChild>
+                        <a href={`https://wa.me/${stateRep.whatsapp.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer">
+                          Contact on WhatsApp
+                        </a>
+                      </Button>
+                    </>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      No representative assigned for {memberData.state} yet.
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Quick Actions */}
+              <Card className="shadow-md">
+                <CardHeader>
+                  <CardTitle>Quick Actions</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <Button className="w-full gradient-primary text-white" asChild>
+                    <Link to="/contribute">Make Contribution</Link>
+                  </Button>
+                  <Button variant="outline" className="w-full" asChild>
+                    <Link to="/withdraw">Request Withdrawal</Link>
+                  </Button>
+                  <Button variant="outline" className="w-full" asChild>
+                    <Link to="/member/dividends">View Dividend History</Link>
+                  </Button>
+                  <Button variant="outline" className="w-full" asChild>
+                    <Link to="/member/profile">Update Profile</Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Recent Transactions */}
+            <Card className="shadow-md">
+              <CardHeader>
+                <CardTitle>Recent Transactions</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {recentTransactions.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">No transactions yet</p>
+                ) : (
+                  <div className="space-y-4">
+                    {recentTransactions.map((transaction) => (
+                      <div
+                        key={transaction.id}
+                        className="flex items-center justify-between p-4 bg-muted/50 rounded-lg hover:bg-muted transition-colors"
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="p-2 rounded-full bg-primary/10">
+                            <ArrowUpRight className="h-5 w-5 text-primary" />
+                          </div>
+                          <div>
+                            <p className="font-medium">{transaction.type}</p>
+                            <p className="text-sm text-muted-foreground">{transaction.date}</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-semibold">₦{transaction.amount.toLocaleString()}</p>
+                          <p className="text-xs text-green-600 capitalize">{transaction.status}</p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                )}
+              </CardContent>
+            </Card>
+          </main>
+        </div>
       </div>
-    </div>
+    </SidebarProvider>
   );
 };
 

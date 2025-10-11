@@ -21,6 +21,9 @@ import About from "./pages/About";
 import Blog from "./pages/Blog";
 import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
+import Dividends from "./pages/member/Dividends";
+import Referrals from "./pages/member/Referrals";
+import Profile from "./pages/member/Profile";
 
 const queryClient = new QueryClient();
 
@@ -80,6 +83,30 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Withdraw />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/member/dividends"
+              element={
+                <ProtectedRoute>
+                  <Dividends />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/member/referrals"
+              element={
+                <ProtectedRoute>
+                  <Referrals />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/member/profile"
+              element={
+                <ProtectedRoute>
+                  <Profile />
                 </ProtectedRoute>
               }
             />

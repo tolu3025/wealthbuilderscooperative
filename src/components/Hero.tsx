@@ -2,10 +2,8 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Shield, TrendingUp, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import logo from "@/assets/logo.png";
-
 const Hero = () => {
-  return (
-    <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-primary via-primary-dark to-secondary">
+  return <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-primary via-primary-dark to-secondary">
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-secondary/20 rounded-full blur-3xl animate-pulse" />
@@ -16,17 +14,13 @@ const Hero = () => {
         <div className="max-w-5xl mx-auto text-center">
           {/* Logo */}
           <div className="mb-8 flex justify-center">
-            <img 
-              src={logo} 
-              alt="WealthBuilders Cooperative Logo" 
-              className="w-32 h-32 md:w-40 md:h-40 drop-shadow-2xl animate-in fade-in zoom-in duration-700"
-            />
+            <img src={logo} alt="WealthBuilders Cooperative Logo" className="w-32 h-32 md:w-40 md:h-40 drop-shadow-2xl animate-in fade-in zoom-in duration-700" />
           </div>
 
           {/* Main Heading */}
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
             Build Wealth Together
-            <span className="block mt-2 bg-gradient-to-r from-accent to-accent-light bg-clip-text text-transparent">
+            <span className="block mt-2 bg-gradient-to-r from-accent to-accent-light bg-clip-text text-amber-400">
               Grow Your Future
             </span>
           </h1>
@@ -44,7 +38,7 @@ const Hero = () => {
               </Button>
             </Link>
             <Link to="/dashboard">
-              <Button size="lg" variant="outline" className="border-2 border-white text-white hover:bg-white hover:text-primary font-semibold px-8 py-6 text-lg transition-all hover:scale-105">
+              <Button size="lg" variant="outline" className="border-2 border-white text-white hover:text-primary font-semibold px-8 py-6 text-lg transition-all hover:scale-105 bg-[#000d00]/0">
                 Member Login
               </Button>
             </Link>
@@ -72,8 +66,6 @@ const Hero = () => {
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default Hero;

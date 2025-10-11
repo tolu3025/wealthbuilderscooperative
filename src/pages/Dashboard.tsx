@@ -86,102 +86,105 @@ const Dashboard = () => {
 
       if (profileError) throw profileError;
 
-      // Fetch contributions
-      const { data: contributions } = await supabase
-        .from('contributions')
-        .select('*')
-        .eq('member_id', profile.id)
-        .order('created_at', { ascending: false });
+      if (profile) {
+        setUserName(`${profile.first_name} ${profile.last_name}`);
 
-      // Calculate totals
-      const totalCapital = contributions?.reduce((sum, c) => sum + Number(c.capital_amount), 0) || 0;
-      const totalSavings = contributions?.reduce((sum, c) => sum + Number(c.savings_amount), 0) || 0;
-      
-      // Check eligibility
-      const memberSinceDate = new Date(profile.created_at);
-      const monthsSinceMembership = (new Date().getTime() - memberSinceDate.getTime()) / (1000 * 60 * 60 * 24 * 30);
-      const eligibleForDividend = monthsSinceMembership >= 6 && totalCapital >= 50000;
+        // Fetch contributions
+        const { data: contributions } = await supabase
+          .from('contributions')
+          .select('*')
+          .eq('member_id', profile.id)
+          .order('created_at', { ascending: false });
 
-      // Fetch referrals count
-      const { count: referralCount } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true })
-        .eq('invited_by', profile.id);
+        // Calculate totals
+        const totalCapital = contributions?.reduce((sum, c) => sum + Number(c.capital_amount), 0) || 0;
+        const totalSavings = contributions?.reduce((sum, c) => sum + Number(c.savings_amount), 0) || 0;
+        
+        // Check eligibility
+        const memberSinceDate = new Date(profile.created_at);
+        const monthsSinceMembership = (new Date().getTime() - memberSinceDate.getTime()) / (1000 * 60 * 60 * 24 * 30);
+        const eligibleForDividend = monthsSinceMembership >= 6 && totalCapital >= 50000;
 
-      // Fetch total commissions
-      const { data: commissions } = await supabase
-        .from('commissions')
-        .select('amount')
-        .eq('member_id', profile.id);
-      
-      const totalCommissions = commissions?.reduce((sum, c) => sum + Number(c.amount), 0) || 0;
+        // Fetch referrals count
+        const { count: referralCount } = await supabase
+          .from('profiles')
+          .select('*', { count: 'exact', head: true })
+          .eq('invited_by', profile.id);
 
-      // Fetch recent dividends
-      const { data: dividends } = await supabase
-        .from('dividends')
-        .select('amount')
-        .eq('member_id', profile.id)
-        .order('created_at', { ascending: false })
-        .limit(1);
+        // Fetch total commissions
+        const { data: commissions } = await supabase
+          .from('commissions')
+          .select('amount')
+          .eq('member_id', profile.id);
+        
+        const totalCommissions = commissions?.reduce((sum, c) => sum + Number(c.amount), 0) || 0;
 
-      const recentDividends = dividends?.[0]?.amount || 0;
+        // Fetch recent dividends
+        const { data: dividends } = await supabase
+          .from('dividends')
+          .select('amount')
+          .eq('member_id', profile.id)
+          .order('created_at', { ascending: false })
+          .limit(1);
 
-      // Calculate next contribution due
-      const lastContribution = contributions?.[0]?.created_at;
-      const nextDue = lastContribution 
-        ? new Date(new Date(lastContribution).setMonth(new Date(lastContribution).getMonth() + 1))
-        : new Date();
+        const recentDividends = dividends?.[0]?.amount || 0;
 
-      setMemberData({
-        id: profile.id,
-        name: `${profile.first_name} ${profile.last_name}`,
-        memberNumber: profile.member_number || 'Pending',
-        totalCapital,
-        totalSavings,
-        monthlyContribution: 5200,
-        eligibleForDividend,
-        memberSince: new Date(profile.created_at).toLocaleDateString(),
-        inviteCode: profile.invite_code || '',
-        invitedBy: profile.invited_by,
-        state: profile.state || '',
-        referralCount: referralCount || 0,
-        totalCommissions,
-        recentDividends,
-        nextContributionDue: nextDue.toLocaleDateString()
-      });
+        // Calculate next contribution due
+        const lastContribution = contributions?.[0]?.created_at;
+        const nextDue = lastContribution 
+          ? new Date(new Date(lastContribution).setMonth(new Date(lastContribution).getMonth() + 1))
+          : new Date();
 
-      // Fetch state representative
-      if (profile.state) {
-        const { data: repData } = await supabase
-          .from('state_representatives')
-          .select(`
-            rep_profile_id,
-            whatsapp_number,
-            profiles!state_representatives_rep_profile_id_fkey(first_name, last_name)
-          `)
-          .eq('state', profile.state)
-          .single();
+        setMemberData({
+          id: profile.id,
+          name: `${profile.first_name} ${profile.last_name}`,
+          memberNumber: profile.member_number || 'Pending',
+          totalCapital,
+          totalSavings,
+          monthlyContribution: 5200,
+          eligibleForDividend,
+          memberSince: new Date(profile.created_at).toLocaleDateString(),
+          inviteCode: profile.invite_code || '',
+          invitedBy: profile.invited_by,
+          state: profile.state || '',
+          referralCount: referralCount || 0,
+          totalCommissions,
+          recentDividends,
+          nextContributionDue: nextDue.toLocaleDateString()
+        });
 
-        if (repData && repData.profiles) {
-          const repProfile: any = repData.profiles;
-          setStateRep({
-            name: `${repProfile.first_name} ${repProfile.last_name}`,
-            whatsapp: repData.whatsapp_number || 'Not available'
-          });
+        // Fetch state representative
+        if (profile.state) {
+          const { data: repData } = await supabase
+            .from('state_representatives')
+            .select(`
+              rep_profile_id,
+              whatsapp_number,
+              profiles!state_representatives_rep_profile_id_fkey(first_name, last_name)
+            `)
+            .eq('state', profile.state)
+            .single();
+
+          if (repData && repData.profiles) {
+            const repProfile: any = repData.profiles;
+            setStateRep({
+              name: `${repProfile.first_name} ${repProfile.last_name}`,
+              whatsapp: repData.whatsapp_number || 'Not available'
+            });
+          }
         }
+
+        // Format transactions
+        const formattedTransactions = contributions?.slice(0, 5).map(c => ({
+          id: c.id,
+          type: 'Contribution',
+          amount: Number(c.amount),
+          date: new Date(c.created_at).toLocaleDateString(),
+          status: c.payment_status
+        })) || [];
+
+        setRecentTransactions(formattedTransactions);
       }
-
-      // Format transactions
-      const formattedTransactions = contributions?.slice(0, 5).map(c => ({
-        id: c.id,
-        type: 'Contribution',
-        amount: Number(c.amount),
-        date: new Date(c.created_at).toLocaleDateString(),
-        status: c.payment_status
-      })) || [];
-
-      setRecentTransactions(formattedTransactions);
-
     } catch (error: any) {
       console.error('Error fetching dashboard data:', error);
       toast({
@@ -196,48 +199,65 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-muted/30 flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading dashboard...</p>
+      <SidebarProvider>
+        <div className="min-h-screen flex w-full">
+          <MemberSidebar />
+          <div className="flex-1 flex flex-col">
+            <DashboardHeader userName={userName} />
+            <div className="flex-1 flex items-center justify-center bg-muted/30">
+              <div className="text-center">
+                <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
+                <p className="text-muted-foreground">Loading dashboard...</p>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      </SidebarProvider>
     );
   }
 
   if (!memberData) {
     return (
-      <div className="min-h-screen bg-muted/30 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-muted-foreground mb-4">No member data found</p>
-          <Button onClick={() => navigate('/register')}>Register Now</Button>
+      <SidebarProvider>
+        <div className="min-h-screen flex w-full">
+          <MemberSidebar />
+          <div className="flex-1 flex flex-col">
+            <DashboardHeader userName={userName} />
+            <div className="flex-1 flex items-center justify-center bg-muted/30">
+              <div className="text-center">
+                <p className="text-muted-foreground mb-4">No member data found</p>
+                <Button onClick={() => navigate('/register')}>Register Now</Button>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      </SidebarProvider>
     );
   }
 
-  return (
-    <div className="min-h-screen bg-muted/30">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-primary to-secondary text-white">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex justify-between items-start">
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold mb-2">Welcome back, {memberData.name}!</h1>
-              <p className="text-white/80 text-sm md:text-base">Member ID: {memberData.memberNumber}</p>
-              <p className="text-white/70 text-xs md:text-sm mt-1">Member since: {memberData.memberSince}</p>
-            </div>
-            <Button variant="ghost" onClick={handleSignOut} className="text-white hover:bg-white/20">
-              <LogOut className="h-4 w-4 mr-2" />
-              Logout
-            </Button>
-          </div>
-        </div>
-      </div>
+  const copyInviteCode = () => {
+    if (memberData?.inviteCode) {
+      navigator.clipboard.writeText(memberData.inviteCode);
+      toast({
+        title: "Copied!",
+        description: "Invite code copied to clipboard"
+      });
+    }
+  };
 
-      <div className="container mx-auto px-4 py-8">
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+  return (
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full">
+        <MemberSidebar />
+        <div className="flex-1 flex flex-col">
+          <DashboardHeader userName={userName} />
+          <main className="flex-1 p-6 bg-muted/30 overflow-auto">
+            {/* Welcome Section */}
+            <div className="mb-6">
+              <h1 className="text-3xl font-bold mb-2">Welcome back, {memberData.name.split(' ')[0]}! 👋</h1>
+              <p className="text-muted-foreground">Member ID: {memberData.memberNumber} • Member since: {memberData.memberSince}</p>
+            </div>
+
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
               {/* Total Capital */}

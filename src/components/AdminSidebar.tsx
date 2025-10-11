@@ -22,16 +22,17 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
+import { Building2, Users as UsersIcon } from "lucide-react";
+
 const menuItems = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
   { title: "Registrations", url: "/admin/registrations", icon: UserCheck },
   { title: "Contributions", url: "/admin/contributions", icon: Wallet },
   { title: "Dividends", url: "/admin/dividends", icon: TrendingUp },
   { title: "Withdrawals", url: "/admin/withdrawals", icon: ArrowDownLeft },
-  { title: "Commissions", url: "/admin/commissions", icon: DollarSign },
-  { title: "Reports", url: "/admin/reports", icon: BarChart3 },
+  { title: "Properties", url: "/admin/properties", icon: Building2 },
+  { title: "State Reps", url: "/admin/state-reps", icon: UsersIcon },
   { title: "Blog", url: "/admin/blog", icon: FileText },
-  { title: "Settings", url: "/admin/settings", icon: Settings },
 ];
 
 export function AdminSidebar() {

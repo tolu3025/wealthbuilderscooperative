@@ -10,7 +10,13 @@ import ScrollToTop from "@/components/ScrollToTop";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
-import AdminDashboard from "./pages/AdminDashboard";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import Registrations from "./pages/admin/Registrations";
+import Contributions from "./pages/admin/Contributions";
+import Withdrawals from "./pages/admin/Withdrawals";
+import AdminDividends from "./pages/admin/Dividends";
+import Properties from "./pages/admin/Properties";
+import StateReps from "./pages/admin/StateReps";
 import BlogManagement from "./pages/admin/BlogManagement";
 import Register from "./pages/Register";
 import UploadReceipt from "./pages/UploadReceipt";
@@ -21,7 +27,7 @@ import About from "./pages/About";
 import Blog from "./pages/Blog";
 import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
-import Dividends from "./pages/member/Dividends";
+import MemberDividends from "./pages/member/Dividends";
 import Referrals from "./pages/member/Referrals";
 import Profile from "./pages/member/Profile";
 
@@ -90,7 +96,7 @@ const App = () => (
               path="/member/dividends"
               element={
                 <ProtectedRoute>
-                  <Dividends />
+                  <MemberDividends />
                 </ProtectedRoute>
               }
             />
@@ -110,22 +116,14 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
-            <Route
-              path="/admin"
-              element={
-                <ProtectedRoute>
-                  <AdminDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/blog"
-              element={
-                <ProtectedRoute>
-                  <BlogManagement />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+            <Route path="/admin/registrations" element={<ProtectedRoute><Registrations /></ProtectedRoute>} />
+            <Route path="/admin/contributions" element={<ProtectedRoute><Contributions /></ProtectedRoute>} />
+            <Route path="/admin/withdrawals" element={<ProtectedRoute><Withdrawals /></ProtectedRoute>} />
+            <Route path="/admin/dividends" element={<ProtectedRoute><AdminDividends /></ProtectedRoute>} />
+            <Route path="/admin/properties" element={<ProtectedRoute><Properties /></ProtectedRoute>} />
+            <Route path="/admin/state-reps" element={<ProtectedRoute><StateReps /></ProtectedRoute>} />
+            <Route path="/admin/blog" element={<ProtectedRoute><BlogManagement /></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

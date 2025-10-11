@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { User, Mail, Phone, MapPin, Loader2, Save } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { User, Mail, Phone, MapPin, Loader2, Save, Camera } from "lucide-react";
+import { FileUpload } from "@/components/FileUpload";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -14,6 +15,7 @@ import { DashboardHeader } from "@/components/DashboardHeader";
 import { NIGERIAN_STATES } from "@/lib/nigerianStates";
 
 interface ProfileData {
+  id: string;
   first_name: string;
   last_name: string;
   email: string;
@@ -21,6 +23,7 @@ interface ProfileData {
   address: string;
   state: string;
   member_number: string;
+  avatar_url: string | null;
 }
 
 const Profile = () => {
@@ -28,6 +31,7 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [userName, setUserName] = useState("");
+  const [showAvatarUpload, setShowAvatarUpload] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -46,7 +50,10 @@ const Profile = () => {
         .single();
 
       if (error) throw error;
-      setProfile(data);
+      setProfile({
+        ...data,
+        avatar_url: data.avatar_url || null
+      });
       setUserName(`${data.first_name} ${data.last_name}`);
     } catch (error: any) {
       toast({
@@ -75,6 +82,7 @@ const Profile = () => {
           phone: profile.phone,
           address: profile.address,
           state: profile.state,
+          avatar_url: profile.avatar_url,
         })
         .eq('user_id', user.id);
 
@@ -130,16 +138,42 @@ const Profile = () => {
             <Card>
               <CardHeader>
                 <div className="flex items-center gap-4">
-                  <Avatar className="h-20 w-20">
-                    <AvatarFallback className="bg-gradient-to-r from-primary to-secondary text-white text-2xl">
-                      {initials}
-                    </AvatarFallback>
-                  </Avatar>
+                  <div className="relative group">
+                    <Avatar className="h-20 w-20">
+                      {profile.avatar_url && <AvatarImage src={profile.avatar_url} />}
+                      <AvatarFallback className="bg-gradient-to-r from-primary to-secondary text-white text-2xl">
+                        {initials}
+                      </AvatarFallback>
+                    </Avatar>
+                    <button
+                      onClick={() => setShowAvatarUpload(!showAvatarUpload)}
+                      className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Camera className="h-6 w-6 text-white" />
+                    </button>
+                  </div>
                   <div>
                     <CardTitle>{profile.first_name} {profile.last_name}</CardTitle>
                     <CardDescription>Member ID: {profile.member_number}</CardDescription>
                   </div>
                 </div>
+                {showAvatarUpload && (
+                  <div className="mt-4">
+                    <Label>Upload Profile Picture</Label>
+                    <FileUpload
+                      userId={profile.id}
+                      fileType="avatar"
+                      onUploadComplete={(url) => {
+                        setProfile({ ...profile, avatar_url: url });
+                        setShowAvatarUpload(false);
+                        toast({
+                          title: "Success",
+                          description: "Avatar uploaded successfully",
+                        });
+                      }}
+                    />
+                  </div>
+                )}
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="grid md:grid-cols-2 gap-4">

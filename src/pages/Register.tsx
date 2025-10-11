@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -15,6 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { NIGERIAN_STATES } from "@/lib/nigerianStates";
 import { z } from "zod";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 
 const registerSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
@@ -27,6 +30,8 @@ const registerSchema = z.object({
   inviteCode: z.string().optional(),
 });
 
+type RegisterFormData = z.infer<typeof registerSchema>;
+
 const Register = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -35,35 +40,36 @@ const Register = () => {
   const [userId, setUserId] = useState<string>("");
   const [showUpload, setShowUpload] = useState(false);
   
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-    address: "",
-    state: "",
-    breakdownType: "80_20" as "80_20" | "100_capital",
-    inviteCode: "",
+  const form = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      email: "",
+      phone: "",
+      address: "",
+      state: "",
+      breakdownType: "80_20",
+      inviteCode: "",
+    },
   });
 
-  const handleCreateAccount = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleCreateAccount = async (data: RegisterFormData) => {
+    setLoading(true);
     
     try {
-      registerSchema.parse(formData);
-      setLoading(true);
 
       // Create user account first
       const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: formData.email,
+        email: data.email,
         password: Math.random().toString(36).slice(-8) + "Aa1!", // Temporary password
         options: {
           emailRedirectTo: `${window.location.origin}/`,
           data: {
-            first_name: formData.firstName,
-            last_name: formData.lastName,
-            phone: formData.phone,
-            state: formData.state,
+            first_name: data.firstName,
+            last_name: data.lastName,
+            phone: data.phone,
+            state: data.state,
           },
         },
       });
@@ -115,6 +121,9 @@ const Register = () => {
         throw new Error("Failed to create profile");
       }
 
+      // Store form data for later use
+      const formData = form.getValues();
+      
       // Update profile with additional data
       const { error: updateError } = await supabase
         .from('profiles')
@@ -188,116 +197,157 @@ const Register = () => {
                 </AlertDescription>
               </Alert>
 
-              <form onSubmit={showUpload ? (e) => { e.preventDefault(); handleCompleteRegistration(); } : handleCreateAccount} className="space-y-6">
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(showUpload ? () => handleCompleteRegistration() : handleCreateAccount)} className="space-y-6">
                 {!showUpload && (
                   <>
                     <div className="grid md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="firstName">First Name *</Label>
-                        <Input
-                          id="firstName"
-                          placeholder="Enter your first name"
-                          value={formData.firstName}
-                          onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                          required
-                        />
-                      </div>
+                      <FormField
+                        control={form.control}
+                        name="firstName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>First Name *</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Enter your first name" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                      <div className="space-y-2">
-                        <Label htmlFor="lastName">Last Name *</Label>
-                        <Input
-                          id="lastName"
-                          placeholder="Enter your last name"
-                          value={formData.lastName}
-                          onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email Address *</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="your.email@example.com"
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        required
+                      <FormField
+                        control={form.control}
+                        name="lastName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Last Name *</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Enter your last name" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
                       />
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="phone">Phone Number *</Label>
-                      <Input
-                        id="phone"
-                        type="tel"
-                        placeholder="+234 xxx xxx xxxx"
-                        value={formData.phone}
-                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        required
-                      />
-                    </div>
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email Address *</FormLabel>
+                          <FormControl>
+                            <Input type="email" placeholder="your.email@example.com" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                    <div className="space-y-2">
-                      <Label htmlFor="address">Home Address *</Label>
-                      <Input
-                        id="address"
-                        placeholder="Enter your full address"
-                        value={formData.address}
-                        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                        required
-                      />
-                    </div>
+                    <FormField
+                      control={form.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Phone Number *</FormLabel>
+                          <FormControl>
+                            <Input type="tel" placeholder="+234 xxx xxx xxxx" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                    <div className="space-y-2">
-                      <Label htmlFor="state">State of Residence *</Label>
-                      <Select value={formData.state} onValueChange={(value) => setFormData({ ...formData, state: value })}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select your state" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {NIGERIAN_STATES.map((state) => (
-                            <SelectItem key={state} value={state}>
-                              {state}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                    <FormField
+                      control={form.control}
+                      name="address"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Home Address *</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter your full address (min. 10 characters)" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                    <div className="space-y-3">
-                      <Label>Monthly Contribution Breakdown *</Label>
-                      <RadioGroup
-                        value={formData.breakdownType}
-                        onValueChange={(value) => setFormData({ ...formData, breakdownType: value as "80_20" | "100_capital" })}
-                      >
-                        <div className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer">
-                          <RadioGroupItem value="80_20" id="80_20" />
-                          <Label htmlFor="80_20" className="cursor-pointer flex-1">
-                            <div className="font-medium">80% Capital / 20% Savings (Recommended)</div>
-                            <div className="text-sm text-muted-foreground">₦4,000 capital + ₦1,000 savings</div>
-                          </Label>
-                        </div>
-                        <div className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer">
-                          <RadioGroupItem value="100_capital" id="100_capital" />
-                          <Label htmlFor="100_capital" className="cursor-pointer flex-1">
-                            <div className="font-medium">100% Capital (Property Only)</div>
-                            <div className="text-sm text-muted-foreground">₦5,000 full capital investment</div>
-                          </Label>
-                        </div>
-                      </RadioGroup>
-                    </div>
+                    <FormField
+                      control={form.control}
+                      name="state"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>State of Residence *</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select your state" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {NIGERIAN_STATES.map((state) => (
+                                <SelectItem key={state} value={state}>
+                                  {state}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                    <div className="space-y-2">
-                      <Label htmlFor="inviteCode">Invite Code (Optional)</Label>
-                      <Input
-                        id="inviteCode"
-                        placeholder="Enter invite code if you have one"
-                        value={formData.inviteCode}
-                        onChange={(e) => setFormData({ ...formData, inviteCode: e.target.value.toUpperCase() })}
-                      />
-                    </div>
+                    <FormField
+                      control={form.control}
+                      name="breakdownType"
+                      render={({ field }) => (
+                        <FormItem className="space-y-3">
+                          <FormLabel>Monthly Contribution Breakdown *</FormLabel>
+                          <FormControl>
+                            <RadioGroup
+                              onValueChange={field.onChange}
+                              value={field.value}
+                              className="space-y-2"
+                            >
+                              <div className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer">
+                                <RadioGroupItem value="80_20" id="80_20" />
+                                <Label htmlFor="80_20" className="cursor-pointer flex-1">
+                                  <div className="font-medium">80% Capital / 20% Savings (Recommended)</div>
+                                  <div className="text-sm text-muted-foreground">₦4,000 capital + ₦1,000 savings</div>
+                                </Label>
+                              </div>
+                              <div className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer">
+                                <RadioGroupItem value="100_capital" id="100_capital" />
+                                <Label htmlFor="100_capital" className="cursor-pointer flex-1">
+                                  <div className="font-medium">100% Capital (Property Only)</div>
+                                  <div className="text-sm text-muted-foreground">₦5,000 full capital investment</div>
+                                </Label>
+                              </div>
+                            </RadioGroup>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="inviteCode"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Invite Code (Optional)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="Enter invite code if you have one" 
+                              {...field}
+                              onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
                     <Button type="submit" className="w-full" size="lg" disabled={loading}>
                       {loading ? "Creating Account..." : "Continue to Payment Upload"}
@@ -336,8 +386,9 @@ const Register = () => {
                   <Button variant="link" className="p-0 h-auto" onClick={() => navigate("/auth")}>
                     Login here
                   </Button>
-                </p>
-              </form>
+                  </p>
+                </form>
+              </Form>
             </CardContent>
           </Card>
         </div>

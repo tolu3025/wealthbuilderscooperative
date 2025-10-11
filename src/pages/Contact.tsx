@@ -11,6 +11,7 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { Mail, Phone, MapPin, Send } from "lucide-react";
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const contactSchema = z.object({
   name: z.string()
@@ -48,16 +49,24 @@ const Contact = () => {
   const onSubmit = async (data: ContactFormData) => {
     setIsSubmitting(true);
     try {
-      // Encode data for WhatsApp message
-      const message = encodeURIComponent(
-        `New Contact Form Submission:\n\nName: ${data.name}\nEmail: ${data.email}\nSubject: ${data.subject}\n\nMessage:\n${data.message}`
-      );
+      const { error } = await supabase
+        .from('contact_submissions')
+        .insert([
+          {
+            name: data.name,
+            email: data.email,
+            subject: data.subject,
+            message: data.message,
+            status: 'new'
+          }
+        ]);
+
+      if (error) throw error;
       
-      // For now, we'll show a success message
-      // In production, you would integrate with your backend or email service
       toast.success("Thank you for contacting us! We'll get back to you soon.");
       reset();
     } catch (error) {
+      console.error('Error submitting contact form:', error);
       toast.error("Failed to send message. Please try again.");
     } finally {
       setIsSubmitting(false);

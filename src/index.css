@@ -161,3 +161,28 @@ All colors MUST be HSL.
     transition: var(--transition-smooth);
   }
 }
+
+/* Global Loading Bar Animation */
+.loading-gradient {
+  background: linear-gradient(
+    90deg,
+    #0052CC 0%,
+    #00C49A 33%,
+    #FFC300 66%,
+    #0052CC 100%
+  );
+  background-size: 200% 100%;
+}
+
+@keyframes loading-slide {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.animate-loading-slide {
+  animation: loading-slide 1.5s linear infinite;
+}

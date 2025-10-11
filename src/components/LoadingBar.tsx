@@ -1,20 +1,23 @@
 import { useEffect, useState } from "react";
-import { useNavigation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
 const LoadingBar = () => {
-  const navigation = useNavigation();
-  const [isVisible, setIsVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
-    if (navigation.state === "loading") {
-      setIsVisible(true);
-    } else {
-      const timer = setTimeout(() => setIsVisible(false), 500);
-      return () => clearTimeout(timer);
-    }
-  }, [navigation.state]);
+    // Show loading bar when route changes
+    setIsLoading(true);
+    
+    // Hide loading bar after animation completes
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 800);
 
-  if (!isVisible) return null;
+    return () => clearTimeout(timer);
+  }, [location.pathname]);
+
+  if (!isLoading) return null;
 
   return (
     <div className="fixed top-0 left-0 right-0 z-[9999] h-1 bg-transparent overflow-hidden">

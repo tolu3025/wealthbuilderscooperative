@@ -7,35 +7,144 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { FileUpload } from "@/components/FileUpload";
 import { useToast } from "@/hooks/use-toast";
-import { UserPlus } from "lucide-react";
+import { UserPlus, Info } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { NIGERIAN_STATES } from "@/lib/nigerianStates";
+import { z } from "zod";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+
+const registerSchema = z.object({
+  firstName: z.string().min(2, "First name must be at least 2 characters"),
+  lastName: z.string().min(2, "Last name must be at least 2 characters"),
+  email: z.string().email("Invalid email address"),
+  phone: z.string().min(10, "Phone number must be at least 10 digits"),
+  address: z.string().min(10, "Address must be at least 10 characters"),
+  state: z.string().min(1, "Please select a state"),
+  breakdownType: z.enum(["80_20", "100_capital"]),
+  inviteCode: z.string().optional(),
+});
 
 const Register = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
+  const [receiptUrl, setReceiptUrl] = useState<string>("");
+  
   const [formData, setFormData] = useState({
-    fullName: "",
+    firstName: "",
+    lastName: "",
     email: "",
     phone: "",
     address: "",
     state: "",
+    breakdownType: "80_20" as "80_20" | "100_capital",
     inviteCode: "",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast({
-      title: "Registration Submitted",
-      description: "Your registration is being processed. You'll receive your PIN via WhatsApp.",
-    });
-    // TODO: Integrate with Supabase
+    
+    try {
+      registerSchema.parse(formData);
+      
+      if (!receiptUrl) {
+        toast({
+          title: "Payment proof required",
+          description: "Please upload your payment receipt",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setLoading(true);
+
+      // Create user account
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: formData.email,
+        password: Math.random().toString(36).slice(-8) + "Aa1!", // Temporary password
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+          data: {
+            first_name: formData.firstName,
+            last_name: formData.lastName,
+            phone: formData.phone,
+            state: formData.state,
+          },
+        },
+      });
+
+      if (authError) throw authError;
+
+      if (authData.user) {
+        // Wait a moment for profile to be created by trigger
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // Get the profile
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('user_id', authData.user.id)
+          .single();
+
+        if (profileError || !profile) {
+          throw new Error("Failed to create profile");
+        }
+
+        // Update profile with additional data
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({
+            address: formData.address,
+            breakdown_type: formData.breakdownType,
+            registration_status: 'pending_approval',
+            invited_by: formData.inviteCode ? null : null, // TODO: Look up inviter by code
+          })
+          .eq('id', profile.id);
+
+        if (updateError) throw updateError;
+
+        // Create registration fee record
+        const { error: feeError } = await supabase
+          .from('registration_fees')
+          .insert({
+            member_id: profile.id,
+            payment_receipt_url: receiptUrl,
+            payment_date: new Date().toISOString(),
+          });
+
+        if (feeError) throw feeError;
+
+        // Create commission records if invite code provided
+        if (formData.inviteCode) {
+          // TODO: Look up inviter and create commission records
+        }
+
+        toast({
+          title: "Registration submitted!",
+          description: "Your registration has been submitted for approval. You'll receive a PIN via WhatsApp within 24 hours.",
+        });
+
+        navigate("/");
+      }
+    } catch (error: any) {
+      toast({
+        title: "Registration failed",
+        description: error.message || "Could not complete registration. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="min-h-screen bg-background pt-16 md:pt-20">
       <Navbar />
       <div className="container mx-auto px-4 py-12">
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-3xl mx-auto">
           <Card className="border-border shadow-elegant">
             <CardHeader className="text-center">
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
@@ -47,20 +156,44 @@ const Register = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
+              <Alert className="mb-6">
+                <Info className="h-4 w-4" />
+                <AlertDescription>
+                  <strong>Registration Fee: ₦5,000</strong>
+                  <br />
+                  Pay to: WealthBuilders Cooperative
+                  <br />
+                  Bank: [Bank Name] | Account: [Account Number]
+                </AlertDescription>
+              </Alert>
+
               <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="fullName">Full Name</Label>
-                  <Input
-                    id="fullName"
-                    placeholder="Enter your full name"
-                    value={formData.fullName}
-                    onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                    required
-                  />
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="firstName">First Name *</Label>
+                    <Input
+                      id="firstName"
+                      placeholder="Enter your first name"
+                      value={formData.firstName}
+                      onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="lastName">Last Name *</Label>
+                    <Input
+                      id="lastName"
+                      placeholder="Enter your last name"
+                      value={formData.lastName}
+                      onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                      required
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email Address</Label>
+                  <Label htmlFor="email">Email Address *</Label>
                   <Input
                     id="email"
                     type="email"
@@ -72,11 +205,11 @@ const Register = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number</Label>
+                  <Label htmlFor="phone">Phone Number *</Label>
                   <Input
                     id="phone"
                     type="tel"
-                    placeholder="+234 XXX XXX XXXX"
+                    placeholder="+234 xxx xxx xxxx"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     required
@@ -84,10 +217,10 @@ const Register = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="address">Home Address</Label>
+                  <Label htmlFor="address">Home Address *</Label>
                   <Input
                     id="address"
-                    placeholder="Enter your address"
+                    placeholder="Enter your full address"
                     value={formData.address}
                     onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                     required
@@ -95,19 +228,42 @@ const Register = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="state">State</Label>
-                  <Select onValueChange={(value) => setFormData({ ...formData, state: value })}>
+                  <Label htmlFor="state">State of Residence *</Label>
+                  <Select value={formData.state} onValueChange={(value) => setFormData({ ...formData, state: value })}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select your state" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="lagos">Lagos</SelectItem>
-                      <SelectItem value="abuja">Abuja</SelectItem>
-                      <SelectItem value="kano">Kano</SelectItem>
-                      <SelectItem value="rivers">Rivers</SelectItem>
-                      <SelectItem value="oyo">Oyo</SelectItem>
+                      {NIGERIAN_STATES.map((state) => (
+                        <SelectItem key={state} value={state}>
+                          {state}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
+                </div>
+
+                <div className="space-y-3">
+                  <Label>Monthly Contribution Breakdown *</Label>
+                  <RadioGroup
+                    value={formData.breakdownType}
+                    onValueChange={(value) => setFormData({ ...formData, breakdownType: value as "80_20" | "100_capital" })}
+                  >
+                    <div className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer">
+                      <RadioGroupItem value="80_20" id="80_20" />
+                      <Label htmlFor="80_20" className="cursor-pointer flex-1">
+                        <div className="font-medium">80% Capital / 20% Savings (Recommended)</div>
+                        <div className="text-sm text-muted-foreground">₦4,000 capital + ₦1,000 savings</div>
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer">
+                      <RadioGroupItem value="100_capital" id="100_capital" />
+                      <Label htmlFor="100_capital" className="cursor-pointer flex-1">
+                        <div className="font-medium">100% Capital (Property Only)</div>
+                        <div className="text-sm text-muted-foreground">₦5,000 full capital investment</div>
+                      </Label>
+                    </div>
+                  </RadioGroup>
                 </div>
 
                 <div className="space-y-2">
@@ -116,24 +272,26 @@ const Register = () => {
                     id="inviteCode"
                     placeholder="Enter invite code if you have one"
                     value={formData.inviteCode}
-                    onChange={(e) => setFormData({ ...formData, inviteCode: e.target.value })}
+                    onChange={(e) => setFormData({ ...formData, inviteCode: e.target.value.toUpperCase() })}
                   />
-                  <p className="text-sm text-muted-foreground">
-                    Your inviter will receive ₦500 commission
-                  </p>
                 </div>
 
-                <div className="bg-primary/5 rounded-lg p-4 space-y-2">
-                  <h4 className="font-semibold text-sm">Monthly Contribution: ₦5,500</h4>
-                  <ul className="text-sm text-muted-foreground space-y-1">
-                    <li>• ₦5,000 - Capital & Savings</li>
-                    <li>• ₦500 - Project Support</li>
-                  </ul>
-                </div>
+                <FileUpload
+                  onUploadComplete={setReceiptUrl}
+                  userId={formData.email}
+                  fileType="registration"
+                />
 
-                <Button type="submit" className="w-full" size="lg">
-                  Submit Registration
+                <Button type="submit" className="w-full" size="lg" disabled={loading || !receiptUrl}>
+                  {loading ? "Submitting..." : "Submit Registration"}
                 </Button>
+
+                <p className="text-sm text-muted-foreground text-center">
+                  Already have an account?{" "}
+                  <Button variant="link" className="p-0 h-auto" onClick={() => navigate("/auth")}>
+                    Login here
+                  </Button>
+                </p>
               </form>
             </CardContent>
           </Card>

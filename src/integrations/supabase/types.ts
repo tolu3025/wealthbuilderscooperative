@@ -58,6 +58,45 @@ export type Database = {
           },
         ]
       }
+      commission_settlements: {
+        Row: {
+          created_at: string | null
+          id: string
+          referral_count: number | null
+          settled_at: string | null
+          settled_by: string | null
+          settlement_month: string
+          state: string | null
+          state_rep_commission: number | null
+          status: string | null
+          total_referral_commission: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          referral_count?: number | null
+          settled_at?: string | null
+          settled_by?: string | null
+          settlement_month: string
+          state?: string | null
+          state_rep_commission?: number | null
+          status?: string | null
+          total_referral_commission?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          referral_count?: number | null
+          settled_at?: string | null
+          settled_by?: string | null
+          settlement_month?: string
+          state?: string | null
+          state_rep_commission?: number | null
+          status?: string | null
+          total_referral_commission?: number | null
+        }
+        Relationships: []
+      }
       commissions: {
         Row: {
           amount: number
@@ -106,35 +145,50 @@ export type Database = {
       contributions: {
         Row: {
           amount: number
+          approved_at: string | null
+          approved_by: string | null
+          breakdown_type: string | null
           capital_amount: number
+          contribution_month: string | null
           created_at: string | null
           id: string
           member_id: string
           payment_date: string | null
           payment_status: string | null
           project_support_amount: number
+          receipt_url: string | null
           savings_amount: number
         }
         Insert: {
           amount: number
+          approved_at?: string | null
+          approved_by?: string | null
+          breakdown_type?: string | null
           capital_amount: number
+          contribution_month?: string | null
           created_at?: string | null
           id?: string
           member_id: string
           payment_date?: string | null
           payment_status?: string | null
           project_support_amount: number
+          receipt_url?: string | null
           savings_amount: number
         }
         Update: {
           amount?: number
+          approved_at?: string | null
+          approved_by?: string | null
+          breakdown_type?: string | null
           capital_amount?: number
+          contribution_month?: string | null
           created_at?: string | null
           id?: string
           member_id?: string
           payment_date?: string | null
           payment_status?: string | null
           project_support_amount?: number
+          receipt_url?: string | null
           savings_amount?: number
         }
         Relationships: [
@@ -147,33 +201,89 @@ export type Database = {
           },
         ]
       }
+      dividend_distributions: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          distribution_date: string | null
+          eligible_members_count: number
+          id: string
+          property_id: string | null
+          status: string | null
+          total_capital_pool: number
+          total_profit: number
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          distribution_date?: string | null
+          eligible_members_count: number
+          id?: string
+          property_id?: string | null
+          status?: string | null
+          total_capital_pool: number
+          total_profit: number
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          distribution_date?: string | null
+          eligible_members_count?: number
+          id?: string
+          property_id?: string | null
+          status?: string | null
+          total_capital_pool?: number
+          total_profit?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dividend_distributions_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dividends: {
         Row: {
           amount: number
           created_at: string | null
           distribution_date: string | null
+          distribution_id: string | null
+          dividend_percentage: number | null
           id: string
+          member_capital_at_distribution: number | null
           member_id: string
           property_name: string | null
           status: string | null
+          total_profit: number | null
         }
         Insert: {
           amount: number
           created_at?: string | null
           distribution_date?: string | null
+          distribution_id?: string | null
+          dividend_percentage?: number | null
           id?: string
+          member_capital_at_distribution?: number | null
           member_id: string
           property_name?: string | null
           status?: string | null
+          total_profit?: number | null
         }
         Update: {
           amount?: number
           created_at?: string | null
           distribution_date?: string | null
+          distribution_id?: string | null
+          dividend_percentage?: number | null
           id?: string
+          member_capital_at_distribution?: number | null
           member_id?: string
           property_name?: string | null
           status?: string | null
+          total_profit?: number | null
         }
         Relationships: [
           {
@@ -188,6 +298,7 @@ export type Database = {
       profiles: {
         Row: {
           address: string | null
+          breakdown_type: string | null
           created_at: string | null
           email: string
           first_name: string
@@ -206,6 +317,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          breakdown_type?: string | null
           created_at?: string | null
           email: string
           first_name: string
@@ -224,6 +336,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          breakdown_type?: string | null
           created_at?: string | null
           email?: string
           first_name?: string
@@ -296,6 +409,94 @@ export type Database = {
         }
         Relationships: []
       }
+      registration_fees: {
+        Row: {
+          app_maintenance_share: number
+          chairman_share: number
+          coop_office_share: number
+          corporator_office_share: number
+          created_at: string | null
+          directors_share: number
+          id: string
+          member_id: string
+          payment_date: string | null
+          payment_receipt_url: string | null
+          status: string | null
+          total_amount: number
+        }
+        Insert: {
+          app_maintenance_share?: number
+          chairman_share?: number
+          coop_office_share?: number
+          corporator_office_share?: number
+          created_at?: string | null
+          directors_share?: number
+          id?: string
+          member_id: string
+          payment_date?: string | null
+          payment_receipt_url?: string | null
+          status?: string | null
+          total_amount?: number
+        }
+        Update: {
+          app_maintenance_share?: number
+          chairman_share?: number
+          coop_office_share?: number
+          corporator_office_share?: number
+          created_at?: string | null
+          directors_share?: number
+          id?: string
+          member_id?: string
+          payment_date?: string | null
+          payment_receipt_url?: string | null
+          status?: string | null
+          total_amount?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "registration_fees_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      state_representatives: {
+        Row: {
+          assigned_date: string | null
+          created_at: string | null
+          id: string
+          rep_profile_id: string | null
+          state: string
+          whatsapp_number: string | null
+        }
+        Insert: {
+          assigned_date?: string | null
+          created_at?: string | null
+          id?: string
+          rep_profile_id?: string | null
+          state: string
+          whatsapp_number?: string | null
+        }
+        Update: {
+          assigned_date?: string | null
+          created_at?: string | null
+          id?: string
+          rep_profile_id?: string | null
+          state?: string
+          whatsapp_number?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "state_representatives_rep_profile_id_fkey"
+            columns: ["rep_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -317,12 +518,74 @@ export type Database = {
         }
         Relationships: []
       }
+      withdrawal_requests: {
+        Row: {
+          account_name: string
+          account_number: string
+          amount: number
+          bank_name: string
+          created_at: string | null
+          id: string
+          member_id: string
+          processed_at: string | null
+          processed_by: string | null
+          requested_at: string | null
+          status: string | null
+        }
+        Insert: {
+          account_name: string
+          account_number: string
+          amount: number
+          bank_name: string
+          created_at?: string | null
+          id?: string
+          member_id: string
+          processed_at?: string | null
+          processed_by?: string | null
+          requested_at?: string | null
+          status?: string | null
+        }
+        Update: {
+          account_name?: string
+          account_number?: string
+          amount?: number
+          bank_name?: string
+          created_at?: string | null
+          id?: string
+          member_id?: string
+          processed_at?: string | null
+          processed_by?: string | null
+          requested_at?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "withdrawal_requests_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      check_dividend_eligibility: {
+        Args: { p_member_id: string }
+        Returns: boolean
+      }
       generate_invite_code: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      generate_member_number: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      generate_pin: {
         Args: Record<PropertyKey, never>
         Returns: string
       }

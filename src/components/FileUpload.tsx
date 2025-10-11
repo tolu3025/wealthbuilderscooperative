@@ -1,0 +1,133 @@
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Upload, X, FileText } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+
+interface FileUploadProps {
+  onUploadComplete: (url: string) => void;
+  userId: string;
+  fileType?: string;
+}
+
+export const FileUpload = ({ onUploadComplete, userId, fileType = "receipt" }: FileUploadProps) => {
+  const [file, setFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const { toast } = useToast();
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const selectedFile = e.target.files[0];
+      
+      // Validate file type
+      const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
+      if (!validTypes.includes(selectedFile.type)) {
+        toast({
+          title: "Invalid file type",
+          description: "Please upload a JPG, PNG, or PDF file",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Validate file size (5MB max)
+      if (selectedFile.size > 5 * 1024 * 1024) {
+        toast({
+          title: "File too large",
+          description: "Please upload a file smaller than 5MB",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setFile(selectedFile);
+    }
+  };
+
+  const handleUpload = async () => {
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${userId}/${fileType}_${Date.now()}.${fileExt}`;
+
+      const { data, error } = await supabase.storage
+        .from('payment-receipts')
+        .upload(fileName, file);
+
+      if (error) throw error;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('payment-receipts')
+        .getPublicUrl(fileName);
+
+      onUploadComplete(publicUrl);
+      
+      toast({
+        title: "Upload successful",
+        description: "Your file has been uploaded successfully",
+      });
+      
+      setFile(null);
+    } catch (error: any) {
+      toast({
+        title: "Upload failed",
+        description: error.message || "Could not upload file",
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <Label htmlFor="file-upload">Upload Payment Proof (JPG, PNG, or PDF)</Label>
+        <div className="mt-2">
+          <Input
+            id="file-upload"
+            type="file"
+            accept="image/jpeg,image/png,image/jpg,application/pdf"
+            onChange={handleFileChange}
+            disabled={uploading}
+          />
+        </div>
+      </div>
+
+      {file && (
+        <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+          <div className="flex items-center gap-2">
+            <FileText className="h-5 w-5 text-primary" />
+            <span className="text-sm">{file.name}</span>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setFile(null)}
+            disabled={uploading}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
+
+      {file && !uploading && (
+        <Button onClick={handleUpload} className="w-full gap-2">
+          <Upload className="h-4 w-4" />
+          Upload File
+        </Button>
+      )}
+
+      {uploading && (
+        <div className="text-center text-sm text-muted-foreground">
+          Uploading...
+        </div>
+      )}
+    </div>
+  );
+};

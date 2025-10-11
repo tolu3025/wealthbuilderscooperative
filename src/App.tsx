@@ -10,6 +10,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import AdminDashboard from "./pages/AdminDashboard";
+import BlogManagement from "./pages/admin/BlogManagement";
 import Register from "./pages/Register";
 import Activate from "./pages/Activate";
 import Contribute from "./pages/Contribute";
@@ -80,6 +81,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <AdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/blog"
+              element={
+                <ProtectedRoute>
+                  <BlogManagement />
                 </ProtectedRoute>
               }
             />

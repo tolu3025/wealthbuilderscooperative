@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { Link, useNavigate } from "react-router-dom";
 import { 
   Wallet, 
   TrendingUp, 
@@ -9,11 +10,17 @@ import {
   Gift,
   ArrowUpRight,
   ArrowDownRight,
-  Loader2
+  Loader2,
+  Users,
+  Phone,
+  Copy,
+  LogOut
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface MemberData {
+  id: string;
   name: string;
   memberNumber: string;
   totalCapital: number;
@@ -21,6 +28,18 @@ interface MemberData {
   monthlyContribution: number;
   eligibleForDividend: boolean;
   memberSince: string;
+  inviteCode: string;
+  invitedBy: string | null;
+  state: string;
+  referralCount: number;
+  totalCommissions: number;
+  recentDividends: number;
+  nextContributionDue: string;
+}
+
+interface StateRep {
+  name: string;
+  whatsapp: string;
 }
 
 interface Transaction {
@@ -33,87 +52,162 @@ interface Transaction {
 
 const Dashboard = () => {
   const [memberData, setMemberData] = useState<MemberData | null>(null);
+  const [stateRep, setStateRep] = useState<StateRep | null>(null);
   const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { signOut } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        // Get current user
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (!user) {
-          toast({
-            title: "Authentication Required",
-            description: "Please log in to view your dashboard",
-            variant: "destructive"
-          });
-          return;
-        }
+    fetchDashboardData();
+  }, []);
 
-        // Fetch user profile
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('user_id', user.id)
-          .single();
-
-        if (profileError) throw profileError;
-
-        // Fetch contributions
-        const { data: contributions, error: contributionsError } = await supabase
-          .from('contributions')
-          .select('*')
-          .eq('member_id', profile.id)
-          .order('created_at', { ascending: false });
-
-        if (contributionsError) throw contributionsError;
-
-        // Calculate totals
-        const totalCapital = contributions?.reduce((sum, c) => sum + Number(c.capital_amount), 0) || 0;
-        const totalSavings = contributions?.reduce((sum, c) => sum + Number(c.savings_amount), 0) || 0;
-        
-        // Check eligibility (6 months and ₦50,000 capital)
-        const memberSinceDate = new Date(profile.created_at);
-        const monthsSinceMembership = (new Date().getTime() - memberSinceDate.getTime()) / (1000 * 60 * 60 * 24 * 30);
-        const eligibleForDividend = monthsSinceMembership >= 6 && totalCapital >= 50000;
-
-        setMemberData({
-          name: `${profile.first_name} ${profile.last_name}`,
-          memberNumber: profile.member_number || 'N/A',
-          totalCapital,
-          totalSavings,
-          monthlyContribution: 5200,
-          eligibleForDividend,
-          memberSince: new Date(profile.created_at).toLocaleDateString()
-        });
-
-        // Format transactions
-        const formattedTransactions = contributions?.slice(0, 5).map(c => ({
-          id: c.id,
-          type: 'contribution',
-          amount: Number(c.amount),
-          date: new Date(c.created_at).toLocaleDateString(),
-          status: c.payment_status
-        })) || [];
-
-        setRecentTransactions(formattedTransactions);
-
-      } catch (error: any) {
-        console.error('Error fetching dashboard data:', error);
+  const fetchDashboardData = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
         toast({
-          title: "Error",
-          description: error.message || "Failed to load dashboard data",
+          title: "Authentication Required",
+          description: "Please log in to view your dashboard",
           variant: "destructive"
         });
-      } finally {
-        setLoading(false);
+        navigate("/auth");
+        return;
       }
-    };
 
-    fetchDashboardData();
-  }, [toast]);
+      // Fetch user profile
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (profileError) throw profileError;
+
+      // Fetch contributions
+      const { data: contributions } = await supabase
+        .from('contributions')
+        .select('*')
+        .eq('member_id', profile.id)
+        .order('created_at', { ascending: false });
+
+      // Calculate totals
+      const totalCapital = contributions?.reduce((sum, c) => sum + Number(c.capital_amount), 0) || 0;
+      const totalSavings = contributions?.reduce((sum, c) => sum + Number(c.savings_amount), 0) || 0;
+      
+      // Check eligibility
+      const memberSinceDate = new Date(profile.created_at);
+      const monthsSinceMembership = (new Date().getTime() - memberSinceDate.getTime()) / (1000 * 60 * 60 * 24 * 30);
+      const eligibleForDividend = monthsSinceMembership >= 6 && totalCapital >= 50000;
+
+      // Fetch referrals count
+      const { count: referralCount } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .eq('invited_by', profile.id);
+
+      // Fetch total commissions
+      const { data: commissions } = await supabase
+        .from('commissions')
+        .select('amount')
+        .eq('member_id', profile.id);
+      
+      const totalCommissions = commissions?.reduce((sum, c) => sum + Number(c.amount), 0) || 0;
+
+      // Fetch recent dividends
+      const { data: dividends } = await supabase
+        .from('dividends')
+        .select('amount')
+        .eq('member_id', profile.id)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      const recentDividends = dividends?.[0]?.amount || 0;
+
+      // Calculate next contribution due
+      const lastContribution = contributions?.[0]?.created_at;
+      const nextDue = lastContribution 
+        ? new Date(new Date(lastContribution).setMonth(new Date(lastContribution).getMonth() + 1))
+        : new Date();
+
+      setMemberData({
+        id: profile.id,
+        name: `${profile.first_name} ${profile.last_name}`,
+        memberNumber: profile.member_number || 'Pending',
+        totalCapital,
+        totalSavings,
+        monthlyContribution: 5200,
+        eligibleForDividend,
+        memberSince: new Date(profile.created_at).toLocaleDateString(),
+        inviteCode: profile.invite_code || '',
+        invitedBy: profile.invited_by,
+        state: profile.state || '',
+        referralCount: referralCount || 0,
+        totalCommissions,
+        recentDividends,
+        nextContributionDue: nextDue.toLocaleDateString()
+      });
+
+      // Fetch state representative
+      if (profile.state) {
+        const { data: repData } = await supabase
+          .from('state_representatives')
+          .select(`
+            rep_profile_id,
+            whatsapp_number,
+            profiles!state_representatives_rep_profile_id_fkey(first_name, last_name)
+          `)
+          .eq('state', profile.state)
+          .single();
+
+        if (repData && repData.profiles) {
+          const repProfile: any = repData.profiles;
+          setStateRep({
+            name: `${repProfile.first_name} ${repProfile.last_name}`,
+            whatsapp: repData.whatsapp_number || 'Not available'
+          });
+        }
+      }
+
+      // Format transactions
+      const formattedTransactions = contributions?.slice(0, 5).map(c => ({
+        id: c.id,
+        type: 'Contribution',
+        amount: Number(c.amount),
+        date: new Date(c.created_at).toLocaleDateString(),
+        status: c.payment_status
+      })) || [];
+
+      setRecentTransactions(formattedTransactions);
+
+    } catch (error: any) {
+      console.error('Error fetching dashboard data:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to load dashboard data",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const copyInviteCode = () => {
+    if (memberData?.inviteCode) {
+      navigator.clipboard.writeText(memberData.inviteCode);
+      toast({
+        title: "Copied!",
+        description: "Invite code copied to clipboard"
+      });
+    }
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
 
   if (loading) {
     return (
@@ -131,7 +225,7 @@ const Dashboard = () => {
       <div className="min-h-screen bg-muted/30 flex items-center justify-center">
         <div className="text-center">
           <p className="text-muted-foreground mb-4">No member data found</p>
-          <Button onClick={() => window.location.href = '/register'}>Register Now</Button>
+          <Button onClick={() => navigate('/register')}>Register Now</Button>
         </div>
       </div>
     );
@@ -141,10 +235,18 @@ const Dashboard = () => {
     <div className="min-h-screen bg-muted/30">
       {/* Header */}
       <div className="bg-gradient-to-r from-primary to-secondary text-white">
-        <div className="container mx-auto px-4 py-8">
-          <h1 className="text-2xl md:text-3xl font-bold mb-2">Welcome back, {memberData.name}!</h1>
-          <p className="text-white/80 text-sm md:text-base">Member ID: {memberData.memberNumber}</p>
-          <p className="text-white/70 text-xs md:text-sm mt-1">Member since: {memberData.memberSince}</p>
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex justify-between items-start">
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold mb-2">Welcome back, {memberData.name}!</h1>
+              <p className="text-white/80 text-sm md:text-base">Member ID: {memberData.memberNumber}</p>
+              <p className="text-white/70 text-xs md:text-sm mt-1">Member since: {memberData.memberSince}</p>
+            </div>
+            <Button variant="ghost" onClick={handleSignOut} className="text-white hover:bg-white/20">
+              <LogOut className="h-4 w-4 mr-2" />
+              Logout
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -164,7 +266,7 @@ const Dashboard = () => {
                 ₦{memberData.totalCapital.toLocaleString()}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                80% of contributions
+                Building your wealth
               </p>
             </CardContent>
           </Card>
@@ -182,7 +284,7 @@ const Dashboard = () => {
                 ₦{memberData.totalSavings.toLocaleString()}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                Available after 6 months
+                Withdrawable after 6 months
               </p>
             </CardContent>
           </Card>
@@ -191,16 +293,16 @@ const Dashboard = () => {
           <Card className="border-l-4 border-l-accent shadow-md hover:shadow-lg transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Monthly Contribution
+                Next Payment Due
               </CardTitle>
               <TrendingUp className="h-5 w-5 text-accent" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl md:text-3xl font-bold">
-                ₦{memberData.monthlyContribution.toLocaleString()}
+              <div className="text-xl font-bold">
+                {memberData.nextContributionDue}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                ₦5,000 + ₦200 support
+                ₦{memberData.monthlyContribution.toLocaleString()} monthly
               </p>
             </CardContent>
           </Card>
@@ -214,63 +316,83 @@ const Dashboard = () => {
               <Gift className="h-5 w-5 text-green-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-xl md:text-2xl font-bold text-green-500">
-                {memberData.eligibleForDividend ? "Eligible" : "In Progress"}
+              <div className="text-xl font-bold text-green-500">
+                {memberData.eligibleForDividend ? "Eligible ✓" : "In Progress"}
               </div>
               <p className="text-xs text-green-600 mt-1">
                 {memberData.eligibleForDividend 
-                  ? "✓ Qualified for next dividend" 
-                  : "Build ₦50K capital + 6 months"}
+                  ? "Qualified for dividends" 
+                  : "Build ₦50K + 6 months"}
               </p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Two Column Layout */}
-        <div className="grid lg:grid-cols-3 gap-6">
-          {/* Recent Transactions */}
-          <Card className="lg:col-span-2 shadow-md">
+        {/* Three Column Layout */}
+        <div className="grid lg:grid-cols-3 gap-6 mb-8">
+          {/* Referral Info */}
+          <Card className="shadow-md">
             <CardHeader>
-              <CardTitle>Recent Transactions</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-primary" />
+                Referral Program
+              </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {recentTransactions.map((transaction) => (
-                  <div
-                    key={transaction.id}
-                    className="flex items-center justify-between p-4 bg-muted/50 rounded-lg hover:bg-muted transition-colors"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className={`p-2 rounded-full ${
-                        transaction.type === "contribution" 
-                          ? "bg-primary/10" 
-                          : "bg-secondary/10"
-                      }`}>
-                        {transaction.type === "contribution" ? (
-                          <ArrowUpRight className={`h-5 w-5 ${
-                            transaction.type === "contribution" 
-                              ? "text-primary" 
-                              : "text-secondary"
-                          }`} />
-                        ) : (
-                          <ArrowDownRight className="h-5 w-5 text-secondary" />
-                        )}
-                      </div>
-                      <div>
-                        <p className="font-medium capitalize">{transaction.type}</p>
-                        <p className="text-sm text-muted-foreground">{transaction.date}</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-semibold">₦{transaction.amount.toLocaleString()}</p>
-                      <p className="text-xs text-green-600 capitalize">{transaction.status}</p>
-                    </div>
-                  </div>
-                ))}
+            <CardContent className="space-y-4">
+              <div>
+                <p className="text-sm text-muted-foreground mb-2">Your Invite Code</p>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 bg-muted px-3 py-2 rounded font-mono text-lg font-bold">
+                    {memberData.inviteCode}
+                  </code>
+                  <Button size="sm" variant="outline" onClick={copyInviteCode}>
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
-              <Button variant="outline" className="w-full mt-4">
-                View All Transactions
-              </Button>
+              <div className="grid grid-cols-2 gap-4 pt-4 border-t">
+                <div>
+                  <p className="text-2xl font-bold text-primary">{memberData.referralCount}</p>
+                  <p className="text-xs text-muted-foreground">Referrals</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-secondary">₦{memberData.totalCommissions.toLocaleString()}</p>
+                  <p className="text-xs text-muted-foreground">Earned</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* State Rep Info */}
+          <Card className="shadow-md">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Phone className="h-5 w-5 text-secondary" />
+                State Representative
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {stateRep ? (
+                <>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Name</p>
+                    <p className="font-semibold">{stateRep.name}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">WhatsApp</p>
+                    <p className="font-semibold">{stateRep.whatsapp}</p>
+                  </div>
+                  <Button className="w-full" variant="outline" asChild>
+                    <a href={`https://wa.me/${stateRep.whatsapp.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer">
+                      Contact on WhatsApp
+                    </a>
+                  </Button>
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  No representative assigned for {memberData.state} yet.
+                </p>
+              )}
             </CardContent>
           </Card>
 
@@ -280,11 +402,11 @@ const Dashboard = () => {
               <CardTitle>Quick Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button className="w-full gradient-primary text-white">
-                Make Contribution
+              <Button className="w-full gradient-primary text-white" asChild>
+                <Link to="/contribute">Make Contribution</Link>
               </Button>
-              <Button variant="outline" className="w-full">
-                Request Withdrawal
+              <Button variant="outline" className="w-full" asChild>
+                <Link to="/withdraw">Request Withdrawal</Link>
               </Button>
               <Button variant="outline" className="w-full">
                 View Dividend History
@@ -295,6 +417,41 @@ const Dashboard = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Recent Transactions */}
+        <Card className="shadow-md">
+          <CardHeader>
+            <CardTitle>Recent Transactions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {recentTransactions.length === 0 ? (
+              <p className="text-center text-muted-foreground py-8">No transactions yet</p>
+            ) : (
+              <div className="space-y-4">
+                {recentTransactions.map((transaction) => (
+                  <div
+                    key={transaction.id}
+                    className="flex items-center justify-between p-4 bg-muted/50 rounded-lg hover:bg-muted transition-colors"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="p-2 rounded-full bg-primary/10">
+                        <ArrowUpRight className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-medium">{transaction.type}</p>
+                        <p className="text-sm text-muted-foreground">{transaction.date}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-semibold">₦{transaction.amount.toLocaleString()}</p>
+                      <p className="text-xs text-green-600 capitalize">{transaction.status}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

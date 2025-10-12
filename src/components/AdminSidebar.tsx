@@ -8,7 +8,8 @@ import {
   DollarSign,
   FileText,
   BarChart3,
-  Settings
+  Settings,
+  Users
 } from "lucide-react";
 import {
   Sidebar,
@@ -32,6 +33,7 @@ const menuItems = [
   { title: "Withdrawals", url: "/admin/withdrawals", icon: ArrowDownLeft },
   { title: "Properties", url: "/admin/properties", icon: Building2 },
   { title: "State Reps", url: "/admin/state-reps", icon: UsersIcon },
+  { title: "User Management", url: "/admin/users", icon: Users },
   { title: "Blog", url: "/admin/blog", icon: FileText },
 ];
 

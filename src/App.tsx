@@ -18,6 +18,7 @@ import Withdrawals from "./pages/admin/Withdrawals";
 import AdminDividends from "./pages/admin/Dividends";
 import Properties from "./pages/admin/Properties";
 import StateReps from "./pages/admin/StateReps";
+import UserManagement from "./pages/admin/UserManagement";
 import BlogManagement from "./pages/admin/BlogManagement";
 import Register from "./pages/Register";
 import UploadReceipt from "./pages/UploadReceipt";
@@ -124,6 +125,7 @@ const App = () => (
             <Route path="/admin/dividends" element={<AdminRoute><AdminDividends /></AdminRoute>} />
             <Route path="/admin/properties" element={<AdminRoute><Properties /></AdminRoute>} />
             <Route path="/admin/state-reps" element={<AdminRoute><StateReps /></AdminRoute>} />
+            <Route path="/admin/users" element={<AdminRoute><UserManagement /></AdminRoute>} />
             <Route path="/admin/blog" element={<AdminRoute><BlogManagement /></AdminRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

@@ -1,9 +1,10 @@
-import { Bell, LogOut } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { NotificationBell } from "@/components/NotificationBell";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,24 +13,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 
 interface DashboardHeaderProps {
   userName?: string;
   avatarUrl?: string;
-  notifications?: Array<{
-    id: string;
-    title: string;
-    description: string;
-    time: string;
-  }>;
 }
 
-export function DashboardHeader({ userName = "User", avatarUrl, notifications = [] }: DashboardHeaderProps) {
+export function DashboardHeader({ userName = "User", avatarUrl }: DashboardHeaderProps) {
   const { signOut } = useAuth();
   const navigate = useNavigate();
 
@@ -45,8 +35,6 @@ export function DashboardHeader({ userName = "User", avatarUrl, notifications = 
     .toUpperCase()
     .slice(0, 2);
 
-  const unreadCount = notifications.length;
-
   return (
     <header className="sticky top-0 z-40 flex h-14 sm:h-16 items-center gap-2 sm:gap-4 border-b bg-background px-3 sm:px-4 md:px-6">
       <div className="flex items-center gap-2">
@@ -55,42 +43,7 @@ export function DashboardHeader({ userName = "User", avatarUrl, notifications = 
       </div>
 
       <div className="ml-auto flex items-center gap-1 sm:gap-2">
-        {/* Notifications */}
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="ghost" size="icon" className="relative h-8 w-8 sm:h-10 sm:w-10">
-              <Bell className="h-4 w-4 sm:h-5 sm:w-5" />
-              {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-destructive text-destructive-foreground text-[10px] sm:text-xs flex items-center justify-center font-bold">
-                  {unreadCount}
-                </span>
-              )}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-72 sm:w-80" align="end">
-            <div className="space-y-2">
-              <h4 className="font-semibold text-sm sm:text-base">Notifications</h4>
-              {notifications.length === 0 ? (
-                <p className="text-xs sm:text-sm text-muted-foreground py-4">No new notifications</p>
-              ) : (
-                <div className="space-y-2">
-                  {notifications.slice(0, 5).map((notif) => (
-                    <div key={notif.id} className="p-2 rounded-lg hover:bg-muted/50 cursor-pointer">
-                      <p className="text-xs sm:text-sm font-medium">{notif.title}</p>
-                      <p className="text-[10px] sm:text-xs text-muted-foreground">{notif.description}</p>
-                      <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">{notif.time}</p>
-                    </div>
-                  ))}
-                  {notifications.length > 5 && (
-                    <Button variant="link" className="w-full text-xs">
-                      View all notifications
-                    </Button>
-                  )}
-                </div>
-              )}
-            </div>
-          </PopoverContent>
-        </Popover>
+        <NotificationBell />
 
         {/* Profile Menu */}
         <DropdownMenu>

@@ -39,9 +39,19 @@ const Contributions = () => {
     }
   };
 
-  const approveContribution = async (contributionId: string) => {
+  const approveContribution = async (contributionId: string, memberId: string) => {
     try {
-      const { error } = await supabase
+      // Get member's user_id first
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('id', memberId)
+        .single();
+
+      if (!profile) throw new Error('Member not found');
+
+      // Approve contribution
+      const { error: updateError } = await supabase
         .from('contributions')
         .update({
           payment_status: 'approved',
@@ -49,7 +59,20 @@ const Contributions = () => {
         })
         .eq('id', contributionId);
 
-      if (error) throw error;
+      if (updateError) throw updateError;
+
+      // Send notification to member
+      const { error: notifError } = await supabase
+        .from('notifications')
+        .insert({
+          user_id: profile.user_id,
+          title: 'Contribution Approved',
+          message: 'Your monthly contribution has been approved and added to your account.',
+          type: 'contribution_approval',
+          related_id: contributionId
+        });
+
+      if (notifError) console.error('Failed to send notification:', notifError);
       
       toast.success("Contribution approved successfully");
       fetchPendingContributions();
@@ -144,7 +167,7 @@ const Contributions = () => {
                           <TableCell className="text-right">
                             <Button
                               size="sm"
-                              onClick={() => approveContribution(contrib.id)}
+                              onClick={() => approveContribution(contrib.id, contrib.member_id)}
                             >
                               <CheckCircle className="h-4 w-4 mr-1" />
                               Approve

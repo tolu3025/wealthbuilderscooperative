@@ -104,10 +104,34 @@ const BlogManagement = () => {
         if (error) throw error;
         toast.success("Blog post updated successfully");
       } else {
-        const { error } = await supabase
+        const { data: newPost, error } = await supabase
           .from('blog_posts')
-          .insert([postData]);
+          .insert([postData])
+          .select()
+          .single();
+        
         if (error) throw error;
+        
+        // If published, notify all users
+        if (data.published) {
+          const { data: allProfiles } = await supabase
+            .from('profiles')
+            .select('user_id')
+            .not('user_id', 'is', null);
+
+          if (allProfiles && allProfiles.length > 0) {
+            const notifications = allProfiles.map(profile => ({
+              user_id: profile.user_id,
+              title: 'New Blog Post',
+              message: `Check out our latest post: ${data.title}`,
+              type: 'blog_post',
+              related_id: newPost.id
+            }));
+
+            await supabase.from('notifications').insert(notifications);
+          }
+        }
+        
         toast.success("Blog post created successfully");
       }
 

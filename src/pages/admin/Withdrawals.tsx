@@ -39,9 +39,19 @@ const Withdrawals = () => {
     }
   };
 
-  const approveWithdrawal = async (withdrawalId: string) => {
+  const approveWithdrawal = async (withdrawalId: string, memberId: string) => {
     try {
-      const { error } = await supabase
+      // Get member's user_id
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('id', memberId)
+        .single();
+
+      if (!profile) throw new Error('Member not found');
+
+      // Approve withdrawal
+      const { error: updateError } = await supabase
         .from('withdrawal_requests')
         .update({
           status: 'approved',
@@ -49,7 +59,20 @@ const Withdrawals = () => {
         })
         .eq('id', withdrawalId);
 
-      if (error) throw error;
+      if (updateError) throw updateError;
+
+      // Send notification to member
+      const { error: notifError } = await supabase
+        .from('notifications')
+        .insert({
+          user_id: profile.user_id,
+          title: 'Withdrawal Approved',
+          message: 'Your withdrawal request has been approved and will be processed shortly.',
+          type: 'withdrawal_status',
+          related_id: withdrawalId
+        });
+
+      if (notifError) console.error('Failed to send notification:', notifError);
       
       toast.success("Withdrawal approved successfully");
       fetchPendingWithdrawals();
@@ -131,7 +154,7 @@ const Withdrawals = () => {
                           <TableCell className="text-right">
                             <Button
                               size="sm"
-                              onClick={() => approveWithdrawal(withdrawal.id)}
+                              onClick={() => approveWithdrawal(withdrawal.id, withdrawal.member_id)}
                             >
                               <CheckCircle className="h-4 w-4 mr-1" />
                               Approve & Process

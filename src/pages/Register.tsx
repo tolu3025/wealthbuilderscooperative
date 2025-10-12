@@ -128,6 +128,26 @@ const Register = () => {
                   status: 'pending'
                 });
 
+              // Get referrer's user_id for notification
+              const { data: referrerProfile } = await supabase
+                .from('profiles')
+                .select('user_id, first_name, last_name')
+                .eq('id', referrer.id)
+                .single();
+
+              if (referrerProfile?.user_id) {
+                // Send notification to referrer
+                await supabase
+                  .from('notifications')
+                  .insert({
+                    user_id: referrerProfile.user_id,
+                    title: 'New Referral!',
+                    message: `${data.firstName} ${data.lastName} just joined using your referral code. You've earned ₦500!`,
+                    type: 'referral',
+                    related_id: profile.id
+                  });
+              }
+
               // Create state rep commission if they have a state rep (₦100)
               const { data: stateRep } = await supabase
                 .from('state_representatives')

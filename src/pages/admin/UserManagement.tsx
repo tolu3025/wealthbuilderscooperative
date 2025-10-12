@@ -46,10 +46,11 @@ const UserManagement = () => {
 
   const fetchUsers = async () => {
     try {
-      // Fetch all profiles
+      // Fetch all profiles with non-null user_id
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('*')
+        .not('user_id', 'is', null)
         .order('created_at', { ascending: false });
 
       if (profilesError) throw profilesError;

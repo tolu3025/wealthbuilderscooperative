@@ -24,6 +24,10 @@ const Contribute = () => {
   const [contributions, setContributions] = useState<any[]>([]);
 
   useEffect(() => {
+    if (!user) {
+      navigate("/login");
+      return;
+    }
     fetchData();
   }, [user]);
 
@@ -39,6 +43,18 @@ const Contribute = () => {
         .single();
 
       if (profileError) throw profileError;
+      
+      // Block access if account is not active
+      if (profileData.registration_status !== 'active') {
+        toast({
+          title: "Account Not Activated",
+          description: "Please activate your account before making contributions.",
+          variant: "destructive",
+        });
+        navigate("/activate");
+        return;
+      }
+      
       setProfile(profileData);
 
       // Fetch contribution history

@@ -47,11 +47,12 @@ const Referrals = () => {
         setUserName(`${profile.first_name} ${profile.last_name}`);
         setInviteCode(profile.invite_code || '');
 
-        // Get referral count
-        const { count } = await supabase
-          .from('profiles')
-          .select('*', { count: 'exact', head: true })
-          .eq('invited_by', profile.id);
+      // Get referral count - only count active members
+      const { count } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .eq('invited_by', profile.id)
+        .eq('registration_status', 'active');
         setReferralCount(count || 0);
 
         // Get commissions
@@ -85,7 +86,7 @@ const Referrals = () => {
   };
 
   const shareInviteLink = () => {
-    const link = `${window.location.origin}/register?code=${inviteCode}`;
+    const link = `${window.location.origin}/register?ref=${inviteCode}`;
     if (navigator.share) {
       navigator.share({
         title: 'Join WealthBuilders Cooperative',

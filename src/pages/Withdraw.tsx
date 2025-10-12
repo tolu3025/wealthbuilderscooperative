@@ -41,6 +41,10 @@ const Withdraw = () => {
   });
 
   useEffect(() => {
+    if (!user) {
+      navigate("/login");
+      return;
+    }
     fetchData();
   }, [user]);
 
@@ -56,6 +60,18 @@ const Withdraw = () => {
         .single();
 
       if (profileError) throw profileError;
+      
+      // Block access if account is not active
+      if (profileData.registration_status !== 'active') {
+        toast({
+          title: "Account Not Activated",
+          description: "Please activate your account before requesting withdrawals.",
+          variant: "destructive",
+        });
+        navigate("/activate");
+        return;
+      }
+      
       setProfile(profileData);
 
       // Calculate total savings and months contributed

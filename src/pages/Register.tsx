@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -61,6 +61,15 @@ const Register = () => {
     },
   });
 
+  // Auto-populate invite code from URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const refCode = params.get('ref');
+    if (refCode) {
+      form.setValue('inviteCode', refCode.toUpperCase());
+    }
+  }, []);
+
   const handleCreateAccount = async (data: RegisterFormData) => {
     setLoading(true);
     
@@ -88,7 +97,7 @@ const Register = () => {
         // Wait for profile to be created
         await new Promise(resolve => setTimeout(resolve, 1000));
 
-        // Update profile with additional data
+        // Update profile with additional data and handle referrals
         const { data: profile } = await supabase
           .from('profiles')
           .select('id')
@@ -96,11 +105,56 @@ const Register = () => {
           .single();
 
         if (profile) {
+          // Handle invite code if provided
+          let invitedById = null;
+          if (data.inviteCode) {
+            const { data: referrer, error: referrerError } = await supabase
+              .from('profiles')
+              .select('id, state')
+              .eq('invite_code', data.inviteCode.toUpperCase())
+              .single();
+
+            if (referrer) {
+              invitedById = referrer.id;
+              
+              // Create referral commission for the inviter (₦500)
+              await supabase
+                .from('commissions')
+                .insert({
+                  member_id: referrer.id,
+                  invited_member_id: profile.id,
+                  amount: 500,
+                  commission_type: 'referral',
+                  status: 'pending'
+                });
+
+              // Create state rep commission if they have a state rep (₦100)
+              const { data: stateRep } = await supabase
+                .from('state_representatives')
+                .select('rep_profile_id')
+                .eq('state', referrer.state)
+                .single();
+
+              if (stateRep?.rep_profile_id) {
+                await supabase
+                  .from('commissions')
+                  .insert({
+                    member_id: stateRep.rep_profile_id,
+                    invited_member_id: profile.id,
+                    amount: 100,
+                    commission_type: 'state_rep',
+                    status: 'pending'
+                  });
+              }
+            }
+          }
+
           await supabase
             .from('profiles')
             .update({
               address: data.address,
               breakdown_type: data.breakdownType,
+              invited_by: invitedById,
             })
             .eq('id', profile.id);
         }

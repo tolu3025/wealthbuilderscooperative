@@ -87,6 +87,18 @@ const Dashboard = () => {
 
       if (profileError) throw profileError;
 
+      // Block access if account is not active
+      if (profile.registration_status !== 'active') {
+        toast({
+          title: "Account Not Activated",
+          description: "Please complete your registration and activate your account first.",
+          variant: "destructive",
+        });
+        navigate("/activate");
+        setLoading(false);
+        return;
+      }
+
       if (profile) {
         setUserName(`${profile.first_name} ${profile.last_name}`);
         setAvatarUrl(profile.avatar_url || "");

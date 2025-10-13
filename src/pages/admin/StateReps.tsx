@@ -30,6 +30,16 @@ const StateReps = () => {
     fetchData();
   }, []);
 
+  // Auto-fill state when member is selected
+  useEffect(() => {
+    if (formData.rep_profile_id && !editing) {
+      const selectedMember = members.find(m => m.id === formData.rep_profile_id);
+      if (selectedMember?.state) {
+        setFormData(prev => ({ ...prev, state: selectedMember.state }));
+      }
+    }
+  }, [formData.rep_profile_id, members, editing]);
+
   const fetchData = async () => {
     try {
       const { data: repsData, error: repsError } = await supabase
@@ -45,7 +55,7 @@ const StateReps = () => {
 
       const { data: membersData, error: membersError } = await supabase
         .from('profiles')
-        .select('id, first_name, last_name, email')
+        .select('id, first_name, last_name, email, state')
         .order('first_name');
 
       if (membersError) throw membersError;
@@ -156,15 +166,15 @@ const StateReps = () => {
                 <CardContent>
                   <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="space-y-2">
-                      <Label>State *</Label>
-                      <Select required value={formData.state} onValueChange={(value) => setFormData({ ...formData, state: value })}>
+                      <Label>Representative Member *</Label>
+                      <Select required value={formData.rep_profile_id} onValueChange={(value) => setFormData({ ...formData, rep_profile_id: value })}>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select state" />
+                          <SelectValue placeholder="Select member first" />
                         </SelectTrigger>
                         <SelectContent>
-                          {NIGERIAN_STATES.map((state) => (
-                            <SelectItem key={state} value={state}>
-                              {state}
+                          {members.map((member) => (
+                            <SelectItem key={member.id} value={member.id}>
+                              {member.first_name} {member.last_name} {member.state ? `(${member.state})` : ''}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -172,15 +182,15 @@ const StateReps = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <Label>Representative Member *</Label>
-                      <Select required value={formData.rep_profile_id} onValueChange={(value) => setFormData({ ...formData, rep_profile_id: value })}>
+                      <Label>State (Auto-filled from member profile)</Label>
+                      <Select required value={formData.state} onValueChange={(value) => setFormData({ ...formData, state: value })} disabled={!editing && !!formData.rep_profile_id}>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select member" />
+                          <SelectValue placeholder="Select member to auto-fill state" />
                         </SelectTrigger>
                         <SelectContent>
-                          {members.map((member) => (
-                            <SelectItem key={member.id} value={member.id}>
-                              {member.first_name} {member.last_name}
+                          {NIGERIAN_STATES.map((state) => (
+                            <SelectItem key={state} value={state}>
+                              {state}
                             </SelectItem>
                           ))}
                         </SelectContent>

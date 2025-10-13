@@ -81,18 +81,38 @@ const Registrations = () => {
 
   const downloadReceipt = async (receiptUrl: string) => {
     try {
-      const response = await fetch(receiptUrl);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
+      // Extract the file path from the Supabase storage URL
+      const url = new URL(receiptUrl);
+      const pathParts = url.pathname.split('/');
+      const bucketIndex = pathParts.findIndex(part => part === 'payment-receipts');
+      
+      if (bucketIndex === -1) {
+        throw new Error('Invalid receipt URL');
+      }
+      
+      const filePath = pathParts.slice(bucketIndex + 1).join('/');
+      
+      // Download using Supabase storage
+      const { data, error } = await supabase.storage
+        .from('payment-receipts')
+        .download(filePath);
+      
+      if (error) throw error;
+      
+      // Create download link
+      const url2 = window.URL.createObjectURL(data);
       const a = document.createElement('a');
-      a.href = url;
+      a.href = url2;
       a.download = `registration-receipt-${Date.now()}.jpg`;
       document.body.appendChild(a);
       a.click();
-      window.URL.revokeObjectURL(url);
+      window.URL.revokeObjectURL(url2);
       document.body.removeChild(a);
-    } catch (error) {
-      toast.error('Failed to download receipt');
+      
+      toast.success('Receipt downloaded successfully');
+    } catch (error: any) {
+      console.error('Download error:', error);
+      toast.error(error.message || 'Failed to download receipt');
     }
   };
 

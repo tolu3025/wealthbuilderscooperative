@@ -23,6 +23,7 @@ export type Database = {
           id: string
           image_url: string | null
           published: boolean | null
+          show_as_banner: boolean | null
           title: string
           updated_at: string | null
         }
@@ -34,6 +35,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           published?: boolean | null
+          show_as_banner?: boolean | null
           title: string
           updated_at?: string | null
         }
@@ -45,6 +47,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           published?: boolean | null
+          show_as_banner?: boolean | null
           title?: string
           updated_at?: string | null
         }
@@ -191,6 +194,8 @@ export type Database = {
           project_support_amount: number
           receipt_url: string | null
           savings_amount: number
+          settlement_month: string | null
+          settlement_status: string | null
         }
         Insert: {
           amount: number
@@ -207,6 +212,8 @@ export type Database = {
           project_support_amount: number
           receipt_url?: string | null
           savings_amount: number
+          settlement_month?: string | null
+          settlement_status?: string | null
         }
         Update: {
           amount?: number
@@ -223,6 +230,8 @@ export type Database = {
           project_support_amount?: number
           receipt_url?: string | null
           savings_amount?: number
+          settlement_month?: string | null
+          settlement_status?: string | null
         }
         Relationships: [
           {
@@ -230,6 +239,67 @@ export type Database = {
             columns: ["member_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      director_assignments: {
+        Row: {
+          assigned_date: string
+          created_at: string
+          director_profile_id: string
+          id: string
+          state: string | null
+        }
+        Insert: {
+          assigned_date?: string
+          created_at?: string
+          director_profile_id: string
+          id?: string
+          state?: string | null
+        }
+        Update: {
+          assigned_date?: string
+          created_at?: string
+          director_profile_id?: string
+          id?: string
+          state?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "director_assignments_director_profile_id_fkey"
+            columns: ["director_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dismissed_announcements: {
+        Row: {
+          blog_post_id: string
+          dismissed_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          blog_post_id: string
+          dismissed_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          blog_post_id?: string
+          dismissed_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dismissed_announcements_blog_post_id_fkey"
+            columns: ["blog_post_id"]
+            isOneToOne: false
+            referencedRelation: "blog_posts"
             referencedColumns: ["id"]
           },
         ]
@@ -327,6 +397,139 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      financial_allocations: {
+        Row: {
+          allocation_type: string
+          amount: number
+          created_at: string
+          id: string
+          registration_id: string | null
+          settled_at: string | null
+          settled_by: string | null
+          settlement_month: string
+          status: string | null
+        }
+        Insert: {
+          allocation_type: string
+          amount: number
+          created_at?: string
+          id?: string
+          registration_id?: string | null
+          settled_at?: string | null
+          settled_by?: string | null
+          settlement_month: string
+          status?: string | null
+        }
+        Update: {
+          allocation_type?: string
+          amount?: number
+          created_at?: string
+          id?: string
+          registration_id?: string | null
+          settled_at?: string | null
+          settled_by?: string | null
+          settlement_month?: string
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_allocations_registration_id_fkey"
+            columns: ["registration_id"]
+            isOneToOne: false
+            referencedRelation: "registration_fees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      member_balances: {
+        Row: {
+          created_at: string
+          eligible_for_dividend: boolean
+          eligible_for_withdrawal: boolean
+          id: string
+          last_contribution_date: string | null
+          member_id: string
+          months_contributed: number
+          total_capital: number
+          total_project_support: number
+          total_savings: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          eligible_for_dividend?: boolean
+          eligible_for_withdrawal?: boolean
+          id?: string
+          last_contribution_date?: string | null
+          member_id: string
+          months_contributed?: number
+          total_capital?: number
+          total_project_support?: number
+          total_savings?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          eligible_for_dividend?: boolean
+          eligible_for_withdrawal?: boolean
+          id?: string
+          last_contribution_date?: string | null
+          member_id?: string
+          months_contributed?: number
+          total_capital?: number
+          total_project_support?: number
+          total_savings?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "member_balances_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      monthly_settlements: {
+        Row: {
+          broad_sheet_data: Json | null
+          created_at: string
+          id: string
+          settled_at: string | null
+          settled_by: string | null
+          settlement_month: string
+          status: string | null
+          total_allocated: number | null
+          total_contributions: number | null
+          total_registrations: number | null
+        }
+        Insert: {
+          broad_sheet_data?: Json | null
+          created_at?: string
+          id?: string
+          settled_at?: string | null
+          settled_by?: string | null
+          settlement_month: string
+          status?: string | null
+          total_allocated?: number | null
+          total_contributions?: number | null
+          total_registrations?: number | null
+        }
+        Update: {
+          broad_sheet_data?: Json | null
+          created_at?: string
+          id?: string
+          settled_at?: string | null
+          settled_by?: string | null
+          settlement_month?: string
+          status?: string | null
+          total_allocated?: number | null
+          total_contributions?: number | null
+          total_registrations?: number | null
+        }
+        Relationships: []
       }
       notifications: {
         Row: {
@@ -490,6 +693,8 @@ export type Database = {
           member_id: string
           payment_date: string | null
           payment_receipt_url: string | null
+          settlement_month: string | null
+          settlement_status: string | null
           status: string | null
           total_amount: number
         }
@@ -504,6 +709,8 @@ export type Database = {
           member_id: string
           payment_date?: string | null
           payment_receipt_url?: string | null
+          settlement_month?: string | null
+          settlement_status?: string | null
           status?: string | null
           total_amount?: number
         }
@@ -518,6 +725,8 @@ export type Database = {
           member_id?: string
           payment_date?: string | null
           payment_receipt_url?: string | null
+          settlement_month?: string | null
+          settlement_status?: string | null
           status?: string | null
           total_amount?: number
         }

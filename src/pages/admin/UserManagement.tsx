@@ -10,6 +10,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/AdminSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { Input } from "@/components/ui/input";
+import { CopyPhoneButton } from "@/components/CopyPhoneButton";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,6 +31,7 @@ interface UserWithRole {
   member_number: string;
   registration_status: string;
   state: string;
+  phone: string;
   created_at: string;
   user_id: string;
   roles: string[];
@@ -189,6 +191,7 @@ const UserManagement = () => {
                         <TableRow>
                           <TableHead>Name</TableHead>
                           <TableHead>Email</TableHead>
+                          <TableHead>Phone</TableHead>
                           <TableHead>Member #</TableHead>
                           <TableHead>State</TableHead>
                           <TableHead>Status</TableHead>
@@ -204,6 +207,12 @@ const UserManagement = () => {
                               {user.first_name} {user.last_name}
                             </TableCell>
                             <TableCell className="text-sm">{user.email}</TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm">{user.phone}</span>
+                                {user.phone && <CopyPhoneButton phoneNumber={user.phone} />}
+                              </div>
+                            </TableCell>
                             <TableCell>
                               <Badge variant="outline">{user.member_number || 'N/A'}</Badge>
                             </TableCell>

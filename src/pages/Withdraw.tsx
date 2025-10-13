@@ -74,17 +74,15 @@ const Withdraw = () => {
       
       setProfile(profileData);
 
-      // Calculate total savings and months contributed
-      const { data: contributions, error: contribError } = await supabase
-        .from('contributions')
+      // Fetch member balance
+      const { data: balance } = await supabase
+        .from('member_balances')
         .select('*')
         .eq('member_id', profileData.id)
-        .eq('payment_status', 'approved');
+        .single();
 
-      if (contribError) throw contribError;
-
-      const savings = contributions?.reduce((sum, c) => sum + (c.savings_amount || 0), 0) || 0;
-      const months = new Set(contributions?.map(c => c.contribution_month)).size;
+      const savings = balance?.total_savings || 0;
+      const months = balance?.months_contributed || 0;
       
       setTotalSavings(savings);
       setMonthsContributed(months);

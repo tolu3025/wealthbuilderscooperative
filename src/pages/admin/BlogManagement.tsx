@@ -22,7 +22,8 @@ const blogSchema = z.object({
   excerpt: z.string().max(300).optional(),
   content: z.string().min(50, "Content must be at least 50 characters").max(10000),
   image_url: z.string().url().optional().or(z.literal("")),
-  published: z.boolean()
+  published: z.boolean(),
+  show_as_banner: z.boolean().optional()
 });
 
 type BlogFormData = z.infer<typeof blogSchema>;
@@ -34,6 +35,7 @@ interface BlogPost {
   content: string;
   image_url: string | null;
   published: boolean;
+  show_as_banner: boolean;
   created_at: string;
 }
 
@@ -93,6 +95,7 @@ const BlogManagement = () => {
         content: data.content,
         image_url: imageUrl || null,
         published: data.published,
+        show_as_banner: data.show_as_banner || false,
         author_id: profile?.id
       };
 
@@ -151,6 +154,7 @@ const BlogManagement = () => {
     setValue('content', post.content);
     setValue('image_url', post.image_url || '');
     setValue('published', post.published);
+    setValue('show_as_banner', post.show_as_banner || false);
     setImageUrl(post.image_url || '');
   };
 
@@ -244,6 +248,14 @@ const BlogManagement = () => {
                     onCheckedChange={(checked) => setValue('published', checked)}
                   />
                   <Label htmlFor="published">Publish immediately</Label>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="show_as_banner"
+                    onCheckedChange={(checked) => setValue('show_as_banner', checked)}
+                  />
+                  <Label htmlFor="show_as_banner">Show as announcement banner</Label>
                 </div>
 
                 <div className="flex gap-2">

@@ -18,6 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { MemberSidebar } from "@/components/MemberSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
+import { AnnouncementBanner } from "@/components/AnnouncementBanner";
 
 interface MemberData {
   id: string;
@@ -103,33 +104,38 @@ const Dashboard = () => {
         setUserName(`${profile.first_name} ${profile.last_name}`);
         setAvatarUrl(profile.avatar_url || "");
 
-        // Fetch contributions
+        // Fetch member balance
+        const { data: balance } = await supabase
+          .from('member_balances')
+          .select('*')
+          .eq('member_id', profile.id)
+          .single();
+
+        const totalCapital = balance?.total_capital || 0;
+        const totalSavings = balance?.total_savings || 0;
+        const monthsContributed = balance?.months_contributed || 0;
+        const eligibleForDividend = balance?.eligible_for_dividend || false;
+
+        // Fetch contributions for transactions
         const { data: contributions } = await supabase
           .from('contributions')
           .select('*')
           .eq('member_id', profile.id)
           .order('created_at', { ascending: false });
 
-        // Calculate totals
-        const totalCapital = contributions?.reduce((sum, c) => sum + Number(c.capital_amount), 0) || 0;
-        const totalSavings = contributions?.reduce((sum, c) => sum + Number(c.savings_amount), 0) || 0;
-        
-        // Check eligibility
-        const memberSinceDate = new Date(profile.created_at);
-        const monthsSinceMembership = (new Date().getTime() - memberSinceDate.getTime()) / (1000 * 60 * 60 * 24 * 30);
-        const eligibleForDividend = monthsSinceMembership >= 6 && totalCapital >= 50000;
-
-        // Fetch referrals count
+        // Fetch referrals count (only active members)
         const { count: referralCount } = await supabase
           .from('profiles')
           .select('*', { count: 'exact', head: true })
-          .eq('invited_by', profile.id);
+          .eq('invited_by', profile.id)
+          .eq('registration_status', 'active');
 
-        // Fetch total commissions
+        // Fetch total approved commissions
         const { data: commissions } = await supabase
           .from('commissions')
           .select('amount')
-          .eq('member_id', profile.id);
+          .eq('member_id', profile.id)
+          .eq('status', 'approved');
         
         const totalCommissions = commissions?.reduce((sum, c) => sum + Number(c.amount), 0) || 0;
 
@@ -266,6 +272,7 @@ const Dashboard = () => {
         <div className="flex-1 flex flex-col">
           <DashboardHeader userName={userName} avatarUrl={avatarUrl} />
           <main className="flex-1 p-6 bg-muted/30 overflow-auto">
+            <AnnouncementBanner />
             {/* Welcome Section */}
             <div className="mb-6">
               <h1 className="text-3xl font-bold mb-2">Welcome back, {memberData.name.split(' ')[0]}! 👋</h1>

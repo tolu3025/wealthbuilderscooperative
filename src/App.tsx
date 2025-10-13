@@ -32,6 +32,10 @@ import NotFound from "./pages/NotFound";
 import MemberDividends from "./pages/member/Dividends";
 import Referrals from "./pages/member/Referrals";
 import Profile from "./pages/member/Profile";
+import StateRepDashboard from "./pages/StateRepDashboard";
+import DirectorDashboard from "./pages/DirectorDashboard";
+import MonthlySettlements from "./pages/admin/MonthlySettlements";
+import CommissionReport from "./pages/admin/CommissionReport";
 
 const queryClient = new QueryClient();
 
@@ -127,6 +131,10 @@ const App = () => (
             <Route path="/admin/state-reps" element={<AdminRoute><StateReps /></AdminRoute>} />
             <Route path="/admin/users" element={<AdminRoute><UserManagement /></AdminRoute>} />
             <Route path="/admin/blog" element={<AdminRoute><BlogManagement /></AdminRoute>} />
+            <Route path="/admin/commissions" element={<AdminRoute><CommissionReport /></AdminRoute>} />
+            <Route path="/admin/settlements" element={<AdminRoute><MonthlySettlements /></AdminRoute>} />
+            <Route path="/state-rep" element={<ProtectedRoute><StateRepDashboard /></ProtectedRoute>} />
+            <Route path="/director" element={<ProtectedRoute><DirectorDashboard /></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

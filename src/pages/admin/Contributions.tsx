@@ -41,6 +41,8 @@ const Contributions = () => {
 
   const approveContribution = async (contributionId: string, memberId: string) => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
       // Get member's user_id first
       const { data: profile } = await supabase
         .from('profiles')
@@ -55,14 +57,15 @@ const Contributions = () => {
         .from('contributions')
         .update({
           payment_status: 'approved',
-          approved_at: new Date().toISOString()
+          approved_at: new Date().toISOString(),
+          approved_by: user?.id
         })
         .eq('id', contributionId);
 
       if (updateError) throw updateError;
 
       // Send notification to member
-      const { error: notifError } = await supabase
+      await supabase
         .from('notifications')
         .insert({
           user_id: profile.user_id,
@@ -71,11 +74,11 @@ const Contributions = () => {
           type: 'contribution_approval',
           related_id: contributionId
         });
-
-      if (notifError) console.error('Failed to send notification:', notifError);
       
       toast.success("Contribution approved successfully");
-      fetchPendingContributions();
+      
+      // Immediately refetch to update UI
+      await fetchPendingContributions();
     } catch (error: any) {
       toast.error(error.message);
     }
@@ -129,8 +132,9 @@ const Contributions = () => {
                       <TableRow>
                         <TableHead>Member</TableHead>
                         <TableHead>Amount</TableHead>
-                        <TableHead>Capital</TableHead>
-                        <TableHead>Savings</TableHead>
+                        <TableHead className="text-green-600">Capital</TableHead>
+                        <TableHead className="text-blue-600">Savings</TableHead>
+                        <TableHead className="text-orange-600">Project</TableHead>
                         <TableHead>Receipt</TableHead>
                         <TableHead>Date</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
@@ -147,8 +151,15 @@ const Contributions = () => {
                             </span>
                           </TableCell>
                           <TableCell>₦{Number(contrib.amount).toLocaleString()}</TableCell>
-                          <TableCell>₦{Number(contrib.capital_amount).toLocaleString()}</TableCell>
-                          <TableCell>₦{Number(contrib.savings_amount).toLocaleString()}</TableCell>
+                          <TableCell className="text-green-600 font-medium">
+                            ₦{Number(contrib.capital_amount).toLocaleString()}
+                          </TableCell>
+                          <TableCell className="text-blue-600 font-medium">
+                            ₦{Number(contrib.savings_amount).toLocaleString()}
+                          </TableCell>
+                          <TableCell className="text-orange-600 font-medium">
+                            ₦{Number(contrib.project_support_amount || 500).toLocaleString()}
+                          </TableCell>
                           <TableCell>
                             {contrib.receipt_url ? (
                               <Button

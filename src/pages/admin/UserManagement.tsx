@@ -82,20 +82,41 @@ const UserManagement = () => {
     }
   };
 
-  const removeAdminRole = async (userId: string, userName: string) => {
+  const addRole = async (userId: string, role: string, userName: string) => {
+    try {
+      // Validate role
+      const validRoles = ['admin', 'member', 'state_rep', 'director'];
+      if (!validRoles.includes(role)) {
+        throw new Error("Invalid role");
+      }
+
+      const { error } = await supabase
+        .from('user_roles')
+        .insert([{ user_id: userId, role: role as any }]);
+
+      if (error) throw error;
+
+      toast.success(`${role} role added to ${userName}`);
+      fetchUsers();
+    } catch (error: any) {
+      toast.error("Failed to add role: " + error.message);
+    }
+  };
+
+  const removeRole = async (userId: string, role: string, userName: string) => {
     try {
       const { error } = await supabase
         .from('user_roles')
         .delete()
         .eq('user_id', userId)
-        .eq('role', 'admin');
+        .eq('role', role as any);
 
       if (error) throw error;
 
-      toast.success(`Admin role removed from ${userName}`);
+      toast.success(`${role} role removed from ${userName}`);
       fetchUsers();
     } catch (error: any) {
-      toast.error("Failed to remove admin role: " + error.message);
+      toast.error("Failed to remove role: " + error.message);
     }
   };
 
@@ -230,11 +251,25 @@ const UserManagement = () => {
                                   <Badge 
                                     key={role} 
                                     variant={role === 'admin' ? 'destructive' : 'secondary'}
-                                    className="text-xs"
+                                    className="text-xs cursor-pointer hover:opacity-80"
+                                    onClick={() => removeRole(user.user_id, role, `${user.first_name} ${user.last_name}`)}
                                   >
-                                    {role}
+                                    {role} ×
                                   </Badge>
                                 ))}
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-5 px-2 text-xs"
+                                  onClick={() => {
+                                    const role = prompt("Enter role to add (admin, member, state_rep, director):");
+                                    if (role && ['admin', 'member', 'state_rep', 'director'].includes(role)) {
+                                      addRole(user.user_id, role, `${user.first_name} ${user.last_name}`);
+                                    }
+                                  }}
+                                >
+                                  + Add Role
+                                </Button>
                               </div>
                             </TableCell>
                             <TableCell className="text-sm">
@@ -242,37 +277,6 @@ const UserManagement = () => {
                             </TableCell>
                             <TableCell className="text-right">
                               <div className="flex justify-end gap-2">
-                                {user.roles.includes('admin') && (
-                                  <AlertDialog>
-                                    <AlertDialogTrigger asChild>
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        className="text-orange-600 hover:text-orange-700"
-                                      >
-                                        <ShieldOff className="h-4 w-4" />
-                                      </Button>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent>
-                                      <AlertDialogHeader>
-                                        <AlertDialogTitle>Remove Admin Role?</AlertDialogTitle>
-                                        <AlertDialogDescription>
-                                          Are you sure you want to remove admin privileges from {user.first_name} {user.last_name}? 
-                                          They will no longer have access to the admin panel.
-                                        </AlertDialogDescription>
-                                      </AlertDialogHeader>
-                                      <AlertDialogFooter>
-                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                        <AlertDialogAction
-                                          onClick={() => removeAdminRole(user.user_id, `${user.first_name} ${user.last_name}`)}
-                                          className="bg-orange-600 hover:bg-orange-700"
-                                        >
-                                          Remove Admin
-                                        </AlertDialogAction>
-                                      </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                  </AlertDialog>
-                                )}
                                 
                                 <AlertDialog>
                                   <AlertDialogTrigger asChild>

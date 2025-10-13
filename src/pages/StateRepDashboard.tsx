@@ -47,11 +47,22 @@ const StateRepDashboard = () => {
       if (!profile) throw new Error("Profile not found");
       setUserName(`${profile.first_name} ${profile.last_name}`);
 
-      const { data: stateRep } = await supabase
+      const { data: stateRep, error: stateRepError } = await supabase
         .from('state_representatives')
         .select('state')
         .eq('rep_profile_id', profile.id)
-        .single();
+        .maybeSingle();
+
+      if (stateRepError) {
+        console.error('Error fetching state rep:', stateRepError);
+        toast({
+          title: "Error",
+          description: "Failed to load state representative data.",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
 
       if (!stateRep) {
         toast({

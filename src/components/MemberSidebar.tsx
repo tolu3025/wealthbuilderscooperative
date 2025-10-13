@@ -1,4 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { 
   LayoutDashboard, 
   Wallet, 
@@ -7,7 +8,9 @@ import {
   UserPlus,
   HelpCircle,
   User,
-  FileText
+  FileText,
+  Briefcase,
+  MapPin
 } from "lucide-react";
 import {
   Sidebar,
@@ -20,8 +23,9 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { supabase } from "@/integrations/supabase/client";
 
-const menuItems = [
+const baseMenuItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Contributions", url: "/contribute", icon: Wallet },
   { title: "Withdrawals", url: "/withdraw", icon: ArrowDownLeft },
@@ -36,6 +40,46 @@ export function MemberSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
   const collapsed = state === "collapsed";
+  const [menuItems, setMenuItems] = useState(baseMenuItems);
+
+  useEffect(() => {
+    const fetchUserRoles = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id);
+
+      if (!roles) return;
+
+      const userRoles = roles.map(r => r.role);
+      const additionalItems = [];
+
+      if (userRoles.includes("state_rep")) {
+        additionalItems.push({
+          title: "State Rep Dashboard",
+          url: "/state-rep",
+          icon: MapPin
+        });
+      }
+
+      if (userRoles.includes("director")) {
+        additionalItems.push({
+          title: "Director Dashboard",
+          url: "/director",
+          icon: Briefcase
+        });
+      }
+
+      if (additionalItems.length > 0) {
+        setMenuItems([...baseMenuItems, ...additionalItems]);
+      }
+    };
+
+    fetchUserRoles();
+  }, []);
 
   const isActive = (path: string) => location.pathname === path;
 

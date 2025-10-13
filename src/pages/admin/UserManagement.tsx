@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, ShieldOff, Loader2, Search } from "lucide-react";
+import { Trash2, ShieldOff, Loader2, Search, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -11,6 +11,13 @@ import { AdminSidebar } from "@/components/AdminSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { Input } from "@/components/ui/input";
 import { CopyPhoneButton } from "@/components/CopyPhoneButton";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -246,7 +253,7 @@ const UserManagement = () => {
                               </Badge>
                             </TableCell>
                             <TableCell>
-                              <div className="flex gap-1 flex-wrap">
+                              <div className="flex gap-1 flex-wrap items-center">
                                 {user.roles.map((role) => (
                                   <Badge 
                                     key={role} 
@@ -257,19 +264,20 @@ const UserManagement = () => {
                                     {role} ×
                                   </Badge>
                                 ))}
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="h-5 px-2 text-xs"
-                                  onClick={() => {
-                                    const role = prompt("Enter role to add (admin, member, state_rep, director):");
-                                    if (role && ['admin', 'member', 'state_rep', 'director'].includes(role)) {
-                                      addRole(user.user_id, role, `${user.first_name} ${user.last_name}`);
-                                    }
-                                  }}
+                                <Select
+                                  onValueChange={(role) => addRole(user.user_id, role, `${user.first_name} ${user.last_name}`)}
                                 >
-                                  + Add Role
-                                </Button>
+                                  <SelectTrigger className="h-6 w-[100px] text-xs">
+                                    <Plus className="h-3 w-3 mr-1" />
+                                    <SelectValue placeholder="Add" />
+                                  </SelectTrigger>
+                                  <SelectContent className="bg-background">
+                                    <SelectItem value="admin">Admin</SelectItem>
+                                    <SelectItem value="member">Member</SelectItem>
+                                    <SelectItem value="state_rep">State Rep</SelectItem>
+                                    <SelectItem value="director">Director</SelectItem>
+                                  </SelectContent>
+                                </Select>
                               </div>
                             </TableCell>
                             <TableCell className="text-sm">

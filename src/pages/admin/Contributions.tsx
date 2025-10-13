@@ -84,8 +84,21 @@ const Contributions = () => {
     }
   };
 
-  const downloadReceipt = (receiptUrl: string) => {
-    window.open(receiptUrl, '_blank');
+  const downloadReceipt = async (receiptUrl: string) => {
+    try {
+      const response = await fetch(receiptUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `receipt-${Date.now()}.jpg`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      toast.error('Failed to download receipt');
+    }
   };
 
   if (loading) {
@@ -168,7 +181,7 @@ const Contributions = () => {
                                 onClick={() => downloadReceipt(contrib.receipt_url)}
                               >
                                 <Download className="h-4 w-4 mr-1" />
-                                View
+                                Download
                               </Button>
                             ) : (
                               <Badge variant="secondary">No receipt</Badge>

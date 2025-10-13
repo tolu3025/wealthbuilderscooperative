@@ -149,7 +149,7 @@ const CommissionReport = () => {
             <div>
               <h1 className="text-3xl font-bold mb-2">Commission Report</h1>
               <p className="text-muted-foreground">
-                View all referral and state representative commissions
+                View all invite and state representative commissions
               </p>
             </div>
 
@@ -158,7 +158,7 @@ const CommissionReport = () => {
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                     <Users className="h-4 w-4" />
-                    Referral (Approved)
+                    Invite Rewards (Approved)
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -172,7 +172,7 @@ const CommissionReport = () => {
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                     <TrendingUp className="h-4 w-4" />
-                    Referral (Pending)
+                    Invite Rewards (Pending)
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -222,7 +222,7 @@ const CommissionReport = () => {
                 <Tabs defaultValue="referral">
                   <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="referral">
-                      Referral Commissions ({referralCommissions.length})
+                      Invite Rewards ({referralCommissions.length})
                     </TabsTrigger>
                     <TabsTrigger value="state_rep">
                       State Rep Commissions ({stateRepCommissions.length})

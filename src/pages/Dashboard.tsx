@@ -358,12 +358,12 @@ const Dashboard = () => {
 
             {/* Three Column Layout */}
             <div className="grid lg:grid-cols-3 gap-4 mb-6">
-              {/* Referral Info */}
+              {/* Invite Program */}
               <Card className="shadow-md">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Users className="h-5 w-5 text-primary" />
-                    Referral Program
+                    Invite Program
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -381,7 +381,7 @@ const Dashboard = () => {
                   <div className="grid grid-cols-2 gap-4 pt-4 border-t">
                     <div>
                       <p className="text-2xl font-bold text-primary">{memberData.referralCount}</p>
-                      <p className="text-xs text-muted-foreground">Referrals</p>
+                      <p className="text-xs text-muted-foreground">Invites</p>
                     </div>
                     <div>
                       <p className="text-2xl font-bold text-secondary">₦{memberData.totalCommissions.toLocaleString()}</p>

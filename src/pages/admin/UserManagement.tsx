@@ -297,14 +297,14 @@ const UserManagement = () => {
                                     </Button>
                                   </AlertDialogTrigger>
                                   <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                      <AlertDialogTitle>Delete Account?</AlertDialogTitle>
-                                      <AlertDialogDescription>
-                                        Are you sure you want to delete the account for {user.first_name} {user.last_name}? 
-                                        This action cannot be undone and will remove all their data including contributions, 
-                                        dividends, and referrals.
-                                      </AlertDialogDescription>
-                                    </AlertDialogHeader>
+                                      <AlertDialogHeader>
+                                        <AlertDialogTitle>Delete Account?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                          Are you sure you want to delete the account for {user.first_name} {user.last_name}? 
+                                          This action cannot be undone and will remove all their data including contributions, 
+                                          dividends, and invites.
+                                        </AlertDialogDescription>
+                                      </AlertDialogHeader>
                                     <AlertDialogFooter>
                                       <AlertDialogCancel>Cancel</AlertDialogCancel>
                                       <AlertDialogAction

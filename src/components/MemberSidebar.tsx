@@ -30,7 +30,7 @@ const baseMenuItems = [
   { title: "Contributions", url: "/contribute", icon: Wallet },
   { title: "Withdrawals", url: "/withdraw", icon: ArrowDownLeft },
   { title: "Dividends", url: "/member/dividends", icon: TrendingUp },
-  { title: "Referrals", url: "/member/referrals", icon: UserPlus },
+  { title: "My Invites", url: "/member/referrals", icon: UserPlus },
   { title: "Blog", url: "/blog", icon: FileText },
   { title: "Profile", url: "/member/profile", icon: User },
   { title: "Support", url: "/contact", icon: HelpCircle },

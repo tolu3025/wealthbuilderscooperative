@@ -126,16 +126,16 @@ const Referrals = () => {
           <DashboardHeader userName={userName} />
           <main className="flex-1 p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 overflow-x-hidden">
             <div>
-              <h1 className="text-3xl font-bold mb-2">Referral Program</h1>
+              <h1 className="text-3xl font-bold mb-2">Invite Program</h1>
               <p className="text-muted-foreground">
-                Earn ₦500 for every member you refer
+                Earn ₦500 for every member you invite
               </p>
             </div>
 
             <Alert className="bg-gradient-to-r from-primary/10 to-secondary/10 border-primary">
               <Share2 className="h-4 w-4" />
               <AlertDescription className="font-medium">
-                <strong>Earn ₦500 per referral!</strong> Share your invite code and earn commission when new members join.
+                <strong>Earn ₦500 per invite!</strong> Share your invite code and earn commission when new members join.
               </AlertDescription>
             </Alert>
 
@@ -171,7 +171,7 @@ const Referrals = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Users className="h-5 w-5" />
-                    Total Referrals
+                    Total Invites
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -205,7 +205,7 @@ const Referrals = () => {
             <Card>
               <CardHeader>
                 <CardTitle>Commission History</CardTitle>
-                <CardDescription>Track your referral earnings</CardDescription>
+                <CardDescription>Track your invite earnings</CardDescription>
               </CardHeader>
               <CardContent>
                 {commissions.length === 0 ? (

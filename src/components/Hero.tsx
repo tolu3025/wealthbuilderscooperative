@@ -216,7 +216,7 @@ const Hero = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-              {["Access to property investment opportunities", "Regular dividend payments from property sales", "Build capital and savings simultaneously", "Referral commission for bringing new members", "Transparent financial tracking dashboard", "Withdrawal access after 6 months", "Community support and networking", "Professional financial management"].map((benefit, index) => <div key={index} className="flex items-start gap-3 md:gap-4 p-4 md:p-6 bg-background rounded-xl border border-border hover:border-primary/50 transition-all">
+              {["Access to property investment opportunities", "Regular dividend payments from property sales", "Build capital and savings simultaneously", "Invite rewards for bringing new members", "Transparent financial tracking dashboard", "Withdrawal access after 6 months", "Community support and networking", "Professional financial management"].map((benefit, index) => <div key={index} className="flex items-start gap-3 md:gap-4 p-4 md:p-6 bg-background rounded-xl border border-border hover:border-primary/50 transition-all">
                   <CheckCircle2 className="h-5 w-5 md:h-6 md:w-6 text-primary flex-shrink-0 mt-1" />
                   <span className="text-sm md:text-base">{benefit}</span>
                 </div>)}

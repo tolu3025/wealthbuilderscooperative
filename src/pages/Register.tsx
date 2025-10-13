@@ -141,8 +141,8 @@ const Register = () => {
                   .from('notifications')
                   .insert({
                     user_id: referrerProfile.user_id,
-                    title: 'New Referral!',
-                    message: `${data.firstName} ${data.lastName} just joined using your referral code. You've earned ₦500!`,
+                    title: 'New Invite!',
+                    message: `${data.firstName} ${data.lastName} just joined using your invite code. You've earned ₦500!`,
                     type: 'referral',
                     related_id: profile.id
                   });

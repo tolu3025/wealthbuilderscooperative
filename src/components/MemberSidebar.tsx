@@ -54,7 +54,7 @@ export function MemberSidebar() {
 
       if (!roles) return;
 
-      const userRoles = roles.map(r => r.role);
+      const userRoles = roles.map(r => r.role as string);
       const additionalItems = [];
 
       if (userRoles.includes("state_rep")) {

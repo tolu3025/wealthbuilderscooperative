@@ -3,7 +3,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, DollarSign, Users, TrendingUp } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Loader2, DollarSign, Users, TrendingUp, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -20,15 +21,26 @@ interface CommissionData {
   created_at: string;
 }
 
+interface DirectorAllocation {
+  id: string;
+  member_name: string;
+  amount: number;
+  status: string;
+  settlement_month: string;
+}
+
 const CommissionReport = () => {
   const [referralCommissions, setReferralCommissions] = useState<CommissionData[]>([]);
   const [stateRepCommissions, setStateRepCommissions] = useState<CommissionData[]>([]);
+  const [directorAllocations, setDirectorAllocations] = useState<DirectorAllocation[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalReferral: 0,
     totalStateRep: 0,
+    totalDirector: 0,
     pendingReferral: 0,
     pendingStateRep: 0,
+    pendingDirector: 0,
   });
 
   useEffect(() => {
@@ -74,13 +86,46 @@ const CommissionReport = () => {
         }
       });
 
+      // Fetch director allocations
+      const { data: allocations } = await supabase
+        .from('financial_allocations')
+        .select(`
+          *,
+          registration_fees!financial_allocations_registration_id_fkey(
+            member_id,
+            profiles!registration_fees_member_id_fkey(first_name, last_name)
+          )
+        `)
+        .eq('allocation_type', 'directors')
+        .order('settlement_month', { ascending: false });
+
+      const directors: DirectorAllocation[] = [];
+      let totalDir = 0, pendingDir = 0;
+
+      allocations?.forEach((alloc: any) => {
+        const profile = alloc.registration_fees?.profiles;
+        directors.push({
+          id: alloc.id,
+          member_name: profile ? `${profile.first_name} ${profile.last_name}` : 'Unknown',
+          amount: Number(alloc.amount),
+          status: alloc.status,
+          settlement_month: alloc.settlement_month,
+        });
+
+        if (alloc.status === 'settled') totalDir += Number(alloc.amount);
+        else pendingDir += Number(alloc.amount);
+      });
+
       setReferralCommissions(referrals);
       setStateRepCommissions(stateReps);
+      setDirectorAllocations(directors);
       setStats({
         totalReferral: totalRef,
         totalStateRep: totalSR,
+        totalDirector: totalDir,
         pendingReferral: pendingRef,
         pendingStateRep: pendingSR,
+        pendingDirector: pendingDir,
       });
     } catch (error: any) {
       toast.error("Failed to load commissions: " + error.message);
@@ -89,7 +134,33 @@ const CommissionReport = () => {
     }
   };
 
-  const CommissionTable = ({ data }: { data: CommissionData[] }) => (
+  const approveCommission = async (id: string, type: 'commission' | 'allocation') => {
+    try {
+      if (type === 'commission') {
+        const { error } = await supabase
+          .from('commissions')
+          .update({ status: 'approved' })
+          .eq('id', id);
+
+        if (error) throw error;
+        toast.success("Commission approved successfully");
+      } else {
+        const { error } = await supabase
+          .from('financial_allocations')
+          .update({ status: 'settled', settled_at: new Date().toISOString() })
+          .eq('id', id);
+
+        if (error) throw error;
+        toast.success("Allocation settled successfully");
+      }
+      
+      fetchCommissions();
+    } catch (error: any) {
+      toast.error("Failed to approve: " + error.message);
+    }
+  };
+
+  const CommissionTable = ({ data, type }: { data: CommissionData[], type: 'commission' }) => (
     <Table>
       <TableHeader>
         <TableRow>
@@ -97,12 +168,13 @@ const CommissionReport = () => {
           <TableHead>Amount</TableHead>
           <TableHead>Status</TableHead>
           <TableHead>Date</TableHead>
+          <TableHead>Action</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {data.length === 0 ? (
           <TableRow>
-            <TableCell colSpan={4} className="text-center text-muted-foreground">
+            <TableCell colSpan={5} className="text-center text-muted-foreground">
               No commissions found
             </TableCell>
           </TableRow>
@@ -119,6 +191,66 @@ const CommissionReport = () => {
                 </Badge>
               </TableCell>
               <TableCell>{format(new Date(comm.created_at), 'MMM dd, yyyy')}</TableCell>
+              <TableCell>
+                {comm.status === 'pending' && (
+                  <Button
+                    size="sm"
+                    onClick={() => approveCommission(comm.id, type)}
+                  >
+                    <Check className="h-4 w-4 mr-1" />
+                    Approve
+                  </Button>
+                )}
+              </TableCell>
+            </TableRow>
+          ))
+        )}
+      </TableBody>
+    </Table>
+  );
+
+  const DirectorTable = ({ data }: { data: DirectorAllocation[] }) => (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Member</TableHead>
+          <TableHead>Amount</TableHead>
+          <TableHead>Status</TableHead>
+          <TableHead>Month</TableHead>
+          <TableHead>Action</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {data.length === 0 ? (
+          <TableRow>
+            <TableCell colSpan={5} className="text-center text-muted-foreground">
+              No allocations found
+            </TableCell>
+          </TableRow>
+        ) : (
+          data.map((alloc) => (
+            <TableRow key={alloc.id}>
+              <TableCell className="font-medium">{alloc.member_name}</TableCell>
+              <TableCell className="font-semibold text-green-600">
+                ₦{alloc.amount.toLocaleString()}
+              </TableCell>
+              <TableCell>
+                <Badge variant={alloc.status === 'settled' ? 'default' : 'secondary'}>
+                  {alloc.status}
+                </Badge>
+              </TableCell>
+              <TableCell>{format(new Date(alloc.settlement_month), 'MMM yyyy')}</TableCell>
+              <TableCell>
+                {alloc.status === 'pending' && (
+                  <Button
+                    size="sm"
+                    onClick={() => approveCommission(alloc.id, 'allocation')}
+                  >
+                    <Check className="h-4 w-4 mr-1" />
+                    Settle
+                  </Button>
+                )}
+              </TableCell>
             </TableRow>
           ))
         )}
@@ -153,12 +285,12 @@ const CommissionReport = () => {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                     <Users className="h-4 w-4" />
-                    Invite Rewards (Approved)
+                    Invite (Approved)
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -172,7 +304,7 @@ const CommissionReport = () => {
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                     <TrendingUp className="h-4 w-4" />
-                    Invite Rewards (Pending)
+                    Invite (Pending)
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -209,6 +341,34 @@ const CommissionReport = () => {
                   </div>
                 </CardContent>
               </Card>
+
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                    <DollarSign className="h-4 w-4" />
+                    Director (Settled)
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-green-600">
+                    ₦{stats.totalDirector.toLocaleString()}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4" />
+                    Director (Pending)
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-orange-600">
+                    ₦{stats.pendingDirector.toLocaleString()}
+                  </div>
+                </CardContent>
+              </Card>
             </div>
 
             <Card>
@@ -220,19 +380,25 @@ const CommissionReport = () => {
               </CardHeader>
               <CardContent>
                 <Tabs defaultValue="referral">
-                  <TabsList className="grid w-full grid-cols-2">
+                  <TabsList className="grid w-full grid-cols-3">
                     <TabsTrigger value="referral">
                       Invite Rewards ({referralCommissions.length})
                     </TabsTrigger>
                     <TabsTrigger value="state_rep">
-                      State Rep Commissions ({stateRepCommissions.length})
+                      State Rep ({stateRepCommissions.length})
+                    </TabsTrigger>
+                    <TabsTrigger value="director">
+                      Director ({directorAllocations.length})
                     </TabsTrigger>
                   </TabsList>
                   <TabsContent value="referral" className="mt-4">
-                    <CommissionTable data={referralCommissions} />
+                    <CommissionTable data={referralCommissions} type="commission" />
                   </TabsContent>
                   <TabsContent value="state_rep" className="mt-4">
-                    <CommissionTable data={stateRepCommissions} />
+                    <CommissionTable data={stateRepCommissions} type="commission" />
+                  </TabsContent>
+                  <TabsContent value="director" className="mt-4">
+                    <DirectorTable data={directorAllocations} />
                   </TabsContent>
                 </Tabs>
               </CardContent>

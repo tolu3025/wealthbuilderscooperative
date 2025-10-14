@@ -28,6 +28,9 @@ import Withdraw from "./pages/Withdraw";
 import About from "./pages/About";
 import Blog from "./pages/Blog";
 import Contact from "./pages/Contact";
+import Terms from "./pages/Terms";
+import Policy from "./pages/Policy";
+import Services from "./pages/Services";
 import NotFound from "./pages/NotFound";
 import MemberDividends from "./pages/member/Dividends";
 import Referrals from "./pages/member/Referrals";
@@ -53,6 +56,9 @@ const App = () => (
             <Route path="/about" element={<About />} />
             <Route path="/blog" element={<Blog />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/privacy" element={<Policy />} />
+            <Route path="/services" element={<Services />} />
             <Route path="/activate" element={<Activate />} />
             <Route
               path="/login"

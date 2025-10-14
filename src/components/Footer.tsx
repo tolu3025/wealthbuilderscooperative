@@ -94,16 +94,8 @@ const Footer = () => {
 
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-white/20">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-white/70">
+          <div className="flex flex-col md:flex-row justify-center items-center gap-4 text-sm text-white/70">
             <p>© 2025 WealthBuilders Cooperative. All Rights Reserved.</p>
-            <div className="flex gap-6">
-              <Link to="/privacy" className="hover:text-accent transition-colors">
-                Privacy Policy
-              </Link>
-              <Link to="/terms" className="hover:text-accent transition-colors">
-                Terms of Service
-              </Link>
-            </div>
           </div>
         </div>
       </div>

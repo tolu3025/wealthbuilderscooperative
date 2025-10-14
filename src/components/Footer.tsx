@@ -46,6 +46,16 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
+                <Link to="/terms" className="text-white/80 hover:text-accent transition-colors">
+                  Terms & Conditions
+                </Link>
+              </li>
+              <li>
+                <Link to="/privacy" className="text-white/80 hover:text-accent transition-colors">
+                  Privacy Policy
+                </Link>
+              </li>
+              <li>
                 <Link to="/register" className="text-white/80 hover:text-accent transition-colors">
                   Become a Member
                 </Link>

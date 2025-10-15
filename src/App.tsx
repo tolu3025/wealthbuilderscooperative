@@ -16,10 +16,11 @@ import Registrations from "./pages/admin/Registrations";
 import Contributions from "./pages/admin/Contributions";
 import Withdrawals from "./pages/admin/Withdrawals";
 import AdminDividends from "./pages/admin/Dividends";
-import Properties from "./pages/admin/Properties";
+import AdminProperties from "./pages/admin/Properties";
 import StateReps from "./pages/admin/StateReps";
 import UserManagement from "./pages/admin/UserManagement";
 import BlogManagement from "./pages/admin/BlogManagement";
+import Properties from "./pages/Properties";
 import Register from "./pages/Register";
 import UploadReceipt from "./pages/UploadReceipt";
 import Activate from "./pages/Activate";
@@ -59,6 +60,7 @@ const App = () => (
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Policy />} />
             <Route path="/services" element={<Services />} />
+            <Route path="/properties" element={<Properties />} />
             <Route path="/activate" element={<Activate />} />
             <Route
               path="/login"
@@ -133,7 +135,7 @@ const App = () => (
             <Route path="/admin/contributions" element={<AdminRoute><Contributions /></AdminRoute>} />
             <Route path="/admin/withdrawals" element={<AdminRoute><Withdrawals /></AdminRoute>} />
             <Route path="/admin/dividends" element={<AdminRoute><AdminDividends /></AdminRoute>} />
-            <Route path="/admin/properties" element={<AdminRoute><Properties /></AdminRoute>} />
+            <Route path="/admin/properties" element={<AdminRoute><AdminProperties /></AdminRoute>} />
             <Route path="/admin/state-reps" element={<AdminRoute><StateReps /></AdminRoute>} />
             <Route path="/admin/users" element={<AdminRoute><UserManagement /></AdminRoute>} />
             <Route path="/admin/blog" element={<AdminRoute><BlogManagement /></AdminRoute>} />

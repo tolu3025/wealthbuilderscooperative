@@ -137,26 +137,51 @@ const CommissionReport = () => {
   const approveCommission = async (id: string, type: 'commission' | 'allocation') => {
     try {
       if (type === 'commission') {
-        const { error } = await supabase
+        // Optimistic update
+        if (type === 'commission') {
+          setReferralCommissions(prev => prev.map(c => c.id === id ? { ...c, status: 'approved' } : c));
+          setStateRepCommissions(prev => prev.map(c => c.id === id ? { ...c, status: 'approved' } : c));
+        }
+
+        const { data, error } = await supabase
           .from('commissions')
           .update({ status: 'approved' })
-          .eq('id', id);
+          .eq('id', id)
+          .select();
 
-        if (error) throw error;
+        if (error) {
+          console.error('Commission update error:', error);
+          throw error;
+        }
+        
+        console.log('Commission updated successfully:', data);
         toast.success("Commission approved successfully");
       } else {
-        const { error } = await supabase
+        // Optimistic update for allocations
+        setDirectorAllocations(prev => prev.map(a => a.id === id ? { ...a, status: 'settled' } : a));
+
+        const { data, error } = await supabase
           .from('financial_allocations')
           .update({ status: 'settled', settled_at: new Date().toISOString() })
-          .eq('id', id);
+          .eq('id', id)
+          .select();
 
-        if (error) throw error;
+        if (error) {
+          console.error('Allocation update error:', error);
+          throw error;
+        }
+
+        console.log('Allocation updated successfully:', data);
         toast.success("Allocation settled successfully");
       }
       
-      fetchCommissions();
+      // Refresh data from database
+      await fetchCommissions();
     } catch (error: any) {
+      console.error('Approval error:', error);
       toast.error("Failed to approve: " + error.message);
+      // Revert optimistic update on error
+      fetchCommissions();
     }
   };
 

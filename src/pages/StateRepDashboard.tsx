@@ -77,15 +77,23 @@ const StateRepDashboard = () => {
       setRepState(stateRep.state);
 
       // Get all commissions for this state rep
-      const { data: commissions } = await supabase
+      const { data: commissions, error: commissionsError } = await supabase
         .from('commissions')
         .select('*')
         .eq('member_id', profile.id)
         .eq('commission_type', 'state_rep');
 
+      if (commissionsError) {
+        console.error('Error fetching commissions:', commissionsError);
+      }
+
+      console.log('State Rep Commissions:', commissions);
+
       // Calculate totals
       const approved = commissions?.filter(c => c.status === 'approved').reduce((sum, c) => sum + Number(c.amount), 0) || 0;
       const pending = commissions?.filter(c => c.status === 'pending').reduce((sum, c) => sum + Number(c.amount), 0) || 0;
+      
+      console.log('Approved total:', approved, 'Pending total:', pending);
       
       setTotalEarned(approved);
       setPendingCommission(pending);

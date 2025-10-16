@@ -12,6 +12,7 @@ import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import PendingRegistrations from "./pages/admin/PendingRegistrations";
 import Registrations from "./pages/admin/Registrations";
 import Contributions from "./pages/admin/Contributions";
 import Withdrawals from "./pages/admin/Withdrawals";
@@ -20,6 +21,7 @@ import AdminProperties from "./pages/admin/Properties";
 import StateReps from "./pages/admin/StateReps";
 import UserManagement from "./pages/admin/UserManagement";
 import BlogManagement from "./pages/admin/BlogManagement";
+import Reports from "./pages/admin/Reports";
 import Properties from "./pages/Properties";
 import Register from "./pages/Register";
 import UploadReceipt from "./pages/UploadReceipt";
@@ -131,7 +133,7 @@ const App = () => (
               }
             />
             <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-            <Route path="/admin/registrations" element={<AdminRoute><Registrations /></AdminRoute>} />
+            <Route path="/admin/registrations" element={<AdminRoute><PendingRegistrations /></AdminRoute>} />
             <Route path="/admin/contributions" element={<AdminRoute><Contributions /></AdminRoute>} />
             <Route path="/admin/withdrawals" element={<AdminRoute><Withdrawals /></AdminRoute>} />
             <Route path="/admin/dividends" element={<AdminRoute><AdminDividends /></AdminRoute>} />
@@ -141,6 +143,7 @@ const App = () => (
             <Route path="/admin/blog" element={<AdminRoute><BlogManagement /></AdminRoute>} />
             <Route path="/admin/commissions" element={<AdminRoute><CommissionReport /></AdminRoute>} />
             <Route path="/admin/settlements" element={<AdminRoute><MonthlySettlements /></AdminRoute>} />
+            <Route path="/admin/reports" element={<AdminRoute><Reports /></AdminRoute>} />
             <Route path="/state-rep" element={<ProtectedRoute><StateRepDashboard /></ProtectedRoute>} />
             <Route path="/director" element={<ProtectedRoute><DirectorDashboard /></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

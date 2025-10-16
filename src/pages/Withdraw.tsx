@@ -30,6 +30,8 @@ const Withdraw = () => {
   const [submitting, setSubmitting] = useState(false);
   const [profile, setProfile] = useState<any>(null);
   const [totalSavings, setTotalSavings] = useState(0);
+  const [totalCapital, setTotalCapital] = useState(0);
+  const [totalDividends, setTotalDividends] = useState(0);
   const [monthsContributed, setMonthsContributed] = useState(0);
   const [requests, setRequests] = useState<any[]>([]);
   
@@ -82,9 +84,21 @@ const Withdraw = () => {
         .single();
 
       const savings = balance?.total_savings || 0;
+      const capital = balance?.total_capital || 0;
       const months = balance?.months_contributed || 0;
       
+      // Fetch total approved dividends
+      const { data: dividends } = await supabase
+        .from('dividends')
+        .select('amount')
+        .eq('member_id', profileData.id)
+        .eq('status', 'approved');
+      
+      const totalDivs = dividends?.reduce((sum, d) => sum + Number(d.amount), 0) || 0;
+      
       setTotalSavings(savings);
+      setTotalCapital(capital);
+      setTotalDividends(totalDivs);
       setMonthsContributed(months);
 
       // Fetch withdrawal requests
@@ -125,8 +139,11 @@ const Withdraw = () => {
         throw new Error("You must contribute for at least 6 months before withdrawing");
       }
 
-      if (amount > totalSavings) {
-        throw new Error("Insufficient savings balance");
+      // Calculate total available balance (savings + capital + dividends after 6 months)
+      const totalAvailable = totalSavings + totalCapital + totalDividends;
+
+      if (amount > totalAvailable) {
+        throw new Error(`Insufficient balance. Available: ₦${totalAvailable.toLocaleString()}`);
       }
 
       setSubmitting(true);
@@ -178,6 +195,7 @@ const Withdraw = () => {
   }
 
   const isEligible = monthsContributed >= 6;
+  const totalAvailableBalance = totalSavings + totalCapital + totalDividends;
 
   return (
     <div className="min-h-screen bg-background pt-16 md:pt-20">
@@ -189,18 +207,53 @@ const Withdraw = () => {
             <p className="text-muted-foreground">Withdraw from your savings balance</p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-4">
+          <div className="grid md:grid-cols-4 gap-4">
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium">Total Savings</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-primary">
+                <div className="text-2xl font-bold text-blue-600">
                   ₦{totalSavings.toLocaleString()}
                 </div>
               </CardContent>
             </Card>
 
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium">Total Capital</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-green-600">
+                  ₦{totalCapital.toLocaleString()}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium">Total Dividends</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-purple-600">
+                  ₦{totalDividends.toLocaleString()}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium">Available Balance</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-primary">
+                  ₦{totalAvailableBalance.toLocaleString()}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4">
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium">Months Contributed</CardTitle>
@@ -228,8 +281,17 @@ const Withdraw = () => {
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
-                You must contribute for at least 6 months before you can request a withdrawal.
-                You have contributed for {monthsContributed} month(s).
+                Your funds are locked for 6 months. You must contribute for at least 6 months before you can request a withdrawal.
+                You have contributed for {monthsContributed} month(s). After 6 months, you can withdraw from your savings, capital, and dividends.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {isEligible && totalAvailableBalance > 0 && (
+            <Alert>
+              <AlertDescription>
+                <strong>Withdrawal Information:</strong> After 6 months, you can withdraw from your total balance which includes savings (₦{totalSavings.toLocaleString()}), 
+                capital (₦{totalCapital.toLocaleString()}), and accumulated dividends (₦{totalDividends.toLocaleString()}).
               </AlertDescription>
             </Alert>
           )}
@@ -254,12 +316,12 @@ const Withdraw = () => {
                     placeholder="Enter amount"
                     value={formData.amount}
                     onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                    max={totalSavings}
+                    max={totalAvailableBalance}
                     disabled={!isEligible}
                     required
                   />
                   <p className="text-sm text-muted-foreground">
-                    Available: ₦{totalSavings.toLocaleString()}
+                    Available: ₦{totalAvailableBalance.toLocaleString()} (Savings: ₦{totalSavings.toLocaleString()}, Capital: ₦{totalCapital.toLocaleString()}, Dividends: ₦{totalDividends.toLocaleString()})
                   </p>
                 </div>
 

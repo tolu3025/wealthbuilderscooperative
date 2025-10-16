@@ -102,7 +102,7 @@ const Dividends = () => {
           amount: memberShare,
           dividend_percentage: percentage,
           member_capital_at_distribution: member!.totalCapital,
-          status: 'pending'
+          status: 'approved' // Changed from 'pending' to 'approved' so funds are immediately withdrawable
         };
       });
 

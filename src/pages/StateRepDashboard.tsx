@@ -109,26 +109,31 @@ const StateRepDashboard = () => {
 
       setCurrentMonthCount(members?.length || 0);
 
-      // Group by month
-      const { data: allMembers } = await supabase
-        .from('profiles')
-        .select('created_at')
-        .eq('state', stateRep.state)
-        .eq('registration_status', 'active')
-        .order('created_at', { ascending: false });
-
-      const monthlyStats: { [key: string]: number } = {};
-      allMembers?.forEach(member => {
-        const month = format(new Date(member.created_at), 'yyyy-MM');
-        monthlyStats[month] = (monthlyStats[month] || 0) + 1;
+      // Group by month with commission status
+      const monthlyStats: { [key: string]: { count: number; approvedCount: number } } = {};
+      
+      commissions?.forEach(commission => {
+        const month = format(new Date(commission.created_at), 'yyyy-MM');
+        if (!monthlyStats[month]) {
+          monthlyStats[month] = { count: 0, approvedCount: 0 };
+        }
+        monthlyStats[month].count += 1;
+        if (commission.status === 'approved') {
+          monthlyStats[month].approvedCount += 1;
+        }
       });
 
-      const formattedData = Object.entries(monthlyStats).map(([month, count]) => ({
-        month: format(new Date(month + '-01'), 'MMMM yyyy'),
-        registrations: count,
-        commission: count * 100,
-        status: 'pending'
-      }));
+      const formattedData = Object.entries(monthlyStats).map(([month, data]) => {
+        const allApproved = data.approvedCount === data.count;
+        const someApproved = data.approvedCount > 0 && data.approvedCount < data.count;
+        
+        return {
+          month: format(new Date(month + '-01'), 'MMMM yyyy'),
+          registrations: data.count,
+          commission: data.count * 100,
+          status: allApproved ? 'approved' : someApproved ? 'partial' : 'pending'
+        };
+      }).sort((a, b) => new Date(b.month).getTime() - new Date(a.month).getTime());
 
       setMonthlyData(formattedData);
     } catch (error: any) {

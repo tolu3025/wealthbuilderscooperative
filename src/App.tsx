@@ -43,6 +43,9 @@ import DirectorDashboard from "./pages/DirectorDashboard";
 import MonthlySettlements from "./pages/admin/MonthlySettlements";
 import CommissionReport from "./pages/admin/CommissionReport";
 
+import PropertyPlans from "./pages/member/PropertyPlans";
+import PlanEnrollments from "./pages/admin/PlanEnrollments";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -132,6 +135,14 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/member/property-plans"
+              element={
+                <ProtectedRoute>
+                  <PropertyPlans />
+                </ProtectedRoute>
+              }
+            />
             <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
             <Route path="/admin/registrations" element={<AdminRoute><PendingRegistrations /></AdminRoute>} />
             <Route path="/admin/contributions" element={<AdminRoute><Contributions /></AdminRoute>} />
@@ -142,6 +153,7 @@ const App = () => (
             <Route path="/admin/users" element={<AdminRoute><UserManagement /></AdminRoute>} />
             <Route path="/admin/blog" element={<AdminRoute><BlogManagement /></AdminRoute>} />
             <Route path="/admin/commissions" element={<AdminRoute><CommissionReport /></AdminRoute>} />
+            <Route path="/admin/plan-enrollments" element={<AdminRoute><PlanEnrollments /></AdminRoute>} />
             <Route path="/admin/settlements" element={<AdminRoute><MonthlySettlements /></AdminRoute>} />
             <Route path="/admin/reports" element={<AdminRoute><Reports /></AdminRoute>} />
             <Route path="/state-rep" element={<ProtectedRoute><StateRepDashboard /></ProtectedRoute>} />

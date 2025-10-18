@@ -135,8 +135,8 @@ const Withdraw = () => {
         bankName: formData.bankName,
       });
 
-      if (monthsContributed < 6) {
-        throw new Error("You must contribute for at least 6 months before withdrawing");
+      if (monthsContributed < 3) {
+        throw new Error("You must contribute for at least 3 months before withdrawing");
       }
 
       // Calculate total available balance (savings + capital + dividends after 6 months)
@@ -194,7 +194,7 @@ const Withdraw = () => {
     );
   }
 
-  const isEligible = monthsContributed >= 6;
+  const isEligible = monthsContributed >= 3;
   const totalAvailableBalance = totalSavings + totalCapital + totalDividends;
 
   return (
@@ -281,8 +281,8 @@ const Withdraw = () => {
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
-                Your funds are locked for 6 months. You must contribute for at least 6 months before you can request a withdrawal.
-                You have contributed for {monthsContributed} month(s). After 6 months, you can withdraw from your savings, capital, and dividends.
+                Your funds are locked for 3 months. You must contribute for at least 3 months before you can request a withdrawal.
+                You have contributed for {monthsContributed} month(s). After 3 months, you can withdraw from your savings, capital, and dividends.
               </AlertDescription>
             </Alert>
           )}
@@ -290,7 +290,7 @@ const Withdraw = () => {
           {isEligible && totalAvailableBalance > 0 && (
             <Alert>
               <AlertDescription>
-                <strong>Withdrawal Information:</strong> After 6 months, you can withdraw from your total balance which includes savings (₦{totalSavings.toLocaleString()}), 
+                <strong>Withdrawal Information:</strong> After 3 months, you can withdraw from your total balance which includes savings (₦{totalSavings.toLocaleString()}), 
                 capital (₦{totalCapital.toLocaleString()}), and accumulated dividends (₦{totalDividends.toLocaleString()}).
               </AlertDescription>
             </Alert>

@@ -350,7 +350,7 @@ const Dashboard = () => {
                   <p className="text-xs text-green-600 mt-1">
                     {memberData.eligibleForDividend 
                       ? "Qualified for dividends" 
-                      : "Build ₦50K + 6 months"}
+                      : "Build ₦50K + 3 months"}
                   </p>
                 </CardContent>
               </Card>
@@ -358,12 +358,12 @@ const Dashboard = () => {
 
             {/* Three Column Layout */}
             <div className="grid lg:grid-cols-3 gap-4 mb-6">
-              {/* Invite Program */}
+              {/* Invite */}
               <Card className="shadow-md">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Users className="h-5 w-5 text-primary" />
-                    Invite Program
+                    Invite
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">

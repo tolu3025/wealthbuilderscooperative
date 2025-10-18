@@ -564,6 +564,45 @@ export type Database = {
         }
         Relationships: []
       }
+      plan_enrollments: {
+        Row: {
+          enrolled_at: string
+          id: string
+          member_id: string
+          plan_id: string
+          status: string
+        }
+        Insert: {
+          enrolled_at?: string
+          id?: string
+          member_id: string
+          plan_id: string
+          status?: string
+        }
+        Update: {
+          enrolled_at?: string
+          id?: string
+          member_id?: string
+          plan_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plan_enrollments_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "plan_enrollments_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "property_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           address: string | null
@@ -678,6 +717,33 @@ export type Database = {
           purchase_price?: number | null
           status?: string | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      property_plans: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          name: string
+          plan_type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          name: string
+          plan_type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          name?: string
+          plan_type?: string
+          updated_at?: string
         }
         Relationships: []
       }

@@ -126,7 +126,7 @@ const Referrals = () => {
           <DashboardHeader userName={userName} />
           <main className="flex-1 p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 overflow-x-hidden">
             <div>
-              <h1 className="text-3xl font-bold mb-2">Invite Program</h1>
+              <h1 className="text-3xl font-bold mb-2">Invite</h1>
               <p className="text-muted-foreground">
                 Earn ₦500 for every member you invite
               </p>

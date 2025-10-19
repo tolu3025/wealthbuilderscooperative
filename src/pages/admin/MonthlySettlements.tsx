@@ -236,29 +236,35 @@ const MonthlySettlements = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {settlements.map((settlement) => (
-                        <TableRow key={settlement.id}>
-                          <TableCell className="font-medium">
-                            {format(new Date(settlement.settlement_month + '-01'), 'MMMM yyyy')}
-                          </TableCell>
-                          <TableCell>{settlement.total_registrations}</TableCell>
-                          <TableCell className="font-semibold">
-                            ₦{settlement.total_allocated.toLocaleString()}
-                          </TableCell>
-                          <TableCell className="font-semibold text-red-600">
-                            ₦{(settlement.total_withdrawals || 0).toLocaleString()}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant={settlement.status === 'settled' ? 'default' : 'secondary'}>
-                              {settlement.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            {settlement.settled_at 
-                              ? format(new Date(settlement.settled_at), 'MMM dd, yyyy')
-                              : 'Not settled'
-                            }
-                          </TableCell>
+                      {settlements.map((settlement) => {
+                        const monthDate = settlement.settlement_month 
+                          ? new Date(settlement.settlement_month + '-01')
+                          : null;
+                        const isValidMonthDate = monthDate && !isNaN(monthDate.getTime());
+
+                        return (
+                          <TableRow key={settlement.id}>
+                            <TableCell className="font-medium">
+                              {isValidMonthDate ? format(monthDate, 'MMMM yyyy') : settlement.settlement_month || 'Invalid date'}
+                            </TableCell>
+                            <TableCell>{settlement.total_registrations}</TableCell>
+                            <TableCell className="font-semibold">
+                              ₦{settlement.total_allocated.toLocaleString()}
+                            </TableCell>
+                            <TableCell className="font-semibold text-red-600">
+                              ₦{(settlement.total_withdrawals || 0).toLocaleString()}
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant={settlement.status === 'settled' ? 'default' : 'secondary'}>
+                                {settlement.status}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              {settlement.settled_at 
+                                ? format(new Date(settlement.settled_at), 'MMM dd, yyyy')
+                                : 'Not settled'
+                              }
+                            </TableCell>
                           <TableCell className="text-right space-x-2">
                             <Button
                               size="sm"
@@ -277,10 +283,10 @@ const MonthlySettlements = () => {
                                   </Button>
                                 </AlertDialogTrigger>
                                 <AlertDialogContent>
-                                  <AlertDialogHeader>
+                                   <AlertDialogHeader>
                                     <AlertDialogTitle>Settle This Month?</AlertDialogTitle>
                                     <AlertDialogDescription>
-                                      This will mark all financial records for {format(new Date(settlement.settlement_month + '-01'), 'MMMM yyyy')} as settled and locked. 
+                                      This will mark all financial records for {isValidMonthDate ? format(monthDate, 'MMMM yyyy') : settlement.settlement_month} as settled and locked. 
                                       All pending commissions will be approved. This action cannot be undone.
                                     </AlertDialogDescription>
                                   </AlertDialogHeader>
@@ -297,7 +303,8 @@ const MonthlySettlements = () => {
                             )}
                           </TableCell>
                         </TableRow>
-                      ))}
+                        );
+                      })}
                     </TableBody>
                   </Table>
                 )}

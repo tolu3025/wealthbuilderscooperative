@@ -504,6 +504,7 @@ export type Database = {
           total_allocated: number | null
           total_contributions: number | null
           total_registrations: number | null
+          total_withdrawals: number | null
         }
         Insert: {
           broad_sheet_data?: Json | null
@@ -516,6 +517,7 @@ export type Database = {
           total_allocated?: number | null
           total_contributions?: number | null
           total_registrations?: number | null
+          total_withdrawals?: number | null
         }
         Update: {
           broad_sheet_data?: Json | null
@@ -528,6 +530,7 @@ export type Database = {
           total_allocated?: number | null
           total_contributions?: number | null
           total_registrations?: number | null
+          total_withdrawals?: number | null
         }
         Relationships: []
       }
@@ -917,6 +920,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_withdrawal_to_settlement: {
+        Args: { p_amount: number; p_month: string }
+        Returns: undefined
+      }
       check_dividend_eligibility: {
         Args: { p_member_id: string }
         Returns: boolean

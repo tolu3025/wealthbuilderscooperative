@@ -28,6 +28,7 @@ interface Settlement {
   total_registrations: number;
   total_contributions: number;
   total_allocated: number;
+  total_withdrawals: number;
   status: string;
   broad_sheet_data: any;
   settled_at: string | null;
@@ -228,6 +229,7 @@ const MonthlySettlements = () => {
                         <TableHead>Month</TableHead>
                         <TableHead>Registrations</TableHead>
                         <TableHead>Total Allocated</TableHead>
+                        <TableHead>Withdrawals</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Settled Date</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
@@ -242,6 +244,9 @@ const MonthlySettlements = () => {
                           <TableCell>{settlement.total_registrations}</TableCell>
                           <TableCell className="font-semibold">
                             ₦{settlement.total_allocated.toLocaleString()}
+                          </TableCell>
+                          <TableCell className="font-semibold text-red-600">
+                            ₦{(settlement.total_withdrawals || 0).toLocaleString()}
                           </TableCell>
                           <TableCell>
                             <Badge variant={settlement.status === 'settled' ? 'default' : 'secondary'}>

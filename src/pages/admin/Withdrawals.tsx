@@ -60,11 +60,29 @@ const Withdrawals = () => {
       if (updateError) throw updateError;
 
       // Add to monthly settlements
-      const settlementMonth = new Date().toISOString().slice(0, 7);
-      await supabase.rpc('add_withdrawal_to_settlement', {
-        p_month: settlementMonth,
-        p_amount: amount
-      });
+      const settlementMonth = new Date().toISOString().slice(0, 7) + '-01';
+      const { data: existingSettlement } = await supabase
+        .from('monthly_settlements')
+        .select('id, total_withdrawals')
+        .eq('settlement_month', settlementMonth)
+        .single();
+
+      if (existingSettlement) {
+        await supabase
+          .from('monthly_settlements')
+          .update({
+            total_withdrawals: (existingSettlement.total_withdrawals || 0) + amount
+          })
+          .eq('id', existingSettlement.id);
+      } else {
+        await supabase
+          .from('monthly_settlements')
+          .insert({
+            settlement_month: settlementMonth,
+            total_withdrawals: amount,
+            status: 'pending'
+          });
+      }
 
       const { error: notifError } = await supabase
         .from('notifications')

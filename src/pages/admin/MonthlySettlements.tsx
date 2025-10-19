@@ -104,9 +104,82 @@ const MonthlySettlements = () => {
     }
   };
 
-  const generateBroadSheet = (settlement: Settlement) => {
-    // TODO: Generate PDF/Excel report
-    toast.info("Report generation coming soon");
+  const generateBroadSheet = async (settlement: Settlement) => {
+    try {
+      // Fetch detailed data for the settlement
+      const { data: allocations } = await supabase
+        .from('financial_allocations')
+        .select('*')
+        .eq('settlement_month', settlement.settlement_month);
+
+      const { data: commissions } = await supabase
+        .from('commissions')
+        .select('*, profiles!commissions_member_id_fkey(first_name, last_name, member_number)')
+        .gte('created_at', settlement.settlement_month + '-01')
+        .lt('created_at', format(new Date(new Date(settlement.settlement_month + '-01').setMonth(new Date(settlement.settlement_month + '-01').getMonth() + 1)), 'yyyy-MM-dd'));
+
+      // Create PDF content
+      const content = `
+        <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; }
+            h1 { color: #0052CC; }
+            table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th { background-color: #0052CC; color: white; }
+            .total { font-weight: bold; background-color: #f0f0f0; }
+          </style>
+        </head>
+        <body>
+          <h1>Monthly Settlement Report</h1>
+          <h2>${format(new Date(settlement.settlement_month + '-01'), 'MMMM yyyy')}</h2>
+          
+          <h3>Summary</h3>
+          <table>
+            <tr><th>Registrations</th><td>${settlement.total_registrations}</td></tr>
+            <tr><th>Total Contributions</th><td>₦${settlement.total_contributions.toLocaleString()}</td></tr>
+            <tr><th>Total Allocated</th><td>₦${settlement.total_allocated.toLocaleString()}</td></tr>
+            <tr><th>Status</th><td>${settlement.status}</td></tr>
+          </table>
+
+          <h3>Financial Allocations</h3>
+          <table>
+            <tr><th>Type</th><th>Amount</th></tr>
+            ${allocations?.map(a => `<tr><td>${a.allocation_type}</td><td>₦${Number(a.amount).toLocaleString()}</td></tr>`).join('')}
+          </table>
+
+          <h3>Commissions</h3>
+          <table>
+            <tr><th>Member</th><th>Type</th><th>Amount</th><th>Status</th></tr>
+            ${commissions?.map(c => `
+              <tr>
+                <td>${c.profiles?.first_name} ${c.profiles?.last_name} (${c.profiles?.member_number})</td>
+                <td>${c.commission_type}</td>
+                <td>₦${Number(c.amount).toLocaleString()}</td>
+                <td>${c.status}</td>
+              </tr>
+            `).join('')}
+          </table>
+        </body>
+        </html>
+      `;
+
+      // Create blob and download
+      const blob = new Blob([content], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `settlement-${settlement.settlement_month}.html`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      toast.success("Settlement report downloaded");
+    } catch (error: any) {
+      toast.error("Failed to generate report: " + error.message);
+    }
   };
 
   if (loading) {

@@ -26,7 +26,7 @@ const Withdrawals = () => {
           *,
           profiles!withdrawal_requests_member_id_fkey(first_name, last_name, member_number)
         `)
-        .eq('status', 'pending')
+        .in('status', ['pending', 'approved'])
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -39,9 +39,8 @@ const Withdrawals = () => {
     }
   };
 
-  const approveWithdrawal = async (withdrawalId: string, memberId: string) => {
+  const approveWithdrawal = async (withdrawalId: string, memberId: string, amount: number) => {
     try {
-      // Get member's user_id
       const { data: profile } = await supabase
         .from('profiles')
         .select('user_id')
@@ -50,7 +49,6 @@ const Withdrawals = () => {
 
       if (!profile) throw new Error('Member not found');
 
-      // Approve withdrawal
       const { error: updateError } = await supabase
         .from('withdrawal_requests')
         .update({
@@ -61,7 +59,13 @@ const Withdrawals = () => {
 
       if (updateError) throw updateError;
 
-      // Send notification to member
+      // Add to monthly settlements
+      const settlementMonth = new Date().toISOString().slice(0, 7);
+      await supabase.rpc('add_withdrawal_to_settlement', {
+        p_month: settlementMonth,
+        p_amount: amount
+      });
+
       const { error: notifError } = await supabase
         .from('notifications')
         .insert({
@@ -74,7 +78,45 @@ const Withdrawals = () => {
 
       if (notifError) console.error('Failed to send notification:', notifError);
       
-      toast.success("Withdrawal approved successfully");
+      toast.success("Withdrawal approved and added to monthly settlement");
+      fetchPendingWithdrawals();
+    } catch (error: any) {
+      toast.error(error.message);
+    }
+  };
+
+  const completeWithdrawal = async (withdrawalId: string, memberId: string) => {
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('id', memberId)
+        .single();
+
+      if (!profile) throw new Error('Member not found');
+
+      const { error: updateError } = await supabase
+        .from('withdrawal_requests')
+        .update({
+          status: 'completed'
+        })
+        .eq('id', withdrawalId);
+
+      if (updateError) throw updateError;
+
+      const { error: notifError } = await supabase
+        .from('notifications')
+        .insert({
+          user_id: profile.user_id,
+          title: 'Withdrawal Completed',
+          message: 'Your withdrawal is now on its way to your bank account. Please allow 1-3 business days for the funds to reflect.',
+          type: 'withdrawal_status',
+          related_id: withdrawalId
+        });
+
+      if (notifError) console.error('Failed to send notification:', notifError);
+      
+      toast.success("Withdrawal marked as completed and member notified");
       fetchPendingWithdrawals();
     } catch (error: any) {
       toast.error(error.message);
@@ -110,9 +152,9 @@ const Withdrawals = () => {
 
             <Card>
               <CardHeader>
-                <CardTitle>Pending Withdrawals ({pendingWithdrawals.length})</CardTitle>
+                <CardTitle>Withdrawal Requests ({pendingWithdrawals.length})</CardTitle>
                 <CardDescription>
-                  Approve withdrawals and process payments
+                  Approve, process and complete withdrawal payments
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -133,13 +175,17 @@ const Withdrawals = () => {
                     <TableBody>
                       {pendingWithdrawals.map((withdrawal: any) => (
                         <TableRow key={withdrawal.id}>
-                          <TableCell className="font-medium">
-                            {withdrawal.profiles?.first_name} {withdrawal.profiles?.last_name}
-                            <br />
-                            <span className="text-xs text-muted-foreground">
-                              {withdrawal.profiles?.member_number}
-                            </span>
-                          </TableCell>
+                           <TableCell className="font-medium">
+                             {withdrawal.profiles?.first_name} {withdrawal.profiles?.last_name}
+                             <br />
+                             <span className="text-xs text-muted-foreground">
+                               {withdrawal.profiles?.member_number}
+                             </span>
+                             <br />
+                             <Badge variant={withdrawal.status === 'approved' ? 'default' : 'secondary'} className="mt-1">
+                               {withdrawal.status}
+                             </Badge>
+                           </TableCell>
                           <TableCell className="font-bold text-lg">
                             ₦{Number(withdrawal.amount).toLocaleString()}
                           </TableCell>
@@ -151,14 +197,26 @@ const Withdrawals = () => {
                             </div>
                           </TableCell>
                           <TableCell>{new Date(withdrawal.requested_at).toLocaleDateString()}</TableCell>
-                          <TableCell className="text-right">
-                            <Button
-                              size="sm"
-                              onClick={() => approveWithdrawal(withdrawal.id, withdrawal.member_id)}
-                            >
-                              <CheckCircle className="h-4 w-4 mr-1" />
-                              Approve & Process
-                            </Button>
+                          <TableCell className="text-right space-x-2">
+                            {withdrawal.status === 'pending' && (
+                              <Button
+                                size="sm"
+                                onClick={() => approveWithdrawal(withdrawal.id, withdrawal.member_id, withdrawal.amount)}
+                              >
+                                <CheckCircle className="h-4 w-4 mr-1" />
+                                Approve & Process
+                              </Button>
+                            )}
+                            {withdrawal.status === 'approved' && (
+                              <Button
+                                size="sm"
+                                variant="secondary"
+                                onClick={() => completeWithdrawal(withdrawal.id, withdrawal.member_id)}
+                              >
+                                <CheckCircle className="h-4 w-4 mr-1" />
+                                Mark as Completed
+                              </Button>
+                            )}
                           </TableCell>
                         </TableRow>
                       ))}

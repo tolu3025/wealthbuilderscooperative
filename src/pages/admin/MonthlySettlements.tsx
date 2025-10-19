@@ -105,63 +105,140 @@ const MonthlySettlements = () => {
     }
   };
 
-  const generateBroadSheet = async (settlement: Settlement) => {
+  const generateAllReports = async () => {
     try {
-      // Fetch detailed data for the settlement
-      const { data: allocations } = await supabase
-        .from('financial_allocations')
-        .select('*')
-        .eq('settlement_month', settlement.settlement_month);
+      // Fetch all settlement data
+      const allReportsData = await Promise.all(
+        settlements.map(async (settlement) => {
+          const { data: allocations } = await supabase
+            .from('financial_allocations')
+            .select('*')
+            .eq('settlement_month', settlement.settlement_month);
 
-      const { data: commissions } = await supabase
-        .from('commissions')
-        .select('*, profiles!commissions_member_id_fkey(first_name, last_name, member_number)')
-        .gte('created_at', settlement.settlement_month + '-01')
-        .lt('created_at', format(new Date(new Date(settlement.settlement_month + '-01').setMonth(new Date(settlement.settlement_month + '-01').getMonth() + 1)), 'yyyy-MM-dd'));
+          const { data: commissions } = await supabase
+            .from('commissions')
+            .select('*, profiles!commissions_member_id_fkey(first_name, last_name, member_number)')
+            .gte('created_at', settlement.settlement_month + '-01')
+            .lt('created_at', format(new Date(new Date(settlement.settlement_month + '-01').setMonth(new Date(settlement.settlement_month + '-01').getMonth() + 1)), 'yyyy-MM-dd'));
 
-      // Create PDF content
+          const { data: withdrawals } = await supabase
+            .from('withdrawal_requests')
+            .select('*, profiles!withdrawal_requests_member_id_fkey(first_name, last_name, member_number, phone)')
+            .gte('created_at', settlement.settlement_month + '-01')
+            .lt('created_at', format(new Date(new Date(settlement.settlement_month + '-01').setMonth(new Date(settlement.settlement_month + '-01').getMonth() + 1)), 'yyyy-MM-dd'))
+            .in('status', ['approved', 'completed']);
+
+          const monthDate = settlement.settlement_month 
+            ? new Date(settlement.settlement_month + '-01')
+            : null;
+          const isValidMonthDate = monthDate && !isNaN(monthDate.getTime());
+
+          return {
+            settlement,
+            allocations,
+            commissions,
+            withdrawals,
+            monthDisplay: isValidMonthDate ? format(monthDate, 'MMMM yyyy') : settlement.settlement_month
+          };
+        })
+      );
+
+      // Create comprehensive HTML report
       const content = `
         <html>
         <head>
           <style>
             body { font-family: Arial, sans-serif; padding: 20px; }
-            h1 { color: #0052CC; }
+            h1 { color: #0052CC; page-break-before: always; }
+            h1:first-child { page-break-before: avoid; }
+            h2 { color: #00C49A; margin-top: 30px; }
+            h3 { color: #666; margin-top: 20px; }
             table { width: 100%; border-collapse: collapse; margin: 20px 0; }
             th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
             th { background-color: #0052CC; color: white; }
-            .total { font-weight: bold; background-color: #f0f0f0; }
+            .summary-box { background: #f5f5f5; padding: 15px; margin: 20px 0; border-radius: 5px; }
+            .total-row { font-weight: bold; background-color: #e8f4f8; }
+            @media print {
+              h1 { page-break-before: always; }
+              h1:first-child { page-break-before: avoid; }
+            }
           </style>
         </head>
         <body>
-          <h1>Monthly Settlement Report</h1>
-          <h2>${format(new Date(settlement.settlement_month + '-01'), 'MMMM yyyy')}</h2>
-          
-          <h3>Summary</h3>
-          <table>
-            <tr><th>Registrations</th><td>${settlement.total_registrations}</td></tr>
-            <tr><th>Total Contributions</th><td>₦${settlement.total_contributions.toLocaleString()}</td></tr>
-            <tr><th>Total Allocated</th><td>₦${settlement.total_allocated.toLocaleString()}</td></tr>
-            <tr><th>Status</th><td>${settlement.status}</td></tr>
-          </table>
+          <h1>WealthBuilders Cooperative</h1>
+          <h2>Complete Monthly Settlements Report</h2>
+          <p>Generated on: ${format(new Date(), 'PPP')}</p>
 
-          <h3>Financial Allocations</h3>
-          <table>
-            <tr><th>Type</th><th>Amount</th></tr>
-            ${allocations?.map(a => `<tr><td>${a.allocation_type}</td><td>₦${Number(a.amount).toLocaleString()}</td></tr>`).join('')}
-          </table>
+          ${allReportsData.map(({ settlement, allocations, commissions, withdrawals, monthDisplay }) => `
+            <h1>${monthDisplay} Settlement Report</h1>
+            
+            <div class="summary-box">
+              <h3>Summary</h3>
+              <table>
+                <tr><th>Metric</th><th>Value</th></tr>
+                <tr><td>Total Registrations</td><td>${settlement.total_registrations}</td></tr>
+                <tr><td>Total Contributions</td><td>₦${Number(settlement.total_contributions || 0).toLocaleString()}</td></tr>
+                <tr><td>Total Allocated</td><td>₦${Number(settlement.total_allocated || 0).toLocaleString()}</td></tr>
+                <tr><td>Total Withdrawals</td><td>₦${Number(settlement.total_withdrawals || 0).toLocaleString()}</td></tr>
+                <tr><td>Status</td><td>${settlement.status}</td></tr>
+              </table>
+            </div>
 
-          <h3>Commissions</h3>
-          <table>
-            <tr><th>Member</th><th>Type</th><th>Amount</th><th>Status</th></tr>
-            ${commissions?.map(c => `
-              <tr>
-                <td>${c.profiles?.first_name} ${c.profiles?.last_name} (${c.profiles?.member_number})</td>
-                <td>${c.commission_type}</td>
-                <td>₦${Number(c.amount).toLocaleString()}</td>
-                <td>${c.status}</td>
+            <h3>Financial Allocations</h3>
+            <table>
+              <tr><th>Type</th><th>Amount</th><th>Status</th></tr>
+              ${allocations?.map(a => `
+                <tr>
+                  <td>${a.allocation_type.replace('_', ' ').toUpperCase()}</td>
+                  <td>₦${Number(a.amount).toLocaleString()}</td>
+                  <td>${a.status}</td>
+                </tr>
+              `).join('') || '<tr><td colspan="3">No allocations</td></tr>'}
+              <tr class="total-row">
+                <td>TOTAL</td>
+                <td>₦${(allocations?.reduce((sum, a) => sum + Number(a.amount), 0) || 0).toLocaleString()}</td>
+                <td></td>
               </tr>
-            `).join('')}
-          </table>
+            </table>
+
+            <h3>Commissions</h3>
+            <table>
+              <tr><th>Member</th><th>Member Number</th><th>Type</th><th>Amount</th><th>Status</th></tr>
+              ${commissions?.map(c => `
+                <tr>
+                  <td>${c.profiles?.first_name} ${c.profiles?.last_name}</td>
+                  <td>${c.profiles?.member_number}</td>
+                  <td>${c.commission_type}</td>
+                  <td>₦${Number(c.amount).toLocaleString()}</td>
+                  <td>${c.status}</td>
+                </tr>
+              `).join('') || '<tr><td colspan="5">No commissions</td></tr>'}
+              <tr class="total-row">
+                <td colspan="3">TOTAL</td>
+                <td>₦${(commissions?.reduce((sum, c) => sum + Number(c.amount), 0) || 0).toLocaleString()}</td>
+                <td></td>
+              </tr>
+            </table>
+
+            <h3>Withdrawals</h3>
+            <table>
+              <tr><th>Member</th><th>Member Number</th><th>Amount</th><th>Status</th><th>Date</th></tr>
+              ${withdrawals?.map(w => `
+                <tr>
+                  <td>${w.profiles?.first_name} ${w.profiles?.last_name}</td>
+                  <td>${w.profiles?.member_number}</td>
+                  <td>₦${Number(w.amount).toLocaleString()}</td>
+                  <td>${w.status}</td>
+                  <td>${format(new Date(w.created_at), 'PP')}</td>
+                </tr>
+              `).join('') || '<tr><td colspan="5">No withdrawals</td></tr>'}
+              <tr class="total-row">
+                <td colspan="2">TOTAL</td>
+                <td>₦${(withdrawals?.reduce((sum, w) => sum + Number(w.amount), 0) || 0).toLocaleString()}</td>
+                <td colspan="2"></td>
+              </tr>
+            </table>
+          `).join('')}
         </body>
         </html>
       `;
@@ -171,13 +248,13 @@ const MonthlySettlements = () => {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `settlement-${settlement.settlement_month}.html`;
+      a.download = `wealthbuilders-settlements-${format(new Date(), 'yyyy-MM-dd')}.html`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
-      toast.success("Settlement report downloaded");
+      toast.success("Complete settlements report downloaded");
     } catch (error: any) {
       toast.error("Failed to generate report: " + error.message);
     }
@@ -217,7 +294,15 @@ const MonthlySettlements = () => {
                   Mark months as settled to lock financial records
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-4">
+                <Button
+                  onClick={generateAllReports}
+                  variant="outline"
+                  className="w-full"
+                >
+                  <FileText className="h-4 w-4 mr-2" />
+                  Download Complete Settlements Report
+                </Button>
                 {settlements.length === 0 ? (
                   <p className="text-center text-muted-foreground py-8">
                     No settlements found
@@ -264,16 +349,8 @@ const MonthlySettlements = () => {
                                 ? format(new Date(settlement.settled_at), 'MMM dd, yyyy')
                                 : 'Not settled'
                               }
-                            </TableCell>
+                          </TableCell>
                           <TableCell className="text-right space-x-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => generateBroadSheet(settlement)}
-                            >
-                              <FileText className="h-4 w-4 mr-1" />
-                              Report
-                            </Button>
                             {settlement.status === 'pending' && (
                               <AlertDialog>
                                 <AlertDialogTrigger asChild>

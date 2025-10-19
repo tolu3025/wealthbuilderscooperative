@@ -62,20 +62,39 @@ const Dividends = () => {
 
       if (!members) return;
 
-      const memberCapitals = await Promise.all(
-        members.map(async (member) => {
-          const { data: contribs } = await supabase
-            .from('contributions')
-            .select('capital_amount')
-            .eq('member_id', member.id)
-            .eq('payment_status', 'approved');
+      // Get member balances with eligibility info
+      const { data: balances } = await supabase
+        .from('member_balances')
+        .select('member_id, total_capital, months_contributed, eligible_for_dividend')
+        .eq('eligible_for_dividend', true);
 
-          const totalCapital = contribs?.reduce((sum, c) => sum + Number(c.capital_amount), 0) || 0;
-          return totalCapital >= 50000 ? { ...member, totalCapital } : null;
-        })
-      );
+      if (!balances || balances.length === 0) {
+        toast.error("No eligible members found. Members need 6 months of contributions and ₦50,000 capital.");
+        setCalculating(false);
+        return;
+      }
 
-      const eligibleMembers = memberCapitals.filter(Boolean);
+      // Filter members who are in the eligible list
+      const eligibleMembers = members
+        .filter(member => 
+          balances.some(balance => 
+            balance.member_id === member.id && 
+            balance.eligible_for_dividend === true
+          )
+        )
+        .map(member => {
+          const balance = balances.find(b => b.member_id === member.id);
+          return {
+            ...member,
+            totalCapital: Number(balance?.total_capital || 0)
+          };
+        });
+
+      if (eligibleMembers.length === 0) {
+        toast.error("No eligible members found.");
+        setCalculating(false);
+        return;
+      }
       const totalEligibleCapital = eligibleMembers.reduce((sum, m) => sum + (m?.totalCapital || 0), 0);
 
       const { data: distribution, error: distError } = await supabase

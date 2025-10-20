@@ -88,6 +88,15 @@ const MonthlySettlements = () => {
 
       if (allocError) throw allocError;
 
+      // Mark all contributions for this month as settled
+      const { error: contribError } = await supabase
+        .from('contributions')
+        .update({ settlement_status: 'settled' })
+        .eq('settlement_month', month)
+        .eq('settlement_status', 'pending');
+
+      if (contribError) throw contribError;
+
       // Mark all commissions for this month as settled (approved)
       const { error: commError } = await supabase
         .from('commissions')
@@ -98,7 +107,20 @@ const MonthlySettlements = () => {
 
       if (commError) throw commError;
 
-      toast.success(`${format(new Date(month + '-01'), 'MMMM yyyy')} has been settled`);
+      // Mark all withdrawals for this month as completed
+      const { error: withdrawError } = await supabase
+        .from('withdrawal_requests')
+        .update({ 
+          status: 'completed',
+          processed_at: new Date().toISOString()
+        })
+        .gte('requested_at', month + '-01')
+        .lt('requested_at', format(new Date(new Date(month + '-01').setMonth(new Date(month + '-01').getMonth() + 1)), 'yyyy-MM-dd'))
+        .eq('status', 'approved');
+
+      if (withdrawError) throw withdrawError;
+
+      toast.success(`${format(new Date(month + '-01'), 'MMMM yyyy')} has been settled - all records finalized`);
       fetchSettlements();
     } catch (error: any) {
       toast.error("Failed to settle month: " + error.message);

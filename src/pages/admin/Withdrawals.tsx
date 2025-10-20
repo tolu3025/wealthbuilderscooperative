@@ -127,21 +127,24 @@ const Withdrawals = () => {
 
       if (!profile) throw new Error('Member not found');
 
+      // Mark as completed (payment sent)
       const { error: updateError } = await supabase
         .from('withdrawal_requests')
         .update({
-          status: 'completed'
+          status: 'completed',
+          processed_at: new Date().toISOString()
         })
         .eq('id', withdrawalId);
 
       if (updateError) throw updateError;
 
+      // Send notification
       const { error: notifError } = await supabase
         .from('notifications')
         .insert({
           user_id: profile.user_id,
           title: 'Withdrawal Completed',
-          message: 'Your withdrawal is now on its way to your bank account. Please allow 1-3 business days for the funds to reflect.',
+          message: 'Your withdrawal has been processed successfully. Funds should reflect in your account within 1-3 business days.',
           type: 'withdrawal_status',
           related_id: withdrawalId
         });
@@ -229,24 +232,24 @@ const Withdrawals = () => {
                             </div>
                           </TableCell>
                           <TableCell>{new Date(withdrawal.requested_at).toLocaleDateString()}</TableCell>
-                          <TableCell className="text-right space-x-2">
+                           <TableCell className="text-right space-x-2">
                             {withdrawal.status === 'pending' && (
                               <Button
                                 size="sm"
                                 onClick={() => approveWithdrawal(withdrawal.id, withdrawal.member_id, withdrawal.amount)}
                               >
                                 <CheckCircle className="h-4 w-4 mr-1" />
-                                Approve & Process
+                                Approve
                               </Button>
                             )}
                             {withdrawal.status === 'approved' && (
                               <Button
                                 size="sm"
-                                variant="secondary"
+                                variant="default"
                                 onClick={() => completeWithdrawal(withdrawal.id, withdrawal.member_id)}
                               >
                                 <CheckCircle className="h-4 w-4 mr-1" />
-                                Mark as Completed
+                                Mark as Paid
                               </Button>
                             )}
                           </TableCell>

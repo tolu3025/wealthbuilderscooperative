@@ -59,16 +59,18 @@ const PropertyPlans = () => {
       if (profile) {
         setUserName(`${profile.first_name} ${profile.last_name}`);
 
-        // Check eligibility (3 months)
+        // Check eligibility (3 months + ₦50,000 capital for plans)
         const { data: balance } = await supabase
           .from('member_balances')
-          .select('months_contributed')
+          .select('months_contributed, total_capital, eligible_for_dividend')
           .eq('member_id', profile.id)
           .single();
 
         const months = balance?.months_contributed || 0;
+        const capital = balance?.total_capital || 0;
         setMonthsActive(months);
-        setEligible(months >= 3);
+        // Eligible if: 3+ months AND ₦50,000+ capital (1 share)
+        setEligible(balance?.eligible_for_dividend || false);
 
         // Fetch enrollments
         const { data: enrollmentData } = await supabase
@@ -96,7 +98,7 @@ const PropertyPlans = () => {
 
   const handleEnroll = async (planId: string) => {
     if (!eligible) {
-      toast.error("You must be an active cooperative member for at least 3 months to access this plan.");
+      toast.error("You must have contributed for at least 3 months and reached ₦50,000 capital before joining a plan.");
       return;
     }
 
@@ -118,17 +120,50 @@ const PropertyPlans = () => {
         .insert({
           member_id: profile.id,
           plan_id: planId,
+          status: 'active',
         });
 
       if (error) throw error;
 
-      toast.success("Successfully enrolled in plan!");
+      toast.success("Successfully applied to plan!");
       fetchData();
     } catch (error: any) {
       console.error('Enrollment error:', error);
-      toast.error("Failed to enroll: " + error.message);
+      toast.error("Failed to apply: " + error.message);
     } finally {
       setEnrolling(null);
+    }
+  };
+
+  const handleCancelInterest = async (planId: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!profile) return;
+
+      // Find the enrollment to delete
+      const enrollment = enrollments.find(e => e.plan_id === planId && e.status === 'active');
+      if (!enrollment) return;
+
+      const { error } = await supabase
+        .from('plan_enrollments')
+        .delete()
+        .eq('id', enrollment.id);
+
+      if (error) throw error;
+
+      toast.success("Interest cancelled successfully!");
+      fetchData();
+    } catch (error: any) {
+      console.error('Cancel error:', error);
+      toast.error("Failed to cancel: " + error.message);
     }
   };
 
@@ -167,7 +202,7 @@ const PropertyPlans = () => {
               <Alert>
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
-                  You must be an active cooperative member for at least 3 months to access these plans.
+                  You must have contributed for at least 3 months and reached ₦50,000 capital before joining a plan.
                   <br />
                   <strong>Current status:</strong> {monthsActive} month{monthsActive !== 1 ? 's' : ''} active
                 </AlertDescription>
@@ -204,7 +239,15 @@ const PropertyPlans = () => {
                         {plan.description}
                       </CardDescription>
                       
-                      {!enrolled && (
+                      {enrolled ? (
+                        <Button
+                          onClick={() => handleCancelInterest(plan.id)}
+                          variant="outline"
+                          className="w-full"
+                        >
+                          Cancel Interest
+                        </Button>
+                      ) : (
                         <Button
                           onClick={() => handleEnroll(plan.id)}
                           disabled={!eligible || enrolling === plan.id}
@@ -213,7 +256,7 @@ const PropertyPlans = () => {
                           {enrolling === plan.id && (
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                           )}
-                          {eligible ? "Enroll in Plan" : "Not Eligible Yet"}
+                          {eligible ? "Apply" : "Not Eligible Yet"}
                         </Button>
                       )}
                     </CardContent>

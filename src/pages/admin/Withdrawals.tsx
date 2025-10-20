@@ -41,6 +41,7 @@ const Withdrawals = () => {
 
   const approveWithdrawal = async (withdrawalId: string, memberId: string, amount: number) => {
     try {
+      // Get member profile and balance
       const { data: profile } = await supabase
         .from('profiles')
         .select('user_id')
@@ -48,6 +49,19 @@ const Withdrawals = () => {
         .single();
 
       if (!profile) throw new Error('Member not found');
+
+      const { data: balance } = await supabase
+        .from('member_balances')
+        .select('total_savings, total_capital, months_contributed')
+        .eq('member_id', memberId)
+        .single();
+
+      if (!balance) throw new Error('Member balance not found');
+
+      // Check minimum capital requirement
+      if (balance.total_capital - amount < 50000 && amount > balance.total_savings) {
+        throw new Error('Cannot approve: Withdrawal would drop capital below ₦50,000 minimum');
+      }
 
       const { error: updateError } = await supabase
         .from('withdrawal_requests')

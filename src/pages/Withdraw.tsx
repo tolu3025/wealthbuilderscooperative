@@ -139,11 +139,21 @@ const Withdraw = () => {
         throw new Error("You must contribute for at least 3 months before withdrawing");
       }
 
-      // Calculate total available balance (savings + capital + dividends after 6 months)
+      // Calculate total available balance (savings + capital + dividends)
       const totalAvailable = totalSavings + totalCapital + totalDividends;
 
       if (amount > totalAvailable) {
         throw new Error(`Insufficient balance. Available: ₦${totalAvailable.toLocaleString()}`);
+      }
+
+      // Check if withdrawal would drop capital below minimum (₦50,000)
+      const remainingCapital = totalCapital - amount;
+      if (remainingCapital < 0 && Math.abs(remainingCapital) <= totalCapital) {
+        // User is withdrawing from capital
+        const capitalWithdrawn = Math.min(amount, totalCapital);
+        if (totalCapital - capitalWithdrawn < 50000) {
+          throw new Error("You cannot withdraw below your minimum share capital of ₦50,000.");
+        }
       }
 
       setSubmitting(true);
@@ -282,7 +292,7 @@ const Withdraw = () => {
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
                 Your funds are locked for 3 months. You must contribute for at least 3 months before you can request a withdrawal.
-                You have contributed for {monthsContributed} month(s). After 3 months, you can withdraw from your savings, capital, and dividends.
+                You have contributed for {monthsContributed} month(s). After 3 months, you can withdraw from your savings and accumulated dividends.
               </AlertDescription>
             </Alert>
           )}
@@ -290,8 +300,9 @@ const Withdraw = () => {
           {isEligible && totalAvailableBalance > 0 && (
             <Alert>
               <AlertDescription>
-                <strong>Withdrawal Information:</strong> After 3 months, you can withdraw from your total balance which includes savings (₦{totalSavings.toLocaleString()}), 
-                capital (₦{totalCapital.toLocaleString()}), and accumulated dividends (₦{totalDividends.toLocaleString()}).
+                <strong>Withdrawal Information:</strong> After 3 months, you can withdraw from savings (₦{totalSavings.toLocaleString()}) 
+                and accumulated dividends (₦{totalDividends.toLocaleString()}). 
+                Capital (₦{totalCapital.toLocaleString()}) cannot be withdrawn below ₦50,000 minimum share capital.
               </AlertDescription>
             </Alert>
           )}

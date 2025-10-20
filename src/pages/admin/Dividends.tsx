@@ -69,7 +69,7 @@ const Dividends = () => {
         .eq('eligible_for_dividend', true);
 
       if (!balances || balances.length === 0) {
-        toast.error("No eligible members found. Members need 6 months of contributions and ₦50,000 capital.");
+        toast.error("No eligible members found. Members need 3 months of contributions and ₦50,000 capital.");
         setCalculating(false);
         return;
       }

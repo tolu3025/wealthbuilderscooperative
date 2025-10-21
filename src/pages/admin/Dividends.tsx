@@ -6,8 +6,19 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, Loader2 } from "lucide-react";
+import { TrendingUp, Loader2, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/AdminSidebar";
@@ -45,6 +56,31 @@ const Dividends = () => {
       toast.error(error.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteDistribution = async (distributionId: string) => {
+    try {
+      // First delete all dividends associated with this distribution
+      const { error: dividendsError } = await supabase
+        .from('dividends')
+        .delete()
+        .eq('distribution_id', distributionId);
+
+      if (dividendsError) throw dividendsError;
+
+      // Then delete the distribution itself
+      const { error: distError } = await supabase
+        .from('dividend_distributions')
+        .delete()
+        .eq('id', distributionId);
+
+      if (distError) throw distError;
+
+      toast.success("Distribution deleted successfully");
+      fetchData();
+    } catch (error: any) {
+      toast.error(error.message);
     }
   };
 
@@ -121,7 +157,7 @@ const Dividends = () => {
           amount: memberShare,
           dividend_percentage: percentage,
           member_capital_at_distribution: member!.totalCapital,
-          status: 'approved' // Changed from 'pending' to 'approved' so funds are immediately withdrawable
+          status: 'calculated'
         };
       });
 
@@ -242,6 +278,7 @@ const Dividends = () => {
                         <TableHead>Members</TableHead>
                         <TableHead>Date</TableHead>
                         <TableHead>Status</TableHead>
+                        <TableHead>Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -254,6 +291,32 @@ const Dividends = () => {
                           <TableCell>{new Date(dist.distribution_date).toLocaleDateString()}</TableCell>
                           <TableCell>
                             <Badge>{dist.status}</Badge>
+                          </TableCell>
+                          <TableCell>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete Distribution?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    This will permanently delete this dividend distribution and all associated member dividends. This action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => handleDeleteDistribution(dist.id)}
+                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                  >
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
                           </TableCell>
                         </TableRow>
                       ))}

@@ -129,41 +129,65 @@ const MonthlySettlements = () => {
 
   const generateAllReports = async () => {
     try {
-      // Fetch all settlement data
+      // Fetch all settlement data with better error handling
       const allReportsData = await Promise.all(
         settlements.map(async (settlement) => {
-          const { data: allocations } = await supabase
-            .from('financial_allocations')
-            .select('*')
-            .eq('settlement_month', settlement.settlement_month);
+          try {
+            // Validate settlement month exists
+            if (!settlement.settlement_month) {
+              console.error('Settlement missing month:', settlement.id);
+              return null;
+            }
 
-          const { data: commissions } = await supabase
-            .from('commissions')
-            .select('*, profiles!commissions_member_id_fkey(first_name, last_name, member_number)')
-            .gte('created_at', settlement.settlement_month + '-01')
-            .lt('created_at', format(new Date(new Date(settlement.settlement_month + '-01').setMonth(new Date(settlement.settlement_month + '-01').getMonth() + 1)), 'yyyy-MM-dd'));
+            const monthDate = new Date(settlement.settlement_month + '-01');
+            if (isNaN(monthDate.getTime())) {
+              console.error('Invalid settlement month:', settlement.settlement_month);
+              return null;
+            }
 
-          const { data: withdrawals } = await supabase
-            .from('withdrawal_requests')
-            .select('*, profiles!withdrawal_requests_member_id_fkey(first_name, last_name, member_number, phone)')
-            .gte('created_at', settlement.settlement_month + '-01')
-            .lt('created_at', format(new Date(new Date(settlement.settlement_month + '-01').setMonth(new Date(settlement.settlement_month + '-01').getMonth() + 1)), 'yyyy-MM-dd'))
-            .in('status', ['approved', 'completed']);
+            const nextMonth = new Date(monthDate);
+            nextMonth.setMonth(nextMonth.getMonth() + 1);
+            const nextMonthStr = format(nextMonth, 'yyyy-MM-dd');
 
-          const monthDate = settlement.settlement_month 
-            ? new Date(settlement.settlement_month + '-01')
-            : null;
-          const isValidMonthDate = monthDate && !isNaN(monthDate.getTime());
+            const { data: allocations } = await supabase
+              .from('financial_allocations')
+              .select('*')
+              .eq('settlement_month', settlement.settlement_month);
 
-          return {
-            settlement,
-            allocations,
-            commissions,
-            withdrawals,
-            monthDisplay: isValidMonthDate ? format(monthDate, 'MMMM yyyy') : settlement.settlement_month
-          };
+            const { data: commissions } = await supabase
+              .from('commissions')
+              .select('*, profiles!commissions_member_id_fkey(first_name, last_name, member_number)')
+              .gte('created_at', settlement.settlement_month + '-01')
+              .lt('created_at', nextMonthStr);
+
+            const { data: withdrawals } = await supabase
+              .from('withdrawal_requests')
+              .select('*, profiles!withdrawal_requests_member_id_fkey(first_name, last_name, member_number, phone)')
+              .gte('created_at', settlement.settlement_month + '-01')
+              .lt('created_at', nextMonthStr)
+              .in('status', ['approved', 'completed']);
+
+            return {
+              settlement,
+              allocations: allocations || [],
+              commissions: commissions || [],
+              withdrawals: withdrawals || [],
+              monthDisplay: format(monthDate, 'MMMM yyyy')
+            };
+          } catch (error) {
+            console.error('Error processing settlement:', settlement.id, error);
+            return null;
+          }
         })
       );
+
+      // Filter out failed settlements
+      const validReports = allReportsData.filter(report => report !== null);
+
+      if (validReports.length === 0) {
+        toast.error("No valid settlement data to generate report");
+        return;
+      }
 
       // Create comprehensive HTML report
       const content = `
@@ -191,7 +215,7 @@ const MonthlySettlements = () => {
           <h2>Complete Monthly Settlements Report</h2>
           <p>Generated on: ${format(new Date(), 'PPP')}</p>
 
-          ${allReportsData.map(({ settlement, allocations, commissions, withdrawals, monthDisplay }) => `
+          ${validReports.map(({ settlement, allocations, commissions, withdrawals, monthDisplay }) => `
             <h1>${monthDisplay} Settlement Report</h1>
             
             <div class="summary-box">
@@ -246,14 +270,14 @@ const MonthlySettlements = () => {
             <table>
               <tr><th>Member</th><th>Member Number</th><th>Amount</th><th>Status</th><th>Date</th></tr>
               ${withdrawals?.map(w => `
-                <tr>
-                  <td>${w.profiles?.first_name} ${w.profiles?.last_name}</td>
-                  <td>${w.profiles?.member_number}</td>
-                  <td>₦${Number(w.amount).toLocaleString()}</td>
-                  <td>${w.status}</td>
-                  <td>${format(new Date(w.created_at), 'PP')}</td>
-                </tr>
-              `).join('') || '<tr><td colspan="5">No withdrawals</td></tr>'}
+                 <tr>
+                   <td>${w.profiles?.first_name} ${w.profiles?.last_name}</td>
+                   <td>${w.profiles?.member_number}</td>
+                   <td>₦${Number(w.amount).toLocaleString()}</td>
+                   <td>${w.status}</td>
+                   <td>${w.created_at ? format(new Date(w.created_at), 'PP') : 'N/A'}</td>
+                 </tr>
+               `).join('') || '<tr><td colspan="5">No withdrawals</td></tr>'}
               <tr class="total-row">
                 <td colspan="2">TOTAL</td>
                 <td>₦${(withdrawals?.reduce((sum, w) => sum + Number(w.amount), 0) || 0).toLocaleString()}</td>

@@ -101,7 +101,7 @@ const Dividends = () => {
               <Info className="h-4 w-4" />
               <AlertDescription>
                 Dividends are distributed after property resales based on your capital contribution.
-                You must have ≥₦50,000 capital and 6+ months membership to qualify.
+                You must have ≥₦50,000 capital and 3+ months of contributions to qualify.
               </AlertDescription>
             </Alert>
 

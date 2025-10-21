@@ -163,8 +163,8 @@ const MonthlySettlements = () => {
             const { data: withdrawals } = await supabase
               .from('withdrawal_requests')
               .select('*, profiles!withdrawal_requests_member_id_fkey(first_name, last_name, member_number, phone)')
-              .gte('created_at', settlement.settlement_month + '-01')
-              .lt('created_at', nextMonthStr)
+              .gte('requested_at', settlement.settlement_month + '-01')
+              .lt('requested_at', nextMonthStr)
               .in('status', ['approved', 'completed']);
 
             return {
@@ -185,7 +185,7 @@ const MonthlySettlements = () => {
       const validReports = allReportsData.filter(report => report !== null);
 
       if (validReports.length === 0) {
-        toast.error("No valid settlement data to generate report");
+        toast.error("No settlement records found. Please ensure settlements exist before generating reports.");
         return;
       }
 
@@ -268,20 +268,21 @@ const MonthlySettlements = () => {
 
             <h3>Withdrawals</h3>
             <table>
-              <tr><th>Member</th><th>Member Number</th><th>Amount</th><th>Status</th><th>Date</th></tr>
+              <tr><th>Member</th><th>Member Number</th><th>Account Number</th><th>Bank Name</th><th>Amount</th><th>Status</th></tr>
               ${withdrawals?.map(w => `
                  <tr>
                    <td>${w.profiles?.first_name} ${w.profiles?.last_name}</td>
                    <td>${w.profiles?.member_number}</td>
+                   <td>${w.account_number || 'N/A'}</td>
+                   <td>${w.bank_name || 'N/A'}</td>
                    <td>₦${Number(w.amount).toLocaleString()}</td>
                    <td>${w.status}</td>
-                   <td>${w.created_at ? format(new Date(w.created_at), 'PP') : 'N/A'}</td>
                  </tr>
-               `).join('') || '<tr><td colspan="5">No withdrawals</td></tr>'}
+               `).join('') || '<tr><td colspan="6">No withdrawals</td></tr>'}
               <tr class="total-row">
-                <td colspan="2">TOTAL</td>
+                <td colspan="4">TOTAL</td>
                 <td>₦${(withdrawals?.reduce((sum, w) => sum + Number(w.amount), 0) || 0).toLocaleString()}</td>
-                <td colspan="2"></td>
+                <td></td>
               </tr>
             </table>
           `).join('')}

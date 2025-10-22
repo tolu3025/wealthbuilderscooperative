@@ -185,7 +185,7 @@ const Hero = () => {
             }, {
               step: "2",
               title: "Monthly Contributions",
-              description: "Contribute ₦5,200 each month. ₦5,000 builds your capital and savings, while ₦200 supports cooperative operations.",
+              description: "Contribute ₦5,500 each month. ₦5,000 builds your capital and savings, while ₦500 supports cooperative operations.",
               color: "secondary"
             }, {
               step: "3",

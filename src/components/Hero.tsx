@@ -190,7 +190,7 @@ const Hero = () => {
             }, {
               step: "3",
               title: "Earn Dividends",
-              description: "After 6 months and ₦50,000 capital, you're eligible for dividends when properties are sold at profit.",
+              description: "After 3 months and ₦50,000 capital, you're eligible for dividends when properties are sold at profit.",
               color: "accent"
             }].map((item, index) => <div key={index} className="bg-card rounded-xl md:rounded-2xl p-6 md:p-8 shadow-lg hover:shadow-xl transition-all hover:scale-105 border border-border">
                   <div className={`w-14 h-14 md:w-16 md:h-16 rounded-full bg-${item.color}/10 flex items-center justify-center mb-4 md:mb-6`}>

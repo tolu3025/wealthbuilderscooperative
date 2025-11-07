@@ -97,7 +97,7 @@ const UploadReceipt = () => {
 
       toast({
         title: "Registration submitted!",
-        description: "Your registration has been submitted for approval. You'll receive a PIN via WhatsApp within 24 hours.",
+        description: "Your registration has been submitted for approval. You'll receive a notification once your account is activated.",
       });
 
       navigate("/dashboard");

@@ -125,12 +125,6 @@ const Login = () => {
                         Register here
                       </Button>
                     </p>
-                    <p className="text-sm text-muted-foreground">
-                      Have a PIN to activate?{" "}
-                      <Button variant="link" className="p-0 h-auto" onClick={() => navigate("/activate")}>
-                        Activate account
-                      </Button>
-                    </p>
                   </div>
                 </form>
               </Form>

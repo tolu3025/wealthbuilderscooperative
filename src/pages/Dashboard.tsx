@@ -91,11 +91,10 @@ const Dashboard = () => {
       // Block access if account is not active
       if (profile.registration_status !== 'active') {
         toast({
-          title: "Account Not Activated",
-          description: "Please complete your registration and activate your account first.",
+          title: "Account Pending Activation",
+          description: "Your registration is being reviewed by our admin team. You'll be notified once activated.",
           variant: "destructive",
         });
-        navigate("/activate");
         setLoading(false);
         return;
       }

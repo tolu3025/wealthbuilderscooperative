@@ -66,11 +66,11 @@ const Withdraw = () => {
       // Block access if account is not active
       if (profileData.registration_status !== 'active') {
         toast({
-          title: "Account Not Activated",
-          description: "Please activate your account before requesting withdrawals.",
+          title: "Account Pending Activation",
+          description: "Your account is being reviewed. You'll be notified once activated.",
           variant: "destructive",
         });
-        navigate("/activate");
+        navigate("/dashboard");
         return;
       }
       

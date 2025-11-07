@@ -34,31 +34,66 @@ const PendingRegistrations = () => {
     }
   };
 
-  const generatePIN = () => {
-    return Math.floor(100000 + Math.random() * 900000).toString();
+  const generateMemberNumber = async () => {
+    // Generate format: WB + Year + 5 random digits
+    const year = new Date().getFullYear().toString().slice(-2);
+    const randomDigits = Math.floor(10000 + Math.random() * 90000);
+    return `WB${year}${randomDigits}`;
   };
 
   const approveRegistration = async (profileId: string) => {
     try {
-      const pin = generatePIN();
+      const memberNumber = await generateMemberNumber();
       
-      const { error } = await supabase
+      // Update profile to active status with member number
+      const { error: updateError } = await supabase
         .from('profiles')
         .update({
-          registration_status: 'pending_activation',
-          registration_pin: pin
+          registration_status: 'active',
+          member_number: memberNumber,
+          registration_pin: null // Clear any existing PIN
         })
         .eq('id', profileId);
 
-      if (error) throw error;
+      if (updateError) throw updateError;
       
-      toast.success(`Registration approved! PIN: ${pin}`, {
-        description: `Send this PIN to the member via WhatsApp: +234 803 374 0309`,
-        duration: 10000
+      // Create member balance record
+      const { error: balanceError } = await supabase
+        .from('member_balances')
+        .insert({ member_id: profileId });
+      
+      if (balanceError && !balanceError.message.includes('duplicate')) {
+        throw balanceError;
+      }
+      
+      // Get profile details for notification
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('user_id, first_name, last_name')
+        .eq('id', profileId)
+        .single();
+        
+      if (profile) {
+        // Send in-app notification
+        await supabase
+          .from('notifications')
+          .insert({
+            user_id: profile.user_id,
+            title: '🎉 Account Activated!',
+            message: `Welcome ${profile.first_name}! Your account is now active. Your member number is: ${memberNumber}`,
+            type: 'activation'
+          });
+      }
+      
+      toast.success(`Account activated! Member #: ${memberNumber}`, {
+        description: `${profile?.first_name} ${profile?.last_name} can now access their dashboard`,
+        duration: 5000
       });
+      
       fetchPendingRegistrations();
     } catch (error: any) {
-      toast.error(error.message);
+      console.error('Activation error:', error);
+      toast.error('Failed to activate account: ' + error.message);
     }
   };
 
@@ -93,7 +128,7 @@ const PendingRegistrations = () => {
               <CardHeader>
                 <CardTitle>Registration Approvals</CardTitle>
                 <CardDescription>
-                  Send generated PINs via WhatsApp: +234 803 374 0309
+                  Review and activate new member accounts directly
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -127,7 +162,7 @@ const PendingRegistrations = () => {
                               onClick={() => approveRegistration(reg.id)}
                             >
                               <CheckCircle className="h-4 w-4 mr-1" />
-                              Generate PIN
+                              Activate Account
                             </Button>
                           </TableCell>
                         </TableRow>

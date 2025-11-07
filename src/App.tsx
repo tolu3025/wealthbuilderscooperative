@@ -25,7 +25,6 @@ import Reports from "./pages/admin/Reports";
 import Properties from "./pages/Properties";
 import Register from "./pages/Register";
 import UploadReceipt from "./pages/UploadReceipt";
-import Activate from "./pages/Activate";
 import Contribute from "./pages/Contribute";
 import Withdraw from "./pages/Withdraw";
 import About from "./pages/About";
@@ -66,7 +65,6 @@ const App = () => (
             <Route path="/privacy" element={<Policy />} />
             <Route path="/services" element={<Services />} />
             <Route path="/properties" element={<Properties />} />
-            <Route path="/activate" element={<Activate />} />
             <Route
               path="/login"
               element={

@@ -38,13 +38,15 @@ const Registrations = () => {
     }
   };
 
-  const generatePIN = () => {
-    return Math.floor(100000 + Math.random() * 900000).toString();
+  const generateMemberNumber = async () => {
+    const year = new Date().getFullYear().toString().slice(-2);
+    const randomDigits = Math.floor(10000 + Math.random() * 90000);
+    return `WB${year}${randomDigits}`;
   };
 
   const approveRegistration = async (regFeeId: string, profileId: string) => {
     try {
-      const pin = generatePIN();
+      const memberNumber = await generateMemberNumber();
       
       // Update registration fee status
       const { error: feeError } = await supabase
@@ -54,24 +56,48 @@ const Registrations = () => {
 
       if (feeError) throw feeError;
 
-      // Update profile with PIN and status
+      // Update profile to active with member number
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
-          registration_status: 'pending_activation',
-          registration_pin: pin
+          registration_status: 'active',
+          member_number: memberNumber,
+          registration_pin: null
         })
         .eq('id', profileId);
 
       if (profileError) throw profileError;
       
-      toast.success(`Registration approved!`, {
-        description: `PIN: ${pin} - Copy this and send via WhatsApp`,
-        duration: 15000
-      });
+      // Create member balance record
+      const { error: balanceError } = await supabase
+        .from('member_balances')
+        .insert({ member_id: profileId });
       
-      // Copy PIN to clipboard automatically
-      navigator.clipboard.writeText(pin);
+      if (balanceError && !balanceError.message.includes('duplicate')) {
+        throw balanceError;
+      }
+      
+      // Get profile for notification
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('user_id, first_name')
+        .eq('id', profileId)
+        .single();
+        
+      if (profile) {
+        await supabase
+          .from('notifications')
+          .insert({
+            user_id: profile.user_id,
+            title: '🎉 Account Activated!',
+            message: `Welcome ${profile.first_name}! Your account is active. Member #: ${memberNumber}`,
+            type: 'activation'
+          });
+      }
+      
+      toast.success(`Account activated! Member #: ${memberNumber}`, {
+        duration: 5000
+      });
       
       fetchPendingRegistrations();
     } catch (error: any) {
@@ -212,7 +238,7 @@ const Registrations = () => {
                                 onClick={() => approveRegistration(reg.id, reg.profiles.id)}
                               >
                                 <CheckCircle className="h-4 w-4 mr-1" />
-                                Approve & Generate PIN
+                                Activate Account
                               </Button>
                             )}
                           </TableCell>

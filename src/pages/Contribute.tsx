@@ -22,6 +22,8 @@ const Contribute = () => {
   const [receiptUrl, setReceiptUrl] = useState<string>("");
   const [profile, setProfile] = useState<any>(null);
   const [contributions, setContributions] = useState<any[]>([]);
+  const [contributionAmount, setContributionAmount] = useState<string>("5000");
+  const [selectedBreakdown, setSelectedBreakdown] = useState<string>("80_20");
 
   useEffect(() => {
     if (!user) {
@@ -56,6 +58,7 @@ const Contribute = () => {
       }
       
       setProfile(profileData);
+      setSelectedBreakdown(profileData.breakdown_type || '80_20');
 
       // Fetch contribution history
       const { data: contribData, error: contribError } = await supabase
@@ -81,34 +84,40 @@ const Contribute = () => {
   const handleSubmit = async () => {
     if (!receiptUrl || !profile) return;
 
+    const amount = parseFloat(contributionAmount);
+    if (isNaN(amount) || amount < 5000) {
+      toast({
+        title: "Invalid amount",
+        description: "Minimum contribution is ₦5,000",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setSubmitting(true);
     try {
       const currentMonth = new Date().toISOString().split('T')[0].substring(0, 7) + '-01';
-      const breakdownType = profile.breakdown_type || '80_20';
-      
-      // Calculate amounts based on breakdown
-      const totalAmount = 5500;
       const projectSupport = 500;
-      const remaining = 5000;
+      const contributable = amount;
       
       let capitalAmount, savingsAmount;
-      if (breakdownType === '100_capital') {
-        capitalAmount = remaining;
+      if (selectedBreakdown === '100_capital') {
+        capitalAmount = contributable;
         savingsAmount = 0;
       } else {
-        capitalAmount = remaining * 0.8;
-        savingsAmount = remaining * 0.2;
+        capitalAmount = contributable * 0.8;
+        savingsAmount = contributable * 0.2;
       }
 
       const { error } = await supabase
         .from('contributions')
         .insert({
           member_id: profile.id,
-          amount: totalAmount,
+          amount: amount + projectSupport,
           capital_amount: capitalAmount,
           savings_amount: savingsAmount,
           project_support_amount: projectSupport,
-          breakdown_type: breakdownType,
+          breakdown_type: selectedBreakdown,
           contribution_month: currentMonth,
           receipt_url: receiptUrl,
           payment_status: 'pending',
@@ -144,7 +153,14 @@ const Contribute = () => {
   }
 
   const currentMonth = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-  const breakdownType = profile?.breakdown_type || '80_20';
+  
+  // Calculate live preview
+  const amount = parseFloat(contributionAmount) || 0;
+  const projectSupport = 500;
+  const contributable = amount;
+  const capitalAmount = selectedBreakdown === '100_capital' ? contributable : contributable * 0.8;
+  const savingsAmount = selectedBreakdown === '100_capital' ? 0 : contributable * 0.2;
+  const totalAmount = amount + projectSupport;
 
   return (
     <div className="min-h-screen bg-background pt-16 md:pt-20">
@@ -156,16 +172,81 @@ const Contribute = () => {
             <p className="text-muted-foreground">Submit your monthly contribution for {currentMonth}</p>
           </div>
 
-          <Alert>
-            <Info className="h-4 w-4" />
-            <AlertDescription>
-              <strong>Monthly Contribution: ₦5,500</strong>
-              <br />
-              Your breakdown: {breakdownType === '100_capital' ? '100% Capital (₦5,000)' : '80% Capital (₦4,000) / 20% Savings (₦1,000)'}
-              <br />
-              Plus ₦500 Project Support Fund
-            </AlertDescription>
-          </Alert>
+          <Card>
+            <CardHeader>
+              <CardTitle>Contribution Amount</CardTitle>
+              <CardDescription>Enter your contribution amount (minimum ₦5,000)</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <label className="text-sm font-medium mb-2 block">Amount (₦)</label>
+                <input
+                  type="number"
+                  min="5000"
+                  step="100"
+                  value={contributionAmount}
+                  onChange={(e) => setContributionAmount(e.target.value)}
+                  className="w-full px-3 py-2 border rounded-md"
+                  placeholder="5000"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-medium mb-2 block">Split Type</label>
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      value="80_20"
+                      checked={selectedBreakdown === '80_20'}
+                      onChange={(e) => setSelectedBreakdown(e.target.value)}
+                      className="w-4 h-4"
+                    />
+                    <span>80% Capital / 20% Savings</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      value="100_capital"
+                      checked={selectedBreakdown === '100_capital'}
+                      onChange={(e) => setSelectedBreakdown(e.target.value)}
+                      className="w-4 h-4"
+                    />
+                    <span>100% Capital</span>
+                  </label>
+                </div>
+              </div>
+
+              <Alert>
+                <Info className="h-4 w-4" />
+                <AlertDescription>
+                  <strong>Live Preview:</strong>
+                  <div className="mt-2 space-y-1">
+                    <div className="flex justify-between">
+                      <span>Contribution:</span>
+                      <span className="font-medium">₦{amount.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>└ Capital:</span>
+                      <span>₦{capitalAmount.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>└ Savings:</span>
+                      <span>₦{savingsAmount.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Project Support:</span>
+                      <span className="font-medium">₦{projectSupport.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between border-t pt-1 mt-2">
+                      <span className="font-bold">Total:</span>
+                      <span className="font-bold">₦{totalAmount.toLocaleString()}</span>
+                    </div>
+                  </div>
+                </AlertDescription>
+              </Alert>
+            </CardContent>
+          </Card>
 
           <Card>
             <CardHeader>

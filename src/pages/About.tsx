@@ -36,7 +36,7 @@ const About = () => {
     {
       step: "2",
       title: "Monthly Contribution",
-      description: "Pay ₦5,200 monthly (₦5,000 capital + ₦200 project fund) by the last Thursday of every month"
+      description: "Pay ₦5,500 monthly (₦5,000 capital + ₦500 project fund) by the last Thursday of every month"
     },
     {
       step: "3",
@@ -220,7 +220,7 @@ const About = () => {
                     <p>• Your contribution is split: <strong className="text-foreground">80% Capital</strong> (for property purchases) + <strong className="text-foreground">20% Savings</strong> (for emergency needs)</p>
                     <p>• Access your 20% savings anytime for emergencies</p>
                     <p>• Your 80% capital works with other members&apos; capital for real estate business</p>
-                    <p>• Money starts working after 6 months with minimum ₦50,000 capital</p>
+                    <p>• Money starts working after 3 months with minimum ₦50,000 capital</p>
                   </div>
                 </div>
               </CardContent>

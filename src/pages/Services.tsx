@@ -43,7 +43,7 @@ const Services = () => {
     {
       icon: Wallet,
       title: "Savings Management",
-      description: "Secure savings account with 20% of your monthly contribution, accessible after 6 months for emergencies.",
+      description: "Secure savings account with 20% of your monthly contribution, accessible after 3 months for emergencies.",
       features: [
         "Automatic savings allocation",
         "Emergency fund access",
@@ -206,7 +206,7 @@ const Services = () => {
               </div>
               <h3 className="font-semibold text-lg mb-2">Earn</h3>
               <p className="text-muted-foreground text-sm">
-                Receive dividends when properties sell and access savings after 6 months
+                Receive dividends when properties sell and access savings after 3 months
               </p>
             </div>
           </div>

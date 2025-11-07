@@ -161,7 +161,7 @@ const Dashboard = () => {
           memberNumber: profile.member_number || 'Pending',
           totalCapital,
           totalSavings,
-          monthlyContribution: 5200,
+          monthlyContribution: 5500,
           eligibleForDividend,
           memberSince: new Date(profile.created_at).toLocaleDateString(),
           inviteCode: profile.invite_code || '',
@@ -312,7 +312,7 @@ const Dashboard = () => {
                     ₦{memberData.totalSavings.toLocaleString()}
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Withdrawable after 6 months
+                    Withdrawable after 3 months
                   </p>
                 </CardContent>
               </Card>

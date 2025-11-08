@@ -98,19 +98,26 @@ const Dividends = () => {
 
       if (!members) return;
 
-      // Get member balances with eligibility info
+      // Get member balances with eligibility info - exclude acting members
       const { data: balances } = await supabase
         .from('member_balances')
-        .select('member_id, total_capital, months_contributed, eligible_for_dividend')
-        .eq('eligible_for_dividend', true);
+        .select(`
+          member_id, 
+          total_capital, 
+          months_contributed, 
+          eligible_for_dividend,
+          profiles!inner(member_type)
+        `)
+        .eq('eligible_for_dividend', true)
+        .eq('profiles.member_type', 'contributor');
 
       if (!balances || balances.length === 0) {
-        toast.error("No eligible members found. Members need 3 months of contributions and ₦50,000 capital.");
+        toast.error("No eligible contributors found. Contributors need 3 months of contributions and ₦50,000 capital.");
         setCalculating(false);
         return;
       }
 
-      // Filter members who are in the eligible list
+      // Filter members who are in the eligible list and are contributors
       const eligibleMembers = members
         .filter(member => 
           balances.some(balance => 
@@ -201,7 +208,7 @@ const Dividends = () => {
             <div>
               <h1 className="text-3xl font-bold mb-2">Dividend Distribution</h1>
               <p className="text-muted-foreground">
-                Calculate and distribute dividends to eligible members
+                Calculate and distribute dividends to eligible contributors (acting members excluded)
               </p>
             </div>
 

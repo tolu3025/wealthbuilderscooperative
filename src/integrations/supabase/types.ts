@@ -619,6 +619,7 @@ export type Database = {
           invited_by: string | null
           last_name: string
           member_number: string | null
+          member_type: Database["public"]["Enums"]["member_type"] | null
           phone: string | null
           registration_pin: string | null
           registration_status: string | null
@@ -639,6 +640,7 @@ export type Database = {
           invited_by?: string | null
           last_name: string
           member_number?: string | null
+          member_type?: Database["public"]["Enums"]["member_type"] | null
           phone?: string | null
           registration_pin?: string | null
           registration_status?: string | null
@@ -659,6 +661,7 @@ export type Database = {
           invited_by?: string | null
           last_name?: string
           member_number?: string | null
+          member_type?: Database["public"]["Enums"]["member_type"] | null
           phone?: string | null
           registration_pin?: string | null
           registration_status?: string | null
@@ -678,6 +681,57 @@ export type Database = {
           {
             foreignKeyName: "profiles_state_rep_id_fkey"
             columns: ["state_rep_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_support_contributions: {
+        Row: {
+          amount: number
+          approved_at: string | null
+          approved_by: string | null
+          contribution_month: string | null
+          created_at: string | null
+          id: string
+          member_id: string
+          payment_status: string | null
+          receipt_url: string | null
+        }
+        Insert: {
+          amount?: number
+          approved_at?: string | null
+          approved_by?: string | null
+          contribution_month?: string | null
+          created_at?: string | null
+          id?: string
+          member_id: string
+          payment_status?: string | null
+          receipt_url?: string | null
+        }
+        Update: {
+          amount?: number
+          approved_at?: string | null
+          approved_by?: string | null
+          contribution_month?: string | null
+          created_at?: string | null
+          id?: string
+          member_id?: string
+          payment_status?: string | null
+          receipt_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_support_contributions_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_support_contributions_member_id_fkey"
+            columns: ["member_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -928,18 +982,9 @@ export type Database = {
         Args: { p_member_id: string }
         Returns: boolean
       }
-      generate_invite_code: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      generate_member_number: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      generate_pin: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      generate_invite_code: { Args: never; Returns: string }
+      generate_member_number: { Args: never; Returns: string }
+      generate_pin: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -950,6 +995,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "state_rep" | "member" | "director"
+      member_type: "contributor" | "acting_member"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1078,6 +1124,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "state_rep", "member", "director"],
+      member_type: ["contributor", "acting_member"],
     },
   },
 } as const

@@ -28,6 +28,7 @@ const registerSchema = z.object({
   state: z.string().min(1, "Please select a state"),
   password: z.string().min(8, "Password must be at least 8 characters"),
   confirmPassword: z.string(),
+  memberType: z.enum(["contributor", "acting_member"]),
   breakdownType: z.enum(["80_20", "100_capital"]),
   inviteCode: z.string().optional(),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -56,6 +57,7 @@ const Register = () => {
       state: "",
       password: "",
       confirmPassword: "",
+      memberType: "contributor",
       breakdownType: "80_20",
       inviteCode: "",
     },
@@ -173,6 +175,7 @@ const Register = () => {
             .from('profiles')
             .update({
               address: data.address,
+              member_type: data.memberType,
               breakdown_type: data.breakdownType,
               invited_by: invitedById,
             })
@@ -230,6 +233,39 @@ const Register = () => {
 
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(handleCreateAccount)} className="space-y-6">
+                  <FormField
+                    control={form.control}
+                    name="memberType"
+                    render={({ field }) => (
+                      <FormItem className="space-y-3">
+                        <FormLabel>Member Type *</FormLabel>
+                        <FormControl>
+                          <RadioGroup
+                            onValueChange={field.onChange}
+                            value={field.value}
+                            className="space-y-2"
+                          >
+                            <div className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer">
+                              <RadioGroupItem value="contributor" id="contributor" />
+                              <Label htmlFor="contributor" className="cursor-pointer flex-1">
+                                <div className="font-medium">Contributor (Full Member)</div>
+                                <div className="text-sm text-muted-foreground">Pay ₦5,000+ monthly, eligible for dividends</div>
+                              </Label>
+                            </div>
+                            <div className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer">
+                              <RadioGroupItem value="acting_member" id="acting_member" />
+                              <Label htmlFor="acting_member" className="cursor-pointer flex-1">
+                                <div className="font-medium">Acting Member</div>
+                                <div className="text-sm text-muted-foreground">Pay ₦500 monthly, no dividends</div>
+                              </Label>
+                            </div>
+                          </RadioGroup>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
                   <div className="grid md:grid-cols-2 gap-4">
                       <FormField
                         control={form.control}

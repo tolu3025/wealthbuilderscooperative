@@ -120,11 +120,7 @@ const Hero = () => {
                   </Button>
                 </Link>
                 <Link to="/contribute">
-                  <Button size="lg" variant="outline" className="w-full sm:w-auto border-2 border-white text-white hover:bg-white/10 font-semibold px-6 md:px-8 py-5 md:py-6 text-base md:text-lg transition-all hover:scale-105">
-                    <DollarSign className="mr-2 h-5 w-5" />
-                    Project Support Fund
-                    <span className="ml-2 text-sm opacity-80">(₦500 monthly)</span>
-                  </Button>
+                  
                 </Link>
               </div>
 

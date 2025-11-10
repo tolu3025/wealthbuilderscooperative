@@ -18,6 +18,8 @@ import { NIGERIAN_STATES } from "@/lib/nigerianStates";
 import { z } from "zod";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { CopyPhoneButton } from "@/components/CopyPhoneButton";
+import { CreditCard, Receipt } from "lucide-react";
 
 const registerSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
@@ -220,16 +222,36 @@ const Register = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Alert className="mb-6">
-                <Info className="h-4 w-4" />
-                <AlertDescription>
-                  <strong>Registration Fee: ₦5,000</strong>
-                  <br />
-                  Pay to: WealthBuilders Cooperative
-                  <br />
-                  Bank: [Bank Name] | Account: [Account Number]
-                </AlertDescription>
-              </Alert>
+              <Card className="mb-6 border-2 border-primary/20">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <CreditCard className="h-5 w-5 text-primary" />
+                    Registration Fee Payment
+                  </CardTitle>
+                  <CardDescription>
+                    Pay ₦5,000 registration fee to this account
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="bg-muted/50 p-4 rounded-lg space-y-3">
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Bank Name</p>
+                      <p className="font-semibold">Alpha Morgan Bank</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Account Number</p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-semibold text-lg">2010006769</p>
+                        <CopyPhoneButton phoneNumber="2010006769" />
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Account Name</p>
+                      <p className="font-semibold text-sm">WEALTH BUILDERS IN PROPERTIES MULTIPURPOSE COOPERATIVE LTD</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
 
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(handleCreateAccount)} className="space-y-6">

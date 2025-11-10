@@ -8,8 +8,9 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { FileUpload } from "@/components/FileUpload";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { Wallet, Info, Loader2 } from "lucide-react";
+import { Wallet, Info, Loader2, CreditCard, Receipt } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { CopyPhoneButton } from "@/components/CopyPhoneButton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 
@@ -318,14 +319,45 @@ const Contribute = () => {
             </CardContent>
           </Card>
 
+          <Card className="border-2 border-primary/20">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CreditCard className="h-5 w-5 text-primary" />
+                Monthly Contribution Account
+              </CardTitle>
+              <CardDescription>
+                Pay your ₦5,000 monthly contribution to this account
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="bg-muted/50 p-4 rounded-lg space-y-3">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Bank Name</p>
+                  <p className="font-semibold">FCMB</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Account Number</p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-semibold text-lg">1042529824</p>
+                    <CopyPhoneButton phoneNumber="1042529824" />
+                  </div>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Account Name</p>
+                  <p className="font-semibold text-sm">ORISUNBARE (OSG) WEALTH BUILDERS IN PROPT MCSL</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Wallet className="h-5 w-5" />
-                Submit Your Contribution
+                <Receipt className="h-5 w-5" />
+                Upload Receipt
               </CardTitle>
               <CardDescription>
-                Upload proof of payment after making your contribution
+                Upload your payment receipt after making the contribution
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">

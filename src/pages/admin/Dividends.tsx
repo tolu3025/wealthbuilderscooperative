@@ -98,7 +98,8 @@ const Dividends = () => {
 
       if (!members) return;
 
-      // Get member balances with eligibility info - exclude acting members
+      // Get member balances - must have ≥₦50,000 capital AND ≥3 months contributions
+      // Exclude acting members (only contributors are eligible)
       const { data: balances } = await supabase
         .from('member_balances')
         .select(`
@@ -108,11 +109,12 @@ const Dividends = () => {
           eligible_for_dividend,
           profiles!inner(member_type)
         `)
-        .eq('eligible_for_dividend', true)
+        .gte('total_capital', 50000)
+        .gte('months_contributed', 3)
         .eq('profiles.member_type', 'contributor');
 
       if (!balances || balances.length === 0) {
-        toast.error("No eligible contributors found. Contributors need 3 months of contributions and ₦50,000 capital.");
+        toast.error("No eligible contributors found. Members need BOTH ₦50,000+ capital AND 3+ months of contributions.");
         setCalculating(false);
         return;
       }

@@ -1,10 +1,13 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Shield, TrendingUp, Users, CheckCircle2 } from "lucide-react";
+import { ArrowRight, Shield, TrendingUp, Users, CheckCircle2, Wallet, DollarSign } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/logo.png";
 import heroMain from "@/assets/hero-main.jpg";
+import Marquee from "./Marquee";
+import PropertyCarousel from "./PropertyCarousel";
+import AccountInfo from "./AccountInfo";
 const Hero = () => {
   const [stats, setStats] = useState({
     memberCount: 0,
@@ -71,7 +74,11 @@ const Hero = () => {
             <div className="text-center mb-12 md:mb-16">
               {/* Logo */}
               <div className="mb-6 md:mb-8 flex justify-center animate-fade-in">
-                <img src={logo} alt="WealthBuilders Cooperative" className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 drop-shadow-2xl" />
+                <img 
+                  src={logo} 
+                  alt="WealthBuilders Cooperative" 
+                  className="w-32 h-32 sm:w-40 sm:h-40 md:w-52 md:h-52 drop-shadow-2xl brightness-110 hover:scale-105 transition-transform" 
+                />
               </div>
 
               {/* Main Heading */}
@@ -104,6 +111,26 @@ const Hero = () => {
                 <Link to="/dashboard">
                   <Button size="lg" variant="outline" className="w-full sm:w-auto border-2 border-white text-white hover:text-primary font-semibold px-6 md:px-8 py-5 md:py-6 text-base md:text-lg transition-all hover:scale-105 bg-white/0">
                     Member Login
+                  </Button>
+                </Link>
+              </div>
+
+              {/* Financial Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12 md:mb-16 px-4 animate-fade-in" style={{
+              animationDelay: '0.35s'
+            }}>
+                <Link to="/contribute">
+                  <Button size="lg" className="w-full sm:w-auto bg-white text-primary hover:bg-white/90 font-semibold px-6 md:px-8 py-5 md:py-6 text-base md:text-lg shadow-lg hover:shadow-xl transition-all hover:scale-105">
+                    <Wallet className="mr-2 h-5 w-5" />
+                    Make Monthly Contribution
+                    <span className="ml-2 text-sm opacity-80">(₦5,000 min)</span>
+                  </Button>
+                </Link>
+                <Link to="/contribute">
+                  <Button size="lg" variant="outline" className="w-full sm:w-auto border-2 border-white text-white hover:bg-white/10 font-semibold px-6 md:px-8 py-5 md:py-6 text-base md:text-lg transition-all hover:scale-105">
+                    <DollarSign className="mr-2 h-5 w-5" />
+                    Project Support Fund
+                    <span className="ml-2 text-sm opacity-80">(₦500 monthly)</span>
                   </Button>
                 </Link>
               </div>
@@ -164,6 +191,23 @@ const Hero = () => {
           </div>
         </div>
       </section>
+
+      {/* Marquee Section */}
+      <Marquee 
+        items={[
+          "Acres of land in Osun State for sale",
+          "Plots of land in Abuja for sale",
+          "Plots of land in Lagos State for sale",
+          "Plots of land in Port Harcourt for sale"
+        ]}
+        speed={30}
+      />
+
+      {/* Property Carousel */}
+      <PropertyCarousel />
+
+      {/* Account Information */}
+      <AccountInfo />
 
       {/* How It Works Section */}
       <section className="py-16 md:py-20 bg-background">

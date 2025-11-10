@@ -113,11 +113,7 @@ const Hero = () => {
               animationDelay: '0.35s'
             }}>
                 <Link to="/contribute">
-                  <Button size="lg" className="w-full sm:w-auto bg-white text-primary hover:bg-white/90 font-semibold px-6 md:px-8 py-5 md:py-6 text-base md:text-lg shadow-lg hover:shadow-xl transition-all hover:scale-105">
-                    <Wallet className="mr-2 h-5 w-5" />
-                    Make Monthly Contribution
-                    <span className="ml-2 text-sm opacity-80">(₦5,000 min)</span>
-                  </Button>
+                  
                 </Link>
                 <Link to="/contribute">
                   

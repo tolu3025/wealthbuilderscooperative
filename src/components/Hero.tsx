@@ -184,7 +184,7 @@ const Hero = () => {
       <PropertyCarousel />
 
       {/* Account Information */}
-      <AccountInfo />
+      
 
       {/* How It Works Section */}
       <section className="py-16 md:py-20 bg-background">

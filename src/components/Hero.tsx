@@ -74,11 +74,7 @@ const Hero = () => {
             <div className="text-center mb-12 md:mb-16">
               {/* Logo */}
               <div className="mb-6 md:mb-8 flex justify-center animate-fade-in">
-                <img 
-                  src={logo} 
-                  alt="WealthBuilders Cooperative" 
-                  className="w-32 h-32 sm:w-40 sm:h-40 md:w-52 md:h-52 drop-shadow-2xl brightness-110 hover:scale-105 transition-transform" 
-                />
+                <img src={logo} alt="WealthBuilders Cooperative" className="w-32 h-32 sm:w-40 sm:h-40 md:w-52 md:h-52 drop-shadow-2xl brightness-110 hover:scale-105 transition-transform" />
               </div>
 
               {/* Main Heading */}
@@ -93,10 +89,7 @@ const Hero = () => {
 
               <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-white/90 mb-8 md:mb-12 max-w-3xl mx-auto px-4 animate-fade-in" style={{
               animationDelay: '0.2s'
-            }}>
-                Join Nigeria's premier multipurpose cooperative society. Save, invest, and build wealth 
-                with a community that cares about your financial future.
-              </p>
+            }}>This is a cooperative that majorly does real estate business  and shares the dividends constantly to all contributing members.</p>
 
               {/* CTA Buttons */}
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12 md:mb-16 px-4 animate-fade-in" style={{
@@ -193,15 +186,7 @@ const Hero = () => {
       </section>
 
       {/* Marquee Section */}
-      <Marquee 
-        items={[
-          "Acres of land in Osun State for sale",
-          "Plots of land in Abuja for sale",
-          "Plots of land in Lagos State for sale",
-          "Plots of land in Port Harcourt for sale"
-        ]}
-        speed={30}
-      />
+      <Marquee items={["Acres of land in Osun State for sale", "Plots of land in Abuja for sale", "Plots of land in Lagos State for sale", "Plots of land in Port Harcourt for sale"]} speed={30} />
 
       {/* Property Carousel */}
       <PropertyCarousel />

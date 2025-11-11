@@ -389,13 +389,25 @@ const Register = () => {
                       control={form.control}
                       name="breakdownType"
                       render={({ field }) => (
-                        <FormItem className="space-y-3">
-                          <FormLabel>Monthly Contribution Breakdown *</FormLabel>
+                        <FormItem className="space-y-3 relative">
+                          <FormLabel className={form.watch("memberType") === "acting_member" ? "opacity-50" : ""}>
+                            Monthly Contribution Breakdown *
+                          </FormLabel>
+                          {form.watch("memberType") === "acting_member" && (
+                            <Alert className="absolute inset-0 z-10 flex items-center justify-center bg-background/80 backdrop-blur-sm border-2 border-muted">
+                              <AlertDescription className="text-center">
+                                <Info className="h-5 w-5 mx-auto mb-2 text-muted-foreground" />
+                                <p className="font-medium">Not applicable for Acting Members</p>
+                                <p className="text-sm text-muted-foreground mt-1">Acting members only pay ₦500 monthly project support</p>
+                              </AlertDescription>
+                            </Alert>
+                          )}
                           <FormControl>
                             <RadioGroup
                               onValueChange={field.onChange}
                               value={field.value}
-                              className="space-y-2"
+                              className={`space-y-2 transition-all ${form.watch("memberType") === "acting_member" ? "blur-sm pointer-events-none" : ""}`}
+                              disabled={form.watch("memberType") === "acting_member"}
                             >
                               <div className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer">
                                 <RadioGroupItem value="80_20" id="80_20" />

@@ -88,10 +88,10 @@ const Contribute = () => {
     if (!receiptUrl || !profile) return;
 
     const amount = parseFloat(contributionAmount);
-    if (isNaN(amount) || amount < 5000) {
+    if (isNaN(amount) || amount < minAmount) {
       toast({
         title: "Invalid amount",
-        description: "Minimum contribution is ₦5,000",
+        description: `Minimum contribution is ₦${minAmount.toLocaleString()}`,
         variant: "destructive",
       });
       return;
@@ -111,7 +111,7 @@ const Contribute = () => {
         savingsAmount = contributable * 0.2;
       }
 
-      // Insert main contribution
+      // Insert main contribution only
       const { error } = await supabase
         .from('contributions')
         .insert({
@@ -128,29 +128,50 @@ const Contribute = () => {
 
       if (error) throw error;
 
-      // If project support is included, insert separate record
-      if (includeProjectSupport && projectSupportReceipt) {
-        const { error: projectError } = await supabase
-          .from('project_support_contributions')
-          .insert({
-            member_id: profile.id,
-            amount: 500,
-            receipt_url: projectSupportReceipt,
-            contribution_month: currentMonth,
-            payment_status: 'pending',
-          });
-
-        if (projectError) throw projectError;
-      }
-
       toast({
         title: "Contribution submitted",
-        description: includeProjectSupport 
-          ? "Your contribution and project support have been submitted for admin approval"
-          : "Your contribution has been submitted for admin approval",
+        description: "Your contribution has been submitted for admin approval",
       });
 
       setReceiptUrl("");
+      fetchData();
+
+    } catch (error: any) {
+      toast({
+        title: "Submission failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleProjectSupportSubmit = async () => {
+    if (!projectSupportReceipt || !profile) return;
+
+    setSubmitting(true);
+    try {
+      const currentMonth = new Date().toISOString().split('T')[0].substring(0, 7) + '-01';
+
+      // Insert project support contribution
+      const { error: projectError } = await supabase
+        .from('project_support_contributions')
+        .insert({
+          member_id: profile.id,
+          amount: 500,
+          receipt_url: projectSupportReceipt,
+          contribution_month: currentMonth,
+          payment_status: 'pending',
+        });
+
+      if (projectError) throw projectError;
+
+      toast({
+        title: "Project Support submitted",
+        description: "Your project support contribution has been submitted for admin approval",
+      });
+
       setProjectSupportReceipt("");
       setIncludeProjectSupport(false);
       fetchData();
@@ -176,13 +197,11 @@ const Contribute = () => {
 
   const currentMonth = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   
-  // Calculate live preview
+  // Calculate live preview for contribution only
   const amount = parseFloat(contributionAmount) || 0;
-  const projectSupport = includeProjectSupport ? 500 : 0;
   const contributable = amount;
   const capitalAmount = selectedBreakdown === '100_capital' ? contributable : contributable * 0.8;
   const savingsAmount = selectedBreakdown === '100_capital' ? 0 : contributable * 0.2;
-  const totalAmount = amount + projectSupport;
   
   // Check if acting member
   const isActingMember = profile?.member_type === 'acting_member';
@@ -258,38 +277,14 @@ const Contribute = () => {
                 </div>
               )}
 
-              <div>
-                <label className="flex items-center gap-2 cursor-pointer mb-3">
-                  <input
-                    type="checkbox"
-                    checked={includeProjectSupport}
-                    onChange={(e) => setIncludeProjectSupport(e.target.checked)}
-                    className="w-4 h-4"
-                  />
-                  <span className="text-sm font-medium">Add Project Support Fund (₦500)</span>
-                </label>
-                {includeProjectSupport && (
-                  <div className="pl-6 space-y-2">
-                    <p className="text-sm text-muted-foreground mb-2">
-                      Upload separate receipt for project support payment
-                    </p>
-                    <FileUpload
-                      onUploadComplete={setProjectSupportReceipt}
-                      userId={user?.id || ''}
-                      fileType="project-support"
-                    />
-                  </div>
-                )}
-              </div>
-
               <Alert>
                 <Info className="h-4 w-4" />
                 <AlertDescription>
-                  <strong>Live Preview:</strong>
+                  <strong>Breakdown:</strong>
                   <div className="mt-2 space-y-1">
-                    <div className="flex justify-between">
-                      <span>Contribution:</span>
-                      <span className="font-medium">₦{amount.toLocaleString()}</span>
+                    <div className="flex justify-between font-bold">
+                      <span>Contribution Amount:</span>
+                      <span className="text-primary">₦{amount.toLocaleString()}</span>
                     </div>
                     {!isActingMember && (
                       <>
@@ -303,16 +298,6 @@ const Contribute = () => {
                         </div>
                       </>
                     )}
-                    {includeProjectSupport && (
-                      <div className="flex justify-between">
-                        <span>Project Support (Optional):</span>
-                        <span className="font-medium">₦{projectSupport.toLocaleString()}</span>
-                      </div>
-                    )}
-                    <div className="flex justify-between border-t pt-1 mt-2">
-                      <span className="font-bold">Total:</span>
-                      <span className="font-bold">₦{totalAmount.toLocaleString()}</span>
-                    </div>
                   </div>
                 </AlertDescription>
               </Alert>
@@ -354,10 +339,10 @@ const Contribute = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Receipt className="h-5 w-5" />
-                Upload Receipt
+                Upload Contribution Receipt
               </CardTitle>
               <CardDescription>
-                Upload your payment receipt after making the contribution
+                Upload your payment receipt for the monthly contribution
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -369,7 +354,7 @@ const Contribute = () => {
 
               <Button
                 onClick={handleSubmit}
-                disabled={!receiptUrl || submitting || (includeProjectSupport && !projectSupportReceipt)}
+                disabled={!receiptUrl || submitting}
                 className="w-full"
                 size="lg"
               >
@@ -377,6 +362,78 @@ const Contribute = () => {
               </Button>
             </CardContent>
           </Card>
+
+          {/* Project Support Fund - Separate Section */}
+          <div className="border-t-4 border-amber-500 pt-6">
+            <Alert className="mb-4">
+              <Info className="h-4 w-4" />
+              <AlertDescription>
+                <strong>Project Support Fund</strong> is completely independent from your monthly contribution. 
+                It's optional and goes to a separate account for project expenses.
+              </AlertDescription>
+            </Alert>
+
+            <Card className="border-2 border-amber-500/20">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Wallet className="h-5 w-5 text-amber-600" />
+                  Optional: Project Support Fund
+                </CardTitle>
+                <CardDescription>
+                  Contribute ₦500 to support project expenses (MLM Real Estate Bonus eligible)
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <label className="flex items-center gap-2 cursor-pointer mb-3">
+                    <input
+                      type="checkbox"
+                      checked={includeProjectSupport}
+                      onChange={(e) => setIncludeProjectSupport(e.target.checked)}
+                      className="w-4 h-4"
+                    />
+                    <span className="text-sm font-medium">I want to contribute to Project Support Fund (₦500)</span>
+                  </label>
+                </div>
+
+                {includeProjectSupport && (
+                  <>
+                    <div className="bg-amber-50 dark:bg-amber-950/20 p-4 rounded-lg space-y-3">
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-1">Bank Name</p>
+                        <p className="font-semibold">TBD - Separate Account</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-1">Amount</p>
+                        <p className="font-semibold text-lg text-amber-600">₦500</p>
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        * Project support fund payments go to a different account than monthly contributions
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Upload Project Support Receipt</label>
+                      <FileUpload
+                        onUploadComplete={setProjectSupportReceipt}
+                        userId={user?.id || ''}
+                        fileType="project-support"
+                      />
+                    </div>
+
+                    <Button
+                      onClick={handleProjectSupportSubmit}
+                      disabled={!projectSupportReceipt || submitting}
+                      className="w-full bg-amber-600 hover:bg-amber-700"
+                      size="lg"
+                    >
+                      {submitting ? "Submitting..." : "Submit Project Support"}
+                    </Button>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          </div>
 
           <Card>
             <CardHeader>

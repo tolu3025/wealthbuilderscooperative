@@ -17,10 +17,12 @@ import Registrations from "./pages/admin/Registrations";
 import Contributions from "./pages/admin/Contributions";
 import Withdrawals from "./pages/admin/Withdrawals";
 import AdminDividends from "./pages/admin/Dividends";
+import AdminProperties from "./pages/admin/Properties";
 import StateReps from "./pages/admin/StateReps";
 import UserManagement from "./pages/admin/UserManagement";
 import BlogManagement from "./pages/admin/BlogManagement";
 import Reports from "./pages/admin/Reports";
+import Properties from "./pages/Properties";
 import Register from "./pages/Register";
 import UploadReceipt from "./pages/UploadReceipt";
 import Contribute from "./pages/Contribute";
@@ -39,6 +41,9 @@ import StateRepDashboard from "./pages/StateRepDashboard";
 import DirectorDashboard from "./pages/DirectorDashboard";
 import MonthlySettlements from "./pages/admin/MonthlySettlements";
 import CommissionReport from "./pages/admin/CommissionReport";
+
+import PropertyPlans from "./pages/member/PropertyPlans";
+import PlanEnrollments from "./pages/admin/PlanEnrollments";
 
 const queryClient = new QueryClient();
 
@@ -59,6 +64,7 @@ const App = () => (
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Policy />} />
             <Route path="/services" element={<Services />} />
+            <Route path="/properties" element={<Properties />} />
             <Route
               path="/login"
               element={
@@ -127,15 +133,25 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/member/property-plans"
+              element={
+                <ProtectedRoute>
+                  <PropertyPlans />
+                </ProtectedRoute>
+              }
+            />
             <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
             <Route path="/admin/registrations" element={<AdminRoute><PendingRegistrations /></AdminRoute>} />
             <Route path="/admin/contributions" element={<AdminRoute><Contributions /></AdminRoute>} />
             <Route path="/admin/withdrawals" element={<AdminRoute><Withdrawals /></AdminRoute>} />
             <Route path="/admin/dividends" element={<AdminRoute><AdminDividends /></AdminRoute>} />
+            <Route path="/admin/properties" element={<AdminRoute><AdminProperties /></AdminRoute>} />
             <Route path="/admin/state-reps" element={<AdminRoute><StateReps /></AdminRoute>} />
             <Route path="/admin/users" element={<AdminRoute><UserManagement /></AdminRoute>} />
             <Route path="/admin/blog" element={<AdminRoute><BlogManagement /></AdminRoute>} />
             <Route path="/admin/commissions" element={<AdminRoute><CommissionReport /></AdminRoute>} />
+            <Route path="/admin/plan-enrollments" element={<AdminRoute><PlanEnrollments /></AdminRoute>} />
             <Route path="/admin/settlements" element={<AdminRoute><MonthlySettlements /></AdminRoute>} />
             <Route path="/admin/reports" element={<AdminRoute><Reports /></AdminRoute>} />
             <Route path="/state-rep" element={<ProtectedRoute><StateRepDashboard /></ProtectedRoute>} />

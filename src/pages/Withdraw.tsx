@@ -13,7 +13,6 @@ import { AlertTriangle, Banknote, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { z } from "zod";
 
 const withdrawSchema = z.object({
@@ -21,7 +20,6 @@ const withdrawSchema = z.object({
   accountName: z.string().min(3, "Account name is required"),
   accountNumber: z.string().min(10, "Valid account number required"),
   bankName: z.string().min(3, "Bank name is required"),
-  withdrawalType: z.enum(['savings', 'capital', 'dividend', 'bonus']),
 });
 
 const Withdraw = () => {
@@ -42,7 +40,6 @@ const Withdraw = () => {
     accountName: "",
     accountNumber: "",
     bankName: "",
-    withdrawalType: "savings" as 'savings' | 'capital' | 'dividend' | 'bonus',
   });
 
   useEffect(() => {
@@ -136,28 +133,27 @@ const Withdraw = () => {
         accountName: formData.accountName,
         accountNumber: formData.accountNumber,
         bankName: formData.bankName,
-        withdrawalType: formData.withdrawalType,
       });
 
       if (monthsContributed < 3) {
         throw new Error("You must contribute for at least 3 months before withdrawing");
       }
 
-      // Validate based on withdrawal type
-      if (formData.withdrawalType === 'savings' && amount > totalSavings) {
-        throw new Error(`Insufficient savings balance. Available: ₦${totalSavings.toLocaleString()}`);
-      } else if (formData.withdrawalType === 'capital') {
-        if (amount > totalCapital) {
-          throw new Error(`Insufficient capital balance. Available: ₦${totalCapital.toLocaleString()}`);
+      // Calculate total available balance (savings + capital + dividends)
+      const totalAvailable = totalSavings + totalCapital + totalDividends;
+
+      if (amount > totalAvailable) {
+        throw new Error(`Insufficient balance. Available: ₦${totalAvailable.toLocaleString()}`);
+      }
+
+      // Check if withdrawal would drop capital below minimum (₦50,000)
+      const remainingCapital = totalCapital - amount;
+      if (remainingCapital < 0 && Math.abs(remainingCapital) <= totalCapital) {
+        // User is withdrawing from capital
+        const capitalWithdrawn = Math.min(amount, totalCapital);
+        if (totalCapital - capitalWithdrawn < 50000) {
+          throw new Error("You cannot withdraw below your minimum share capital of ₦50,000.");
         }
-        if (totalCapital - amount < 50000) {
-          throw new Error("You cannot withdraw capital below the minimum share capital of ₦50,000.");
-        }
-      } else if (formData.withdrawalType === 'dividend' && amount > totalDividends) {
-        throw new Error(`Insufficient dividend balance. Available: ₦${totalDividends.toLocaleString()}`);
-      } else if (formData.withdrawalType === 'bonus') {
-        // Bonus withdrawal logic will be implemented with MLM system
-        throw new Error("Bonus withdrawals will be available soon");
       }
 
       setSubmitting(true);
@@ -170,7 +166,6 @@ const Withdraw = () => {
           account_name: formData.accountName,
           account_number: formData.accountNumber,
           bank_name: formData.bankName,
-          withdrawal_type: formData.withdrawalType,
           status: 'pending',
         });
 
@@ -186,7 +181,6 @@ const Withdraw = () => {
         accountName: "",
         accountNumber: "",
         bankName: "",
-        withdrawalType: "savings",
       });
 
       fetchData();
@@ -326,33 +320,6 @@ const Withdraw = () => {
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="withdrawalType">Withdrawal Type</Label>
-                  <Select 
-                    value={formData.withdrawalType} 
-                    onValueChange={(value: 'savings' | 'capital' | 'dividend' | 'bonus') => 
-                      setFormData({ ...formData, withdrawalType: value })
-                    }
-                    disabled={!isEligible}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="savings">Savings (₦{totalSavings.toLocaleString()})</SelectItem>
-                      <SelectItem value="capital">Capital (₦{totalCapital.toLocaleString()})</SelectItem>
-                      <SelectItem value="dividend">Dividend (₦{totalDividends.toLocaleString()})</SelectItem>
-                      <SelectItem value="bonus" disabled>Bonus (Coming Soon)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-sm text-muted-foreground">
-                    {formData.withdrawalType === 'savings' && `Withdraw from your savings balance`}
-                    {formData.withdrawalType === 'capital' && `Minimum ₦50,000 must remain`}
-                    {formData.withdrawalType === 'dividend' && `Withdraw accumulated dividends`}
-                    {formData.withdrawalType === 'bonus' && `Inviter and Real Estate bonuses`}
-                  </p>
-                </div>
-
-                <div className="space-y-2">
                   <Label htmlFor="amount">Amount (₦)</Label>
                   <Input
                     id="amount"
@@ -360,18 +327,12 @@ const Withdraw = () => {
                     placeholder="Enter amount"
                     value={formData.amount}
                     onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                    max={
-                      formData.withdrawalType === 'savings' ? totalSavings :
-                      formData.withdrawalType === 'capital' ? totalCapital - 50000 :
-                      formData.withdrawalType === 'dividend' ? totalDividends : 0
-                    }
+                    max={totalAvailableBalance}
                     disabled={!isEligible}
                     required
                   />
                   <p className="text-sm text-muted-foreground">
-                    {formData.withdrawalType === 'savings' && `Available: ₦${totalSavings.toLocaleString()}`}
-                    {formData.withdrawalType === 'capital' && `Available: ₦${Math.max(0, totalCapital - 50000).toLocaleString()} (₦50,000 minimum required)`}
-                    {formData.withdrawalType === 'dividend' && `Available: ₦${totalDividends.toLocaleString()}`}
+                    Available: ₦{totalAvailableBalance.toLocaleString()} (Savings: ₦{totalSavings.toLocaleString()}, Capital: ₦{totalCapital.toLocaleString()}, Dividends: ₦{totalDividends.toLocaleString()})
                   </p>
                 </div>
 
@@ -431,7 +392,6 @@ const Withdraw = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Date</TableHead>
-                      <TableHead>Type</TableHead>
                       <TableHead>Amount</TableHead>
                       <TableHead>Bank</TableHead>
                       <TableHead>Status</TableHead>
@@ -442,11 +402,6 @@ const Withdraw = () => {
                       <TableRow key={request.id}>
                         <TableCell>
                           {new Date(request.requested_at).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className="capitalize">
-                            {request.withdrawal_type || 'savings'}
-                          </Badge>
                         </TableCell>
                         <TableCell>₦{request.amount.toLocaleString()}</TableCell>
                         <TableCell>{request.bank_name}</TableCell>

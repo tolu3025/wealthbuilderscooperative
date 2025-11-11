@@ -25,7 +25,9 @@ import { AdminSidebar } from "@/components/AdminSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
 
 const Dividends = () => {
+  const [properties, setProperties] = useState<any[]>([]);
   const [distributions, setDistributions] = useState<any[]>([]);
+  const [selectedProperty, setSelectedProperty] = useState("");
   const [dividendProfit, setDividendProfit] = useState("");
   const [loading, setLoading] = useState(true);
   const [calculating, setCalculating] = useState(false);
@@ -36,9 +38,18 @@ const Dividends = () => {
 
   const fetchData = async () => {
     try {
+      const { data: propertiesData } = await supabase
+        .from('properties')
+        .select('*')
+        .order('created_at', { ascending: false });
+      setProperties(propertiesData || []);
+
       const { data: distributionsData } = await supabase
         .from('dividend_distributions')
-        .select('*')
+        .select(`
+          *,
+          properties(name)
+        `)
         .order('created_at', { ascending: false });
       setDistributions(distributionsData || []);
     } catch (error: any) {
@@ -74,8 +85,8 @@ const Dividends = () => {
   };
 
   const handleDividendDistribution = async () => {
-    if (!dividendProfit) {
-      toast.error("Please enter profit amount");
+    if (!dividendProfit || !selectedProperty) {
+      toast.error("Please enter profit amount and select property");
       return;
     }
 
@@ -134,6 +145,7 @@ const Dividends = () => {
       const { data: distribution, error: distError } = await supabase
         .from('dividend_distributions')
         .insert([{
+          property_id: selectedProperty,
           total_profit: parseFloat(dividendProfit),
           total_capital_pool: totalEligibleCapital,
           eligible_members_count: eligibleMembers.length,
@@ -166,6 +178,7 @@ const Dividends = () => {
 
       toast.success(`Dividends calculated for ${eligibleMembers.length} eligible members`);
       setDividendProfit("");
+      setSelectedProperty("");
       fetchData();
     } catch (error: any) {
       toast.error(error.message);
@@ -205,21 +218,36 @@ const Dividends = () => {
               <CardHeader>
                 <CardTitle>New Dividend Distribution</CardTitle>
                 <CardDescription>
-                  Enter total profit to calculate and distribute dividends to eligible members
+                  Enter property sale profit to calculate member dividends
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Total Profit (₦)</Label>
-                  <Input
-                    type="number"
-                    placeholder="Enter profit amount"
-                    value={dividendProfit}
-                    onChange={(e) => setDividendProfit(e.target.value)}
-                  />
-                  <p className="text-sm text-muted-foreground">
-                    System will automatically distribute to all eligible members (₦50,000+ capital AND 3+ months contributing)
-                  </p>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Select Property</Label>
+                    <Select value={selectedProperty} onValueChange={setSelectedProperty}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Choose property" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {properties.map((prop) => (
+                          <SelectItem key={prop.id} value={prop.id}>
+                            {prop.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Total Profit (₦)</Label>
+                    <Input
+                      type="number"
+                      placeholder="Enter profit amount"
+                      value={dividendProfit}
+                      onChange={(e) => setDividendProfit(e.target.value)}
+                    />
+                  </div>
                 </div>
 
                 <Button
@@ -253,6 +281,7 @@ const Dividends = () => {
                   <Table>
                     <TableHeader>
                       <TableRow>
+                        <TableHead>Property</TableHead>
                         <TableHead>Total Profit</TableHead>
                         <TableHead>Capital Pool</TableHead>
                         <TableHead>Members</TableHead>
@@ -264,7 +293,8 @@ const Dividends = () => {
                     <TableBody>
                       {distributions.map((dist: any) => (
                         <TableRow key={dist.id}>
-                          <TableCell className="font-medium">₦{Number(dist.total_profit).toLocaleString()}</TableCell>
+                          <TableCell className="font-medium">{dist.properties?.name}</TableCell>
+                          <TableCell>₦{Number(dist.total_profit).toLocaleString()}</TableCell>
                           <TableCell>₦{Number(dist.total_capital_pool).toLocaleString()}</TableCell>
                           <TableCell>{dist.eligible_members_count}</TableCell>
                           <TableCell>{new Date(dist.distribution_date).toLocaleDateString()}</TableCell>

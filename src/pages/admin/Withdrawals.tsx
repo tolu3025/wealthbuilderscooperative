@@ -201,6 +201,7 @@ const Withdrawals = () => {
                     <TableHeader>
                       <TableRow>
                         <TableHead>Member</TableHead>
+                        <TableHead>Type</TableHead>
                         <TableHead>Amount</TableHead>
                         <TableHead>Bank Details</TableHead>
                         <TableHead>Date</TableHead>
@@ -221,6 +222,11 @@ const Withdrawals = () => {
                                {withdrawal.status}
                              </Badge>
                            </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="capitalize">
+                              {withdrawal.withdrawal_type || 'savings'}
+                            </Badge>
+                          </TableCell>
                           <TableCell className="font-bold text-lg">
                             ₦{Number(withdrawal.amount).toLocaleString()}
                           </TableCell>

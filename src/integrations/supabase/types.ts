@@ -452,6 +452,8 @@ export type Database = {
           member_id: string
           months_contributed: number
           total_capital: number
+          total_commissions: number
+          total_dividends: number
           total_project_support: number
           total_savings: number
           updated_at: string
@@ -465,6 +467,8 @@ export type Database = {
           member_id: string
           months_contributed?: number
           total_capital?: number
+          total_commissions?: number
+          total_dividends?: number
           total_project_support?: number
           total_savings?: number
           updated_at?: string
@@ -478,6 +482,8 @@ export type Database = {
           member_id?: string
           months_contributed?: number
           total_capital?: number
+          total_commissions?: number
+          total_dividends?: number
           total_project_support?: number
           total_savings?: number
           updated_at?: string

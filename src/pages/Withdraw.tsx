@@ -78,7 +78,7 @@ const Withdraw = () => {
       
       setProfile(profileData);
 
-      // Fetch member balance
+      // Fetch member balance (now includes dividends and commissions)
       const { data: balance } = await supabase
         .from('member_balances')
         .select('*')
@@ -87,25 +87,9 @@ const Withdraw = () => {
 
       const savings = balance?.total_savings || 0;
       const capital = balance?.total_capital || 0;
+      const totalDivs = balance?.total_dividends || 0;
+      const totalBonus = balance?.total_commissions || 0;
       const months = balance?.months_contributed || 0;
-      
-      // Fetch total approved dividends
-      const { data: dividends } = await supabase
-        .from('dividends')
-        .select('amount')
-        .eq('member_id', profileData.id)
-        .eq('status', 'calculated');
-      
-      const totalDivs = dividends?.reduce((sum, d) => sum + Number(d.amount), 0) || 0;
-      
-      // Fetch all bonuses (inviter's bonus + real estate bonus)
-      const { data: commissions } = await supabase
-        .from('commissions')
-        .select('amount')
-        .eq('member_id', profileData.id)
-        .eq('status', 'approved');
-      
-      const totalBonus = commissions?.reduce((sum, c) => sum + Number(c.amount), 0) || 0;
       
       setTotalSavings(savings);
       setTotalCapital(capital);

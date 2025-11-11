@@ -113,6 +113,8 @@ const Dashboard = () => {
 
         const totalCapital = balance?.total_capital || 0;
         const totalSavings = balance?.total_savings || 0;
+        const totalDividends = balance?.total_dividends || 0;
+        const totalCommissions = balance?.total_commissions || 0;
         const monthsContributed = balance?.months_contributed || 0;
         const eligibleForDividend = balance?.eligible_for_dividend || false;
 
@@ -130,26 +132,25 @@ const Dashboard = () => {
           .eq('invited_by', profile.id)
           .eq('registration_status', 'active');
 
-        // Fetch total approved commissions
-        const { data: commissions } = await supabase
+        // Fetch referral commissions only (for invite bonus tracking)
+        const { data: referralCommissions, count: referralCommissionsCount } = await supabase
           .from('commissions')
-          .select('amount')
+          .select('amount', { count: 'exact' })
           .eq('member_id', profile.id)
+          .eq('commission_type', 'referral')
           .eq('status', 'approved');
         
-        const totalCommissions = commissions?.reduce((sum, c) => sum + Number(c.amount), 0) || 0;
+        const totalReferralCommissions = referralCommissions?.reduce((sum, c) => sum + Number(c.amount), 0) || 0;
 
-        // Fetch recent dividends
+        // Fetch recent dividends for display only
         const { data: dividends } = await supabase
           .from('dividends')
-          .select('amount, status')
+          .select('amount')
           .eq('member_id', profile.id)
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false })
+          .limit(1);
 
         const recentDividends = dividends?.[0]?.amount || 0;
-        const dividendBalance = dividends
-          ?.filter(d => d.status === 'calculated')
-          .reduce((sum, d) => sum + Number(d.amount), 0) || 0;
 
         // Calculate next contribution due
         const lastContribution = contributions?.[0]?.created_at;
@@ -170,9 +171,9 @@ const Dashboard = () => {
           invitedBy: profile.invited_by,
           state: profile.state || '',
           referralCount: referralCount || 0,
-          totalCommissions,
+          totalCommissions: totalReferralCommissions,
           recentDividends,
-          dividendBalance,
+          dividendBalance: totalDividends,
           nextContributionDue: nextDue.toLocaleDateString()
         });
 
@@ -397,40 +398,54 @@ const Dashboard = () => {
               </CardContent>
             </Card>
 
-            {/* Three Column Layout */}
-            <div className="grid lg:grid-cols-3 gap-4 mb-6">
-              {/* Invite */}
-              <Card className="shadow-md">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Users className="h-5 w-5 text-primary" />
-                    Invite
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
+            {/* Invite Bonus Card */}
+            <Card className="shadow-md bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 mb-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5 text-amber-600" />
+                  Invite Bonus Dashboard
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-muted-foreground mb-2">Your Invite Code</p>
-                    <div className="flex items-center gap-2">
-                      <code className="flex-1 bg-muted px-3 py-2 rounded font-mono text-lg font-bold">
-                        {memberData.inviteCode}
-                      </code>
-                      <Button size="sm" variant="outline" onClick={copyInviteCode}>
-                        <Copy className="h-4 w-4" />
-                      </Button>
+                    <p className="text-sm text-muted-foreground mb-1">Total Referrals</p>
+                    <div className="text-3xl font-bold text-amber-600">
+                      {memberData.referralCount}
                     </div>
+                    <p className="text-xs text-muted-foreground mt-1">Active members</p>
                   </div>
-                  <div className="grid grid-cols-2 gap-4 pt-4 border-t">
-                    <div>
-                      <p className="text-2xl font-bold text-primary">{memberData.referralCount}</p>
-                      <p className="text-xs text-muted-foreground">Invites</p>
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Total Earned</p>
+                    <div className="text-3xl font-bold text-orange-600">
+                      ₦{memberData.totalCommissions.toLocaleString()}
                     </div>
-                    <div>
-                      <p className="text-2xl font-bold text-secondary">₦{memberData.totalCommissions.toLocaleString()}</p>
-                      <p className="text-xs text-muted-foreground">Earned</p>
-                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">₦1,000 per referral</p>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+                <div className="flex items-center justify-between pt-3 border-t">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Your Invite Code</p>
+                    <code className="text-lg font-mono font-bold text-amber-700">{memberData.inviteCode}</code>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" onClick={copyInviteCode}>
+                      <Copy className="h-4 w-4 mr-1" /> Copy
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      className="bg-amber-600 hover:bg-amber-700"
+                      asChild
+                    >
+                      <Link to="/member/referrals">View All</Link>
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Three Column Layout */}
+            <div className="grid lg:grid-cols-2 gap-4 mb-6">
 
               {/* State Rep Info */}
               <Card className="shadow-md">

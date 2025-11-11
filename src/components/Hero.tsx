@@ -208,17 +208,17 @@ const Hero = () => {
               {[{
               step: "1",
               title: "Register & Join",
-              description: "Sign up with your details and receive your unique member PIN via WhatsApp. Use an invite code to help your referrer earn commission.",
+              description: "Pay ₦5,000 registration fee and choose your member type: Contributor (eligible for dividends) or Acting Member (project support only). Use an invite code to earn your referrer ₦1,000 bonus.",
               color: "primary"
             }, {
               step: "2",
               title: "Monthly Contributions",
-              description: "Contribute ₦5,500 each month. ₦5,000 builds your capital and savings, while ₦500 supports cooperative operations.",
+              description: "Contributors: Pay minimum ₦5,000 monthly (flexible amount) for capital/savings plus optional ₦500 project support. Acting Members: Pay only ₦500 project support fund.",
               color: "secondary"
             }, {
               step: "3",
               title: "Earn Dividends",
-              description: "After 3 months and ₦50,000 capital, you're eligible for dividends when properties are sold at profit.",
+              description: "Contributors become eligible after 3 months of contributions AND reaching ₦50,000 capital. Receive proportional dividends when profits are distributed from property investments.",
               color: "accent"
             }].map((item, index) => <div key={index} className="bg-card rounded-xl md:rounded-2xl p-6 md:p-8 shadow-lg hover:shadow-xl transition-all hover:scale-105 border border-border">
                   <div className={`w-14 h-14 md:w-16 md:h-16 rounded-full bg-${item.color}/10 flex items-center justify-center mb-4 md:mb-6`}>

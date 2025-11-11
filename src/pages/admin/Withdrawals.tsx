@@ -201,6 +201,7 @@ const Withdrawals = () => {
                     <TableHeader>
                       <TableRow>
                         <TableHead>Member</TableHead>
+                        <TableHead>Type</TableHead>
                         <TableHead>Amount</TableHead>
                         <TableHead>Bank Details</TableHead>
                         <TableHead>Date</TableHead>
@@ -208,7 +209,7 @@ const Withdrawals = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {pendingWithdrawals.map((withdrawal: any) => (
+                       {pendingWithdrawals.map((withdrawal: any) => (
                         <TableRow key={withdrawal.id}>
                            <TableCell className="font-medium">
                              {withdrawal.profiles?.first_name} {withdrawal.profiles?.last_name}
@@ -219,6 +220,11 @@ const Withdrawals = () => {
                              <br />
                              <Badge variant={withdrawal.status === 'approved' ? 'default' : 'secondary'} className="mt-1">
                                {withdrawal.status}
+                             </Badge>
+                           </TableCell>
+                           <TableCell>
+                             <Badge variant="outline" className="capitalize">
+                               {withdrawal.withdrawal_type || 'savings'}
                              </Badge>
                            </TableCell>
                           <TableCell className="font-bold text-lg">

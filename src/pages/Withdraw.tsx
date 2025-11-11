@@ -40,6 +40,7 @@ const Withdraw = () => {
     accountName: "",
     accountNumber: "",
     bankName: "",
+    withdrawalType: "savings",
   });
 
   useEffect(() => {
@@ -166,6 +167,7 @@ const Withdraw = () => {
           account_name: formData.accountName,
           account_number: formData.accountNumber,
           bank_name: formData.bankName,
+          withdrawal_type: formData.withdrawalType,
           status: 'pending',
         });
 
@@ -181,6 +183,7 @@ const Withdraw = () => {
         accountName: "",
         accountNumber: "",
         bankName: "",
+        withdrawalType: "savings",
       });
 
       fetchData();
@@ -320,6 +323,25 @@ const Withdraw = () => {
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
+                  <Label htmlFor="withdrawalType">Withdrawal Type</Label>
+                  <select
+                    id="withdrawalType"
+                    value={formData.withdrawalType}
+                    onChange={(e) => setFormData({ ...formData, withdrawalType: e.target.value })}
+                    className="w-full h-10 px-3 rounded-md border border-input bg-background"
+                    disabled={!isEligible}
+                  >
+                    <option value="savings">Savings (₦{totalSavings.toLocaleString()})</option>
+                    <option value="capital">Capital (₦{totalCapital.toLocaleString()})</option>
+                    <option value="dividend">Dividend (₦{totalDividends.toLocaleString()})</option>
+                    <option value="bonus">Bonus</option>
+                  </select>
+                  <p className="text-sm text-muted-foreground">
+                    Select the type of withdrawal you want to make
+                  </p>
+                </div>
+
+                <div className="space-y-2">
                   <Label htmlFor="amount">Amount (₦)</Label>
                   <Input
                     id="amount"
@@ -392,6 +414,7 @@ const Withdraw = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Date</TableHead>
+                      <TableHead>Type</TableHead>
                       <TableHead>Amount</TableHead>
                       <TableHead>Bank</TableHead>
                       <TableHead>Status</TableHead>
@@ -402,6 +425,11 @@ const Withdraw = () => {
                       <TableRow key={request.id}>
                         <TableCell>
                           {new Date(request.requested_at).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="capitalize">
+                            {request.withdrawal_type || 'savings'}
+                          </Badge>
                         </TableCell>
                         <TableCell>₦{request.amount.toLocaleString()}</TableCell>
                         <TableCell>{request.bank_name}</TableCell>

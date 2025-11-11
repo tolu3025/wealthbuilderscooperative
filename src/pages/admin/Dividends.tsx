@@ -27,8 +27,11 @@ import { DashboardHeader } from "@/components/DashboardHeader";
 const Dividends = () => {
   const [distributions, setDistributions] = useState<any[]>([]);
   const [dividendProfit, setDividendProfit] = useState("");
+  const [dividendRate, setDividendRate] = useState("10");
   const [loading, setLoading] = useState(true);
   const [calculating, setCalculating] = useState(false);
+  const [totalDistributed, setTotalDistributed] = useState(0);
+  const [totalCapitalPool, setTotalCapitalPool] = useState(0);
 
   useEffect(() => {
     fetchData();
@@ -41,6 +44,13 @@ const Dividends = () => {
         .select('*')
         .order('created_at', { ascending: false });
       setDistributions(distributionsData || []);
+
+      // Calculate totals
+      const distributed = distributionsData?.reduce((sum, d) => sum + Number(d.total_profit), 0) || 0;
+      const capitalPool = distributionsData?.[0]?.total_capital_pool || 0;
+      
+      setTotalDistributed(distributed);
+      setTotalCapitalPool(capitalPool);
     } catch (error: any) {
       toast.error(error.message);
     } finally {
@@ -195,34 +205,106 @@ const Dividends = () => {
           <DashboardHeader userName="Admin" />
           <main className="flex-1 p-6 space-y-6">
             <div>
-              <h1 className="text-3xl font-bold mb-2">Dividend Distribution</h1>
+              <h1 className="text-3xl font-bold mb-2">Dividend Management</h1>
               <p className="text-muted-foreground">
-                Calculate and distribute dividends to eligible contributors (acting members excluded)
+                Calculate and distribute dividends to eligible contributors
               </p>
+            </div>
+
+            {/* Summary Cards */}
+            <div className="grid md:grid-cols-3 gap-4">
+              <Card className="border-l-4 border-l-blue-500">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Total Contribution Pool
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-blue-600">
+                    ₦{totalCapitalPool.toLocaleString()}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Current eligible capital
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="border-l-4 border-l-green-500">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Total Distributed
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-green-600">
+                    ₦{totalDistributed.toLocaleString()}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    All-time dividends paid
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="border-l-4 border-l-purple-500">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Dividend Rate
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-purple-600">
+                    {dividendRate}%
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Base rate for calculations
+                  </p>
+                </CardContent>
+              </Card>
             </div>
 
             <Card>
               <CardHeader>
-                <CardTitle>New Dividend Distribution</CardTitle>
+                <CardTitle>Dividend Configuration</CardTitle>
                 <CardDescription>
-                  Enter profit to calculate member dividends
+                  Set the base dividend rate and enter profit to calculate member dividends
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Total Profit (₦)</Label>
-                  <Input
-                    type="number"
-                    placeholder="Enter profit amount"
-                    value={dividendProfit}
-                    onChange={(e) => setDividendProfit(e.target.value)}
-                  />
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Base Dividend Rate (%)</Label>
+                    <Input
+                      type="number"
+                      placeholder="e.g., 10"
+                      value={dividendRate}
+                      onChange={(e) => setDividendRate(e.target.value)}
+                      min="0"
+                      max="100"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Default rate for dividend calculations (for reference only)
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Total Profit (₦)</Label>
+                    <Input
+                      type="number"
+                      placeholder="Enter profit amount"
+                      value={dividendProfit}
+                      onChange={(e) => setDividendProfit(e.target.value)}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Enter the actual profit to distribute
+                    </p>
+                  </div>
                 </div>
 
                 <Button
                   onClick={handleDividendDistribution}
                   disabled={calculating}
                   className="w-full"
+                  size="lg"
                 >
                   {calculating ? (
                     <>
@@ -232,7 +314,7 @@ const Dividends = () => {
                   ) : (
                     <>
                       <TrendingUp className="mr-2 h-4 w-4" />
-                      Calculate & Distribute Dividends
+                      Generate Monthly Dividends
                     </>
                   )}
                 </Button>

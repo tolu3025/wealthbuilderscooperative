@@ -35,6 +35,7 @@ interface MemberData {
   referralCount: number;
   totalCommissions: number;
   recentDividends: number;
+  dividendBalance: number;
   nextContributionDue: string;
 }
 
@@ -141,12 +142,14 @@ const Dashboard = () => {
         // Fetch recent dividends
         const { data: dividends } = await supabase
           .from('dividends')
-          .select('amount')
+          .select('amount, status')
           .eq('member_id', profile.id)
-          .order('created_at', { ascending: false })
-          .limit(1);
+          .order('created_at', { ascending: false });
 
         const recentDividends = dividends?.[0]?.amount || 0;
+        const dividendBalance = dividends
+          ?.filter(d => d.status === 'calculated')
+          .reduce((sum, d) => sum + Number(d.amount), 0) || 0;
 
         // Calculate next contribution due
         const lastContribution = contributions?.[0]?.created_at;
@@ -169,6 +172,7 @@ const Dashboard = () => {
           referralCount: referralCount || 0,
           totalCommissions,
           recentDividends,
+          dividendBalance,
           nextContributionDue: nextDue.toLocaleDateString()
         });
 
@@ -354,6 +358,44 @@ const Dashboard = () => {
                 </CardContent>
               </Card>
             </div>
+
+            {/* Dividend Balance Section */}
+            <Card className="shadow-md bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-950/20 dark:to-blue-950/20">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Gift className="h-5 w-5 text-purple-600" />
+                  Dividend Wallet
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Available Balance</p>
+                  <div className="text-4xl font-bold text-purple-600">
+                    ₦{memberData.dividendBalance.toLocaleString()}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {memberData.dividendBalance >= 1000 
+                      ? "Ready to withdraw" 
+                      : `₦${(1000 - memberData.dividendBalance).toLocaleString()} more to reach minimum`}
+                  </p>
+                </div>
+                <div className="flex items-center justify-between pt-3 border-t">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Last Distribution</p>
+                    <p className="text-lg font-semibold">₦{memberData.recentDividends.toLocaleString()}</p>
+                  </div>
+                  <Button 
+                    className="bg-purple-600 hover:bg-purple-700" 
+                    asChild
+                    disabled={memberData.dividendBalance < 1000}
+                  >
+                    <Link to="/member/dividends">
+                      {memberData.dividendBalance >= 1000 ? "Withdraw" : "View Details"}
+                    </Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Three Column Layout */}
             <div className="grid lg:grid-cols-3 gap-4 mb-6">

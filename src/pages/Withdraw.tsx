@@ -142,13 +142,16 @@ const Withdraw = () => {
         throw new Error(`Insufficient balance. Available: ₦${totalAvailable.toLocaleString()}`);
       }
 
-      // Validate based on withdrawal type
+      // Validate based on withdrawal type - prevent negative balances
       if (formData.withdrawalType === 'savings') {
-        if (amount > totalSavings) {
+        if (amount > totalSavings || totalSavings <= 0) {
           throw new Error(`Insufficient savings. Available: ₦${totalSavings.toLocaleString()}`);
         }
+        if (totalSavings - amount < 0) {
+          throw new Error("This withdrawal would result in a negative savings balance");
+        }
       } else if (formData.withdrawalType === 'capital') {
-        if (amount > totalCapital) {
+        if (amount > totalCapital || totalCapital <= 0) {
           throw new Error(`Insufficient capital. Available: ₦${totalCapital.toLocaleString()}`);
         }
         // Check if withdrawal would drop capital below minimum (₦50,000)
@@ -156,12 +159,18 @@ const Withdraw = () => {
           throw new Error("You cannot withdraw below your minimum share capital of ₦50,000.");
         }
       } else if (formData.withdrawalType === 'dividend') {
-        if (amount > totalDividends) {
+        if (amount > totalDividends || totalDividends <= 0) {
           throw new Error(`Insufficient dividend balance. Available: ₦${totalDividends.toLocaleString()}`);
         }
+        if (totalDividends - amount < 0) {
+          throw new Error("This withdrawal would result in a negative dividend balance");
+        }
       } else if (formData.withdrawalType === 'bonus') {
-        if (amount > totalBonuses) {
+        if (amount > totalBonuses || totalBonuses <= 0) {
           throw new Error(`Insufficient bonus balance. Available: ₦${totalBonuses.toLocaleString()}`);
+        }
+        if (totalBonuses - amount < 0) {
+          throw new Error("This withdrawal would result in a negative bonus balance");
         }
         if (amount < 1000) {
           throw new Error("Minimum bonus withdrawal is ₦1,000");

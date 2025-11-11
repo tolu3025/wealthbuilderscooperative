@@ -42,6 +42,7 @@ import DirectorDashboard from "./pages/DirectorDashboard";
 import MonthlySettlements from "./pages/admin/MonthlySettlements";
 import CommissionReport from "./pages/admin/CommissionReport";
 import WithdrawalHistory from "./pages/admin/WithdrawalHistory";
+import ProjectSupportFund from "./pages/admin/ProjectSupportFund";
 
 const queryClient = new QueryClient();
 
@@ -134,6 +135,7 @@ const App = () => (
             <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
             <Route path="/admin/registrations" element={<AdminRoute><PendingRegistrations /></AdminRoute>} />
             <Route path="/admin/contributions" element={<AdminRoute><Contributions /></AdminRoute>} />
+            <Route path="/admin/project-support" element={<AdminRoute><ProjectSupportFund /></AdminRoute>} />
             <Route path="/admin/withdrawals" element={<AdminRoute><Withdrawals /></AdminRoute>} />
             <Route path="/admin/dividends" element={<AdminRoute><AdminDividends /></AdminRoute>} />
             <Route path="/admin/properties" element={<AdminRoute><AdminProperties /></AdminRoute>} />

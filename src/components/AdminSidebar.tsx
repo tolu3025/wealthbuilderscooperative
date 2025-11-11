@@ -31,6 +31,7 @@ const menuItems = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
   { title: "Registrations", url: "/admin/registrations", icon: UserCheck },
   { title: "Contributions", url: "/admin/contributions", icon: Wallet },
+  { title: "Project Support Fund", url: "/admin/project-support", icon: Briefcase },
   { title: "Dividends", url: "/admin/dividends", icon: TrendingUp },
   { title: "Withdrawals", url: "/admin/withdrawals", icon: ArrowDownLeft },
   { title: "Withdrawal History", url: "/admin/withdrawal-history", icon: History },

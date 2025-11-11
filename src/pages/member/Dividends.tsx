@@ -151,10 +151,20 @@ const Dividends = () => {
         return;
       }
 
-      if (amount > dividendBalance.available) {
+      if (amount > dividendBalance.available || dividendBalance.available <= 0) {
         toast({
           title: "Insufficient Balance",
-          description: `Available dividend balance: ₦${dividendBalance.available.toLocaleString()}`,
+          description: `You cannot withdraw more than your available balance. Available: ₦${dividendBalance.available.toLocaleString()}`,
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Additional safety check to prevent negative balance
+      if (dividendBalance.available - amount < 0) {
+        toast({
+          title: "Invalid Withdrawal",
+          description: "This withdrawal would result in a negative balance",
           variant: "destructive",
         });
         return;

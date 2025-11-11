@@ -401,7 +401,18 @@ const Contribute = () => {
                     <div className="bg-amber-50 dark:bg-amber-950/20 p-4 rounded-lg space-y-3">
                       <div>
                         <p className="text-sm text-muted-foreground mb-1">Bank Name</p>
-                        <p className="font-semibold">TBD - Separate Account</p>
+                        <p className="font-semibold">Alpha Morgan Bank</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-1">Account Number</p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-semibold text-lg">2010006769</p>
+                          <CopyPhoneButton phoneNumber="2010006769" />
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-1">Account Name</p>
+                        <p className="font-semibold text-sm">WEALTH BUILDERS IN PROPERTIES MULTIPURPOSE COOPERATIVE LTD</p>
                       </div>
                       <div>
                         <p className="text-sm text-muted-foreground mb-1">Amount</p>

@@ -32,6 +32,7 @@ const Withdraw = () => {
   const [totalSavings, setTotalSavings] = useState(0);
   const [totalCapital, setTotalCapital] = useState(0);
   const [totalDividends, setTotalDividends] = useState(0);
+  const [totalBonuses, setTotalBonuses] = useState(0);
   const [monthsContributed, setMonthsContributed] = useState(0);
   const [requests, setRequests] = useState<any[]>([]);
   
@@ -93,13 +94,23 @@ const Withdraw = () => {
         .from('dividends')
         .select('amount')
         .eq('member_id', profileData.id)
-        .eq('status', 'approved');
+        .eq('status', 'calculated');
       
       const totalDivs = dividends?.reduce((sum, d) => sum + Number(d.amount), 0) || 0;
+      
+      // Fetch all bonuses (inviter's bonus + real estate bonus)
+      const { data: commissions } = await supabase
+        .from('commissions')
+        .select('amount')
+        .eq('member_id', profileData.id)
+        .eq('status', 'approved');
+      
+      const totalBonus = commissions?.reduce((sum, c) => sum + Number(c.amount), 0) || 0;
       
       setTotalSavings(savings);
       setTotalCapital(capital);
       setTotalDividends(totalDivs);
+      setTotalBonuses(totalBonus);
       setMonthsContributed(months);
 
       // Fetch withdrawal requests
@@ -140,20 +151,36 @@ const Withdraw = () => {
         throw new Error("You must contribute for at least 3 months before withdrawing");
       }
 
-      // Calculate total available balance (savings + capital + dividends)
-      const totalAvailable = totalSavings + totalCapital + totalDividends;
+      // Calculate total available balance (savings + capital + dividends + bonuses)
+      const totalAvailable = totalSavings + totalCapital + totalDividends + totalBonuses;
 
       if (amount > totalAvailable) {
         throw new Error(`Insufficient balance. Available: ₦${totalAvailable.toLocaleString()}`);
       }
 
-      // Check if withdrawal would drop capital below minimum (₦50,000)
-      const remainingCapital = totalCapital - amount;
-      if (remainingCapital < 0 && Math.abs(remainingCapital) <= totalCapital) {
-        // User is withdrawing from capital
-        const capitalWithdrawn = Math.min(amount, totalCapital);
-        if (totalCapital - capitalWithdrawn < 50000) {
+      // Validate based on withdrawal type
+      if (formData.withdrawalType === 'savings') {
+        if (amount > totalSavings) {
+          throw new Error(`Insufficient savings. Available: ₦${totalSavings.toLocaleString()}`);
+        }
+      } else if (formData.withdrawalType === 'capital') {
+        if (amount > totalCapital) {
+          throw new Error(`Insufficient capital. Available: ₦${totalCapital.toLocaleString()}`);
+        }
+        // Check if withdrawal would drop capital below minimum (₦50,000)
+        if (totalCapital - amount < 50000) {
           throw new Error("You cannot withdraw below your minimum share capital of ₦50,000.");
+        }
+      } else if (formData.withdrawalType === 'dividend') {
+        if (amount > totalDividends) {
+          throw new Error(`Insufficient dividend balance. Available: ₦${totalDividends.toLocaleString()}`);
+        }
+      } else if (formData.withdrawalType === 'bonus') {
+        if (amount > totalBonuses) {
+          throw new Error(`Insufficient bonus balance. Available: ₦${totalBonuses.toLocaleString()}`);
+        }
+        if (amount < 1000) {
+          throw new Error("Minimum bonus withdrawal is ₦1,000");
         }
       }
 
@@ -208,7 +235,7 @@ const Withdraw = () => {
   }
 
   const isEligible = monthsContributed >= 3;
-  const totalAvailableBalance = totalSavings + totalCapital + totalDividends;
+  const totalAvailableBalance = totalSavings + totalCapital + totalDividends + totalBonuses;
 
   return (
     <div className="min-h-screen bg-background pt-16 md:pt-20">
@@ -251,6 +278,20 @@ const Withdraw = () => {
                 <div className="text-2xl font-bold text-purple-600">
                   ₦{totalDividends.toLocaleString()}
                 </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium">Total Bonuses</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-amber-600">
+                  ₦{totalBonuses.toLocaleString()}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Inviter's + Real Estate Bonus
+                </p>
               </CardContent>
             </Card>
 
@@ -300,12 +341,14 @@ const Withdraw = () => {
             </Alert>
           )}
 
-          {isEligible && totalAvailableBalance > 0 && (
+            {isEligible && totalAvailableBalance > 0 && (
             <Alert>
               <AlertDescription>
-                <strong>Withdrawal Information:</strong> After 3 months, you can withdraw from savings (₦{totalSavings.toLocaleString()}) 
-                and accumulated dividends (₦{totalDividends.toLocaleString()}). 
+                <strong>Withdrawal Information:</strong> After 3 months, you can withdraw from savings (₦{totalSavings.toLocaleString()}), 
+                accumulated dividends (₦{totalDividends.toLocaleString()}), and bonuses (₦{totalBonuses.toLocaleString()}). 
                 Capital (₦{totalCapital.toLocaleString()}) cannot be withdrawn below ₦50,000 minimum share capital.
+                <br /><br />
+                <strong>Bonus withdrawals:</strong> Includes both Inviter's Bonus (₦500 per referral) and Real Estate Bonus from project support fund. Minimum: ₦1,000
               </AlertDescription>
             </Alert>
           )}
@@ -334,10 +377,10 @@ const Withdraw = () => {
                     <option value="savings">Savings (₦{totalSavings.toLocaleString()})</option>
                     <option value="capital">Capital (₦{totalCapital.toLocaleString()})</option>
                     <option value="dividend">Dividend (₦{totalDividends.toLocaleString()})</option>
-                    <option value="bonus">Bonus</option>
+                    <option value="bonus">All Bonuses (₦{totalBonuses.toLocaleString()} - Inviter's + Real Estate)</option>
                   </select>
                   <p className="text-sm text-muted-foreground">
-                    Select the type of withdrawal you want to make
+                    Bonus includes Inviter's Bonus (₦500/referral) + Real Estate Bonus (MLM). Minimum withdrawal: ₦1,000
                   </p>
                 </div>
 
@@ -354,7 +397,11 @@ const Withdraw = () => {
                     required
                   />
                   <p className="text-sm text-muted-foreground">
-                    Available: ₦{totalAvailableBalance.toLocaleString()} (Savings: ₦{totalSavings.toLocaleString()}, Capital: ₦{totalCapital.toLocaleString()}, Dividends: ₦{totalDividends.toLocaleString()})
+                    Available: ₦{totalAvailableBalance.toLocaleString()} 
+                    (Savings: ₦{totalSavings.toLocaleString()}, 
+                    Capital: ₦{totalCapital.toLocaleString()}, 
+                    Dividends: ₦{totalDividends.toLocaleString()},
+                    Bonuses: ₦{totalBonuses.toLocaleString()})
                   </p>
                 </div>
 

@@ -190,8 +190,14 @@ const Contributions = () => {
                           <TableCell className="text-blue-600 font-medium">
                             ₦{Number(contrib.savings_amount).toLocaleString()}
                           </TableCell>
-                          <TableCell className="text-orange-600 font-medium">
-                            ₦{Number(contrib.project_support_amount || 500).toLocaleString()}
+                          <TableCell>
+                            {contrib.project_support_amount > 0 ? (
+                              <span className="text-orange-600 font-medium">
+                                ₦{Number(contrib.project_support_amount).toLocaleString()}
+                              </span>
+                            ) : (
+                              <Badge variant="secondary" className="text-xs">Not Paid</Badge>
+                            )}
                           </TableCell>
                           <TableCell>
                             {contrib.receipt_url ? (

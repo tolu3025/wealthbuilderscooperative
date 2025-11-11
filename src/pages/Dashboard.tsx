@@ -117,16 +117,26 @@ const Dashboard = () => {
         const monthsContributed = balance?.months_contributed || 0;
         const eligibleForDividend = balance?.eligible_for_dividend || false;
 
-        // Calculate actual dividend balance from dividends table
+        // Calculate total dividends earned from dividends table
         const { data: allDividends } = await supabase
           .from('dividends')
-          .select('amount, status')
+          .select('amount')
           .eq('member_id', profile.id);
 
-        // Sum all dividends that haven't been withdrawn
-        const totalDividends = allDividends
-          ?.filter(d => d.status !== 'withdrawn')
-          .reduce((sum, d) => sum + Number(d.amount), 0) || 0;
+        const totalDividendsEarned = allDividends?.reduce((sum, d) => sum + Number(d.amount), 0) || 0;
+
+        // Calculate total withdrawn dividends from withdrawal_requests
+        const { data: dividendWithdrawals } = await supabase
+          .from('withdrawal_requests')
+          .select('amount')
+          .eq('member_id', profile.id)
+          .eq('withdrawal_type', 'dividend')
+          .in('status', ['approved', 'completed']);
+
+        const totalWithdrawn = dividendWithdrawals?.reduce((sum, w) => sum + Number(w.amount), 0) || 0;
+
+        // Available dividend balance = earned - withdrawn
+        const totalDividends = totalDividendsEarned - totalWithdrawn;
 
         // Fetch contributions for transactions
         const { data: contributions } = await supabase

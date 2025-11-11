@@ -100,17 +100,32 @@ const Dividends = () => {
 
         setDividends(dividendsData || []);
         
-        // Calculate balances
-        const total = dividendsData?.reduce((sum, d) => sum + Number(d.amount), 0) || 0;
-        const available = dividendsData?.filter(d => d.status === 'calculated')
-          .reduce((sum, d) => sum + Number(d.amount), 0) || 0;
-        const pending = dividendsData?.filter(d => d.status === 'pending')
-          .reduce((sum, d) => sum + Number(d.amount), 0) || 0;
-        const withdrawn = dividendsData?.filter(d => d.status === 'withdrawn')
-          .reduce((sum, d) => sum + Number(d.amount), 0) || 0;
+        // Calculate total earned
+        const totalEarnedAmount = dividendsData?.reduce((sum, d) => sum + Number(d.amount), 0) || 0;
+        setTotalEarned(totalEarnedAmount);
+
+        // Fetch withdrawal requests to calculate withdrawn and pending amounts
+        const { data: withdrawalRequests } = await supabase
+          .from('withdrawal_requests')
+          .select('amount, status')
+          .eq('member_id', profile.id)
+          .eq('withdrawal_type', 'dividend');
+
+        const withdrawnAmount = withdrawalRequests
+          ?.filter(w => w.status === 'approved' || w.status === 'completed')
+          .reduce((sum, w) => sum + Number(w.amount), 0) || 0;
+
+        const pendingAmount = withdrawalRequests
+          ?.filter(w => w.status === 'pending')
+          .reduce((sum, w) => sum + Number(w.amount), 0) || 0;
+
+        const availableAmount = totalEarnedAmount - withdrawnAmount - pendingAmount;
         
-        setTotalEarned(total);
-        setDividendBalance({ available, pending, withdrawn });
+        setDividendBalance({ 
+          available: availableAmount, 
+          pending: pendingAmount, 
+          withdrawn: withdrawnAmount 
+        });
       }
     } catch (error: any) {
       toast({

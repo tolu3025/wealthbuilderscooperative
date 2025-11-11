@@ -348,7 +348,7 @@ const Withdraw = () => {
                 accumulated dividends (₦{totalDividends.toLocaleString()}), and bonuses (₦{totalBonuses.toLocaleString()}). 
                 Capital (₦{totalCapital.toLocaleString()}) cannot be withdrawn below ₦50,000 minimum share capital.
                 <br /><br />
-                <strong>Bonus withdrawals:</strong> Includes both Inviter's Bonus (₦500 per referral) and Real Estate Bonus from project support fund. Minimum: ₦1,000
+                <strong>Bonus withdrawals:</strong> Includes both Inviter's Bonus (₦1,000 per referral) and Real Estate Bonus from project support fund. Minimum: ₦1,000
               </AlertDescription>
             </Alert>
           )}
@@ -380,7 +380,7 @@ const Withdraw = () => {
                     <option value="bonus">All Bonuses (₦{totalBonuses.toLocaleString()} - Inviter's + Real Estate)</option>
                   </select>
                   <p className="text-sm text-muted-foreground">
-                    Bonus includes Inviter's Bonus (₦500/referral) + Real Estate Bonus (MLM). Minimum withdrawal: ₦1,000
+                    Bonus includes Inviter's Bonus (₦1,000/referral) + Real Estate Bonus (MLM). Minimum withdrawal: ₦1,000
                   </p>
                 </div>
 

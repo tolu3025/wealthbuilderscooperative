@@ -932,6 +932,7 @@ export type Database = {
           processed_by: string | null
           requested_at: string | null
           status: string | null
+          withdrawal_type: string
         }
         Insert: {
           account_name: string
@@ -945,6 +946,7 @@ export type Database = {
           processed_by?: string | null
           requested_at?: string | null
           status?: string | null
+          withdrawal_type?: string
         }
         Update: {
           account_name?: string
@@ -958,6 +960,7 @@ export type Database = {
           processed_by?: string | null
           requested_at?: string | null
           status?: string | null
+          withdrawal_type?: string
         }
         Relationships: [
           {

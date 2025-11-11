@@ -121,13 +121,13 @@ const Register = () => {
             if (referrer) {
               invitedById = referrer.id;
               
-              // Create referral commission for the inviter (₦500)
+              // Create referral commission for the inviter (₦1,000)
               await supabase
                 .from('commissions')
                 .insert({
                   member_id: referrer.id,
                   invited_member_id: profile.id,
-                  amount: 500,
+                  amount: 1000,
                   commission_type: 'referral',
                   status: 'pending'
                 });
@@ -146,7 +146,7 @@ const Register = () => {
                   .insert({
                     user_id: referrerProfile.user_id,
                     title: 'New Invite!',
-                    message: `${data.firstName} ${data.lastName} just joined using your invite code. You've earned ₦500!`,
+                    message: `${data.firstName} ${data.lastName} just joined using your invite code. You've earned ₦1,000!`,
                     type: 'referral',
                     related_id: profile.id
                   });

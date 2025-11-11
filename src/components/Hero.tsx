@@ -74,7 +74,14 @@ const Hero = () => {
             <div className="text-center mb-12 md:mb-16">
               {/* Logo */}
               <div className="mb-6 md:mb-8 flex justify-center animate-fade-in">
-                <img src={logo} alt="WealthBuilders Cooperative" className="w-32 h-32 sm:w-40 sm:h-40 md:w-52 md:h-52 drop-shadow-2xl brightness-125 contrast-110 hover:scale-105 transition-transform" style={{ filter: 'drop-shadow(0 0 40px rgba(255, 195, 0, 0.6))' }} />
+                <div className="relative">
+                  {/* Glowing background circle */}
+                  <div className="absolute inset-0 -m-4 sm:-m-6 md:-m-8 bg-accent/20 rounded-full blur-2xl animate-pulse" />
+                  <div className="absolute inset-0 -m-2 sm:-m-3 md:-m-4 bg-white/10 rounded-full backdrop-blur-sm border border-accent/30" />
+                  
+                  {/* Logo */}
+                  <img src={logo} alt="WealthBuilders Cooperative" className="relative w-32 h-32 sm:w-40 sm:h-40 md:w-52 md:h-52 drop-shadow-2xl brightness-125 contrast-110 hover:scale-105 transition-transform" style={{ filter: 'drop-shadow(0 0 40px rgba(255, 195, 0, 0.6))' }} />
+                </div>
               </div>
 
               {/* Main Heading */}

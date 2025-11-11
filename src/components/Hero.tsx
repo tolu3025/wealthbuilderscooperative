@@ -74,7 +74,7 @@ const Hero = () => {
             <div className="text-center mb-12 md:mb-16">
               {/* Logo */}
               <div className="mb-6 md:mb-8 flex justify-center animate-fade-in">
-                <img src={logo} alt="WealthBuilders Cooperative" className="w-32 h-32 sm:w-40 sm:h-40 md:w-52 md:h-52 drop-shadow-2xl brightness-110 hover:scale-105 transition-transform" />
+                <img src={logo} alt="WealthBuilders Cooperative" className="w-32 h-32 sm:w-40 sm:h-40 md:w-52 md:h-52 drop-shadow-2xl brightness-125 contrast-110 hover:scale-105 transition-transform" style={{ filter: 'drop-shadow(0 0 40px rgba(255, 195, 0, 0.6))' }} />
               </div>
 
               {/* Main Heading */}

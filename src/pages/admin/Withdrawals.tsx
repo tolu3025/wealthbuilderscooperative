@@ -82,7 +82,7 @@ const Withdrawals = () => {
     }
   };
 
-  const approveWithdrawal = async (withdrawalId: string, memberId: string, amount: number) => {
+  const approveWithdrawal = async (withdrawalId: string, memberId: string, amount: number, withdrawalType: string = 'savings') => {
     try {
       // Get member profile and balance
       const { data: profile } = await supabase
@@ -101,9 +101,45 @@ const Withdrawals = () => {
 
       if (!balance) throw new Error('Member balance not found');
 
-      // Check minimum capital requirement
-      if (balance.total_capital - amount < 50000 && amount > balance.total_savings) {
-        throw new Error('Cannot approve: Withdrawal would drop capital below ₦50,000 minimum');
+      // Get dividend balance
+      const { data: dividends } = await supabase
+        .from('dividends')
+        .select('amount')
+        .eq('member_id', memberId)
+        .eq('status', 'calculated');
+      
+      const dividendBalance = dividends?.reduce((sum, d) => sum + Number(d.amount), 0) || 0;
+
+      // Get bonus balance
+      const { data: commissions } = await supabase
+        .from('commissions')
+        .select('amount')
+        .eq('member_id', memberId)
+        .eq('status', 'approved');
+
+      const bonusBalance = commissions?.reduce((sum, c) => sum + Number(c.amount), 0) || 0;
+
+      // Validate based on withdrawal type
+      if (withdrawalType === 'savings') {
+        if (amount > balance.total_savings) {
+          throw new Error('Insufficient savings balance');
+        }
+      } else if (withdrawalType === 'capital') {
+        if (amount > balance.total_capital) {
+          throw new Error('Insufficient capital balance');
+        }
+        // Check minimum capital requirement for capital withdrawals only
+        if (balance.total_capital - amount < 50000) {
+          throw new Error('Cannot approve: Withdrawal would drop capital below ₦50,000 minimum');
+        }
+      } else if (withdrawalType === 'dividend') {
+        if (amount > dividendBalance) {
+          throw new Error('Insufficient dividend balance');
+        }
+      } else if (withdrawalType === 'bonus') {
+        if (amount > bonusBalance) {
+          throw new Error('Insufficient bonus balance');
+        }
       }
 
       const { error: updateError } = await supabase
@@ -146,7 +182,7 @@ const Withdrawals = () => {
         .insert({
           user_id: profile.user_id,
           title: 'Withdrawal Approved',
-          message: 'Your withdrawal request has been approved and will be processed shortly.',
+          message: `Your ${withdrawalType} withdrawal of ₦${amount.toLocaleString()} has been approved and will be processed shortly.`,
           type: 'withdrawal_status',
           related_id: withdrawalId
         });
@@ -309,7 +345,7 @@ const Withdrawals = () => {
                              {withdrawal.status === 'pending' && (
                                <Button
                                  size="sm"
-                                 onClick={() => approveWithdrawal(withdrawal.id, withdrawal.member_id, withdrawal.amount)}
+                                 onClick={() => approveWithdrawal(withdrawal.id, withdrawal.member_id, withdrawal.amount, withdrawalType)}
                                  disabled={!hasSufficientBalance}
                                >
                                  <CheckCircle className="h-4 w-4 mr-1" />

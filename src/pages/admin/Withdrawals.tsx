@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Loader2 } from "lucide-react";
+import { CheckCircle, Loader2, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -24,13 +24,56 @@ const Withdrawals = () => {
         .from('withdrawal_requests')
         .select(`
           *,
-          profiles!withdrawal_requests_member_id_fkey(first_name, last_name, member_number)
+          profiles!withdrawal_requests_member_id_fkey(first_name, last_name, member_number, id)
         `)
         .in('status', ['pending', 'approved'])
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setPendingWithdrawals(data || []);
+
+      // Fetch balances for each member
+      const withdrawalsWithBalances = await Promise.all(
+        (data || []).map(async (withdrawal: any) => {
+          const memberId = withdrawal.profiles?.id;
+          
+          // Fetch member balance
+          const { data: balance } = await supabase
+            .from('member_balances')
+            .select('total_savings, total_capital')
+            .eq('member_id', memberId)
+            .single();
+
+          // Fetch dividend balance
+          const { data: dividends } = await supabase
+            .from('dividends')
+            .select('amount, status')
+            .eq('member_id', memberId)
+            .eq('status', 'calculated');
+          
+          const dividendBalance = dividends?.reduce((sum, d) => sum + Number(d.amount), 0) || 0;
+
+          // Fetch bonus balance (commissions)
+          const { data: commissions } = await supabase
+            .from('commissions')
+            .select('amount')
+            .eq('member_id', memberId)
+            .eq('status', 'approved');
+
+          const bonusBalance = commissions?.reduce((sum, c) => sum + Number(c.amount), 0) || 0;
+
+          return {
+            ...withdrawal,
+            balances: {
+              savings: balance?.total_savings || 0,
+              capital: balance?.total_capital || 0,
+              dividend: dividendBalance,
+              bonus: bonusBalance
+            }
+          };
+        })
+      );
+
+      setPendingWithdrawals(withdrawalsWithBalances);
     } catch (error: any) {
       console.error('Error fetching withdrawals:', error);
       toast.error(error.message);
@@ -203,13 +246,19 @@ const Withdrawals = () => {
                         <TableHead>Member</TableHead>
                         <TableHead>Type</TableHead>
                         <TableHead>Amount</TableHead>
+                        <TableHead>Available Balance</TableHead>
                         <TableHead>Bank Details</TableHead>
                         <TableHead>Date</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                       {pendingWithdrawals.map((withdrawal: any) => (
+                       {pendingWithdrawals.map((withdrawal: any) => {
+                        const withdrawalType = withdrawal.withdrawal_type || 'savings';
+                        const typeBalance = withdrawal.balances?.[withdrawalType] || 0;
+                        const hasSufficientBalance = withdrawal.amount <= typeBalance;
+                        
+                        return (
                         <TableRow key={withdrawal.id}>
                            <TableCell className="font-medium">
                              {withdrawal.profiles?.first_name} {withdrawal.profiles?.last_name}
@@ -224,43 +273,63 @@ const Withdrawals = () => {
                            </TableCell>
                            <TableCell>
                              <Badge variant="outline" className="capitalize">
-                               {withdrawal.withdrawal_type || 'savings'}
+                               {withdrawalType}
                              </Badge>
                            </TableCell>
                           <TableCell className="font-bold text-lg">
                             ₦{Number(withdrawal.amount).toLocaleString()}
                           </TableCell>
                           <TableCell>
-                            <div className="text-sm">
-                              <div className="font-medium">{withdrawal.account_name}</div>
-                              <div className="text-muted-foreground">{withdrawal.bank_name}</div>
-                              <div className="font-mono">{withdrawal.account_number}</div>
+                            <div className="space-y-1">
+                              <div className={`font-semibold ${hasSufficientBalance ? 'text-green-600' : 'text-red-600'}`}>
+                                ₦{typeBalance.toLocaleString()}
+                              </div>
+                              {!hasSufficientBalance && (
+                                <div className="flex items-center gap-1 text-xs text-red-600">
+                                  <AlertCircle className="h-3 w-3" />
+                                  Insufficient
+                                </div>
+                              )}
+                              {hasSufficientBalance && (
+                                <div className="text-xs text-green-600">
+                                  ✓ Sufficient
+                                </div>
+                              )}
                             </div>
                           </TableCell>
-                          <TableCell>{new Date(withdrawal.requested_at).toLocaleDateString()}</TableCell>
-                           <TableCell className="text-right space-x-2">
-                            {withdrawal.status === 'pending' && (
-                              <Button
-                                size="sm"
-                                onClick={() => approveWithdrawal(withdrawal.id, withdrawal.member_id, withdrawal.amount)}
-                              >
-                                <CheckCircle className="h-4 w-4 mr-1" />
-                                Approve
-                              </Button>
-                            )}
-                            {withdrawal.status === 'approved' && (
-                              <Button
-                                size="sm"
-                                variant="default"
-                                onClick={() => completeWithdrawal(withdrawal.id, withdrawal.member_id)}
-                              >
-                                <CheckCircle className="h-4 w-4 mr-1" />
-                                Mark as Paid
-                              </Button>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                           <TableCell>
+                             <div className="text-sm">
+                               <div className="font-medium">{withdrawal.account_name}</div>
+                               <div className="text-muted-foreground">{withdrawal.bank_name}</div>
+                               <div className="font-mono">{withdrawal.account_number}</div>
+                             </div>
+                           </TableCell>
+                           <TableCell>{new Date(withdrawal.requested_at).toLocaleDateString()}</TableCell>
+                            <TableCell className="text-right space-x-2">
+                             {withdrawal.status === 'pending' && (
+                               <Button
+                                 size="sm"
+                                 onClick={() => approveWithdrawal(withdrawal.id, withdrawal.member_id, withdrawal.amount)}
+                                 disabled={!hasSufficientBalance}
+                               >
+                                 <CheckCircle className="h-4 w-4 mr-1" />
+                                 Approve
+                               </Button>
+                             )}
+                             {withdrawal.status === 'approved' && (
+                               <Button
+                                 size="sm"
+                                 variant="default"
+                                 onClick={() => completeWithdrawal(withdrawal.id, withdrawal.member_id)}
+                               >
+                                 <CheckCircle className="h-4 w-4 mr-1" />
+                                 Mark as Paid
+                               </Button>
+                             )}
+                           </TableCell>
+                         </TableRow>
+                        );
+                       })}
                     </TableBody>
                   </Table>
                   </div>

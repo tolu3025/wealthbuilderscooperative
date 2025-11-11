@@ -32,8 +32,6 @@ const menuItems = [
   { title: "Contributions", url: "/admin/contributions", icon: Wallet },
   { title: "Dividends", url: "/admin/dividends", icon: TrendingUp },
   { title: "Withdrawals", url: "/admin/withdrawals", icon: ArrowDownLeft },
-  { title: "Properties", url: "/admin/properties", icon: Building2 },
-  { title: "Plan Enrollments", url: "/admin/plan-enrollments", icon: Briefcase },
   { title: "State Reps", url: "/admin/state-reps", icon: UsersIcon },
   { title: "Commissions", url: "/admin/commissions", icon: DollarSign },
   { title: "Monthly Settlement", url: "/admin/settlements", icon: BarChart3 },

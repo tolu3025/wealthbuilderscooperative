@@ -58,7 +58,7 @@ const Hero = () => {
         {/* Background Image with Overlay */}
         <div className="absolute inset-0">
           <img src={heroMain} alt="WealthBuilders Community" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/95 via-primary/90 to-secondary/85" />
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/60 via-primary/50 to-secondary/45" />
         </div>
 
         {/* Animated background elements */}

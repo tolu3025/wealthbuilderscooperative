@@ -113,10 +113,20 @@ const Dashboard = () => {
 
         const totalCapital = balance?.total_capital || 0;
         const totalSavings = balance?.total_savings || 0;
-        const totalDividends = balance?.total_dividends || 0;
         const totalCommissions = balance?.total_commissions || 0;
         const monthsContributed = balance?.months_contributed || 0;
         const eligibleForDividend = balance?.eligible_for_dividend || false;
+
+        // Calculate actual dividend balance from dividends table
+        const { data: allDividends } = await supabase
+          .from('dividends')
+          .select('amount, status')
+          .eq('member_id', profile.id);
+
+        // Sum all dividends that haven't been withdrawn
+        const totalDividends = allDividends
+          ?.filter(d => d.status !== 'withdrawn')
+          .reduce((sum, d) => sum + Number(d.amount), 0) || 0;
 
         // Fetch contributions for transactions
         const { data: contributions } = await supabase

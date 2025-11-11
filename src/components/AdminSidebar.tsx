@@ -10,7 +10,8 @@ import {
   BarChart3,
   Settings,
   Users,
-  Briefcase
+  Briefcase,
+  History
 } from "lucide-react";
 import {
   Sidebar,
@@ -32,6 +33,7 @@ const menuItems = [
   { title: "Contributions", url: "/admin/contributions", icon: Wallet },
   { title: "Dividends", url: "/admin/dividends", icon: TrendingUp },
   { title: "Withdrawals", url: "/admin/withdrawals", icon: ArrowDownLeft },
+  { title: "Withdrawal History", url: "/admin/withdrawal-history", icon: History },
   { title: "Properties", url: "/admin/properties", icon: Building2 },
   { title: "State Reps", url: "/admin/state-reps", icon: UsersIcon },
   { title: "Commissions", url: "/admin/commissions", icon: DollarSign },

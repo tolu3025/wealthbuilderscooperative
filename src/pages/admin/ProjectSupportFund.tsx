@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, DollarSign, Download, CheckCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -171,8 +172,13 @@ const ProjectSupportFund = () => {
             <div className="mb-6">
               <h1 className="text-3xl font-bold mb-2">Project Support Fund Management</h1>
               <p className="text-muted-foreground">
-                Monitor and approve ₦500 project support fund contributions
+                Monitor and approve mandatory ₦500 project support fund contributions
               </p>
+              <Alert className="mt-3 border-red-500/50 bg-red-50 dark:bg-red-950/20">
+                <AlertDescription className="text-sm text-red-900 dark:text-red-100">
+                  <strong className="text-red-700 dark:text-red-300">⚠️ MANDATORY Payment:</strong> Members must pay by the last Thursday of each month to receive Real Estate Bonus (MLM earnings) for that month.
+                </AlertDescription>
+              </Alert>
             </div>
 
             {/* Stats Cards */}
@@ -221,9 +227,9 @@ const ProjectSupportFund = () => {
             {/* Contributions Table */}
             <Card>
               <CardHeader>
-                <CardTitle>Project Support Fund Contributions</CardTitle>
+                <CardTitle>Mandatory Project Support Fund Contributions</CardTitle>
                 <CardDescription>
-                  All ₦500 project support fund payments from members
+                  All mandatory ₦500 monthly payments - members must pay by last Thursday to receive Real Estate Bonus
                 </CardDescription>
               </CardHeader>
               <CardContent>

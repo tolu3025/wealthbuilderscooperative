@@ -25,7 +25,6 @@ const Contribute = () => {
   const [contributions, setContributions] = useState<any[]>([]);
   const [contributionAmount, setContributionAmount] = useState<string>("5000");
   const [selectedBreakdown, setSelectedBreakdown] = useState<string>("80_20");
-  const [includeProjectSupport, setIncludeProjectSupport] = useState(false);
   const [projectSupportReceipt, setProjectSupportReceipt] = useState<string>("");
 
   useEffect(() => {
@@ -173,7 +172,6 @@ const Contribute = () => {
       });
 
       setProjectSupportReceipt("");
-      setIncludeProjectSupport(false);
       fetchData();
 
     } catch (error: any) {
@@ -196,6 +194,23 @@ const Contribute = () => {
   }
 
   const currentMonth = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  
+  // Calculate last Thursday of current month
+  const getLastThursday = (date: Date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const lastDay = new Date(year, month + 1, 0);
+    const dayOfWeek = lastDay.getDay();
+    const daysUntilThursday = (dayOfWeek + 3) % 7;
+    return new Date(year, month, lastDay.getDate() - daysUntilThursday);
+  };
+  
+  const lastThursday = getLastThursday(new Date());
+  const lastThursdayFormatted = lastThursday.toLocaleDateString('en-US', { 
+    month: 'long', 
+    day: 'numeric',
+    year: 'numeric'
+  });
   
   // Calculate live preview for contribution only
   const amount = parseFloat(contributionAmount) || 0;
@@ -363,85 +378,75 @@ const Contribute = () => {
             </CardContent>
           </Card>
 
-          {/* Project Support Fund - Separate Section */}
-          <div className="border-t-4 border-amber-500 pt-6">
-            <Alert className="mb-4">
-              <Info className="h-4 w-4" />
-              <AlertDescription>
-                <strong>Project Support Fund</strong> is completely independent from your monthly contribution. 
-                It's optional and goes to a separate account for project expenses.
+          {/* Project Support Fund - Mandatory Section */}
+          <div className="border-t-4 border-red-500 pt-6">
+            <Alert className="mb-4 border-red-500/50 bg-red-50 dark:bg-red-950/20">
+              <Info className="h-4 w-4 text-red-600" />
+              <AlertDescription className="text-red-900 dark:text-red-100">
+                <strong className="text-red-700 dark:text-red-300">⚠️ MANDATORY: Project Support Fund</strong>
+                <div className="mt-2 space-y-1 text-sm">
+                  <p>The ₦500 Project Support Fund is <strong>compulsory</strong> for all members.</p>
+                  <p className="font-semibold">⏰ Deadline: {lastThursdayFormatted} (Last Thursday of the month)</p>
+                  <p className="text-red-700 dark:text-red-300">
+                    ⚠️ Members who don't pay by the deadline will NOT receive Real Estate Bonus (MLM earnings) for that month.
+                  </p>
+                </div>
               </AlertDescription>
             </Alert>
 
-            <Card className="border-2 border-amber-500/20">
+            <Card className="border-2 border-red-500/30">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Wallet className="h-5 w-5 text-amber-600" />
-                  Optional: Project Support Fund
+                  <Wallet className="h-5 w-5 text-red-600" />
+                  Mandatory: Project Support Fund (₦500)
                 </CardTitle>
                 <CardDescription>
-                  Contribute ₦500 to support project expenses (MLM Real Estate Bonus eligible)
+                  Required monthly payment - pays before last Thursday to remain eligible for Real Estate Bonus
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div>
-                  <label className="flex items-center gap-2 cursor-pointer mb-3">
-                    <input
-                      type="checkbox"
-                      checked={includeProjectSupport}
-                      onChange={(e) => setIncludeProjectSupport(e.target.checked)}
-                      className="w-4 h-4"
-                    />
-                    <span className="text-sm font-medium">I want to contribute to Project Support Fund (₦500)</span>
-                  </label>
+                <div className="bg-red-50 dark:bg-red-950/20 p-4 rounded-lg space-y-3 border border-red-200 dark:border-red-800">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Bank Name</p>
+                    <p className="font-semibold">Alpha Morgan Bank</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Account Number</p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-semibold text-lg">2010006769</p>
+                      <CopyPhoneButton phoneNumber="2010006769" />
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Account Name</p>
+                    <p className="font-semibold text-sm">WEALTH BUILDERS IN PROPERTIES MULTIPURPOSE COOPERATIVE LTD</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Amount (Fixed)</p>
+                    <p className="font-semibold text-lg text-red-600">₦500</p>
+                  </div>
+                  <div className="text-xs text-red-600 dark:text-red-400 font-medium">
+                    * This is a separate mandatory payment from your monthly contribution
+                  </div>
                 </div>
 
-                {includeProjectSupport && (
-                  <>
-                    <div className="bg-amber-50 dark:bg-amber-950/20 p-4 rounded-lg space-y-3">
-                      <div>
-                        <p className="text-sm text-muted-foreground mb-1">Bank Name</p>
-                        <p className="font-semibold">Alpha Morgan Bank</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground mb-1">Account Number</p>
-                        <div className="flex items-center gap-2">
-                          <p className="font-semibold text-lg">2010006769</p>
-                          <CopyPhoneButton phoneNumber="2010006769" />
-                        </div>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground mb-1">Account Name</p>
-                        <p className="font-semibold text-sm">WEALTH BUILDERS IN PROPERTIES MULTIPURPOSE COOPERATIVE LTD</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground mb-1">Amount</p>
-                        <p className="font-semibold text-lg text-amber-600">₦500</p>
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        * Project support fund payments go to a different account than monthly contributions
-                      </div>
-                    </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Upload Project Support Receipt *</label>
+                  <FileUpload
+                    onUploadComplete={setProjectSupportReceipt}
+                    userId={user?.id || ''}
+                    fileType="project-support"
+                  />
+                </div>
 
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Upload Project Support Receipt</label>
-                      <FileUpload
-                        onUploadComplete={setProjectSupportReceipt}
-                        userId={user?.id || ''}
-                        fileType="project-support"
-                      />
-                    </div>
-
-                    <Button
-                      onClick={handleProjectSupportSubmit}
-                      disabled={!projectSupportReceipt || submitting}
-                      className="w-full bg-amber-600 hover:bg-amber-700"
-                      size="lg"
-                    >
-                      {submitting ? "Submitting..." : "Submit Project Support"}
-                    </Button>
-                  </>
-                )}
+                <Button
+                  onClick={handleProjectSupportSubmit}
+                  disabled={!projectSupportReceipt || submitting}
+                  className="w-full bg-red-600 hover:bg-red-700"
+                  size="lg"
+                >
+                  {submitting ? "Submitting..." : "Submit Mandatory Project Support"}
+                </Button>
               </CardContent>
             </Card>
           </div>

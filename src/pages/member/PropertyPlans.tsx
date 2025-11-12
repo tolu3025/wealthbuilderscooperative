@@ -37,8 +37,6 @@ const PropertyPlans = () => {
   const [loading, setLoading] = useState(true);
   const [enrolling, setEnrolling] = useState<string | null>(null);
   const [userName, setUserName] = useState("");
-  const [monthsActive, setMonthsActive] = useState(0);
-  const [eligible, setEligible] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -58,19 +56,6 @@ const PropertyPlans = () => {
 
       if (profile) {
         setUserName(`${profile.first_name} ${profile.last_name}`);
-
-        // Check eligibility (3 months + ₦50,000 capital for plans)
-        const { data: balance } = await supabase
-          .from('member_balances')
-          .select('months_contributed, total_capital, eligible_for_dividend')
-          .eq('member_id', profile.id)
-          .single();
-
-        const months = balance?.months_contributed || 0;
-        const capital = balance?.total_capital || 0;
-        setMonthsActive(months);
-        // Eligible if: 3+ months AND ₦50,000+ capital (1 share)
-        setEligible(balance?.eligible_for_dividend || false);
 
         // Fetch enrollments
         const { data: enrollmentData } = await supabase
@@ -97,11 +82,6 @@ const PropertyPlans = () => {
   };
 
   const handleEnroll = async (planId: string) => {
-    if (!eligible) {
-      toast.error("You must have contributed for at least 3 months and reached ₦50,000 capital before joining a plan.");
-      return;
-    }
-
     setEnrolling(planId);
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -125,11 +105,11 @@ const PropertyPlans = () => {
 
       if (error) throw error;
 
-      toast.success("Successfully applied to plan!");
+      toast.success("Successfully enrolled in plan!");
       fetchData();
     } catch (error: any) {
       console.error('Enrollment error:', error);
-      toast.error("Failed to apply: " + error.message);
+      toast.error("Failed to enroll: " + error.message);
     } finally {
       setEnrolling(null);
     }
@@ -198,17 +178,6 @@ const PropertyPlans = () => {
               </p>
             </div>
 
-            {!eligible && (
-              <Alert>
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
-                  You must have contributed for at least 3 months and reached ₦50,000 capital before joining a plan.
-                  <br />
-                  <strong>Current status:</strong> {monthsActive} month{monthsActive !== 1 ? 's' : ''} active
-                </AlertDescription>
-              </Alert>
-            )}
-
             <div className="grid md:grid-cols-2 gap-6">
               {plans.map((plan) => {
                 const Icon = planIcons[plan.plan_type as keyof typeof planIcons] || Building2;
@@ -250,13 +219,13 @@ const PropertyPlans = () => {
                       ) : (
                         <Button
                           onClick={() => handleEnroll(plan.id)}
-                          disabled={!eligible || enrolling === plan.id}
+                          disabled={enrolling === plan.id}
                           className="w-full"
                         >
                           {enrolling === plan.id && (
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                           )}
-                          {eligible ? "Apply" : "Not Eligible Yet"}
+                          Enroll Now
                         </Button>
                       )}
                     </CardContent>

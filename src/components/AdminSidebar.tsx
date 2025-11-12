@@ -26,7 +26,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
-import { Building2, Users as UsersIcon } from "lucide-react";
+import { Building2, Users as UsersIcon, Boxes } from "lucide-react";
 
 const menuItems = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
@@ -37,6 +37,7 @@ const menuItems = [
   { title: "Withdrawals", url: "/admin/withdrawals", icon: ArrowDownLeft },
   { title: "Withdrawal History", url: "/admin/withdrawal-history", icon: History },
   { title: "Properties", url: "/admin/properties", icon: Building2 },
+  { title: "Plan Enrollments", url: "/admin/plan-enrollments", icon: Boxes },
   { title: "State Reps", url: "/admin/state-reps", icon: UsersIcon },
   { title: "Commissions", url: "/admin/commissions", icon: DollarSign },
   { title: "Bonus Distribution", url: "/admin/mlm", icon: Network },

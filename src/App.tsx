@@ -45,6 +45,8 @@ import WithdrawalHistory from "./pages/admin/WithdrawalHistory";
 import ProjectSupportFund from "./pages/admin/ProjectSupportFund";
 import MemberBalanceAdjustment from "./pages/admin/MemberBalanceAdjustment";
 import MLMManagement from "./pages/admin/BonusDistribution";
+import PropertyPlans from "./pages/member/PropertyPlans";
+import PlanEnrollments from "./pages/admin/PlanEnrollments";
 
 const queryClient = new QueryClient();
 
@@ -134,6 +136,14 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/member/property-plans"
+              element={
+                <ProtectedRoute>
+                  <PropertyPlans />
+                </ProtectedRoute>
+              }
+            />
             <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
             <Route path="/admin/registrations" element={<AdminRoute><PendingRegistrations /></AdminRoute>} />
             <Route path="/admin/contributions" element={<AdminRoute><Contributions /></AdminRoute>} />
@@ -149,6 +159,7 @@ const App = () => (
             <Route path="/admin/withdrawal-history" element={<AdminRoute><WithdrawalHistory /></AdminRoute>} />
             <Route path="/admin/balance-adjustment" element={<AdminRoute><MemberBalanceAdjustment /></AdminRoute>} />
             <Route path="/admin/mlm" element={<AdminRoute><MLMManagement /></AdminRoute>} />
+            <Route path="/admin/plan-enrollments" element={<AdminRoute><PlanEnrollments /></AdminRoute>} />
             <Route path="/admin/reports" element={<AdminRoute><Reports /></AdminRoute>} />
             <Route path="/state-rep" element={<ProtectedRoute><StateRepDashboard /></ProtectedRoute>} />
             <Route path="/director" element={<ProtectedRoute><DirectorDashboard /></ProtectedRoute>} />

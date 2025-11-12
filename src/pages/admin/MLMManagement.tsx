@@ -1,16 +1,17 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Users, DollarSign, TrendingUp, Network } from "lucide-react";
-import { toast } from "sonner";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/AdminSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Loader2, Users, Network, DollarSign, TrendingUp } from "lucide-react";
+import { toast } from "sonner";
 
 interface MLMTreeNode {
+  id: string;
   member_id: string;
   parent_id: string | null;
   level: number;
@@ -22,32 +23,30 @@ interface MLMTreeNode {
 
 interface MLMDistribution {
   id: string;
+  member_id: string;
   member_name: string;
   member_number: string;
   amount: number;
   distribution_date: string;
   is_company_share: boolean;
-  payment_id: string;
 }
 
 interface MLMStats {
+  total_members: number;
+  total_distributed: number;
+  total_reserve: number;
   total_distributions: number;
-  total_amount_distributed: number;
-  total_reserve_fund: number;
-  active_participants: number;
-  company_earnings: number;
 }
 
-const MLMManagement = () => {
+export default function MLMManagement() {
   const [loading, setLoading] = useState(true);
   const [treeNodes, setTreeNodes] = useState<MLMTreeNode[]>([]);
   const [distributions, setDistributions] = useState<MLMDistribution[]>([]);
   const [stats, setStats] = useState<MLMStats>({
+    total_members: 0,
+    total_distributed: 0,
+    total_reserve: 0,
     total_distributions: 0,
-    total_amount_distributed: 0,
-    total_reserve_fund: 0,
-    active_participants: 0,
-    company_earnings: 0,
   });
 
   useEffect(() => {
@@ -58,10 +57,11 @@ const MLMManagement = () => {
     try {
       setLoading(true);
 
-      // Fetch MLM tree
+      // Fetch MLM tree with member details
       const { data: treeData, error: treeError } = await supabase
         .from("mlm_tree")
         .select(`
+          id,
           member_id,
           parent_id,
           level,
@@ -77,15 +77,16 @@ const MLMManagement = () => {
 
       if (treeError) throw treeError;
 
-      // Count children for each node
+      // Calculate children count for each node
       const nodesWithChildren = treeData?.map((node: any) => {
-        const childrenCount = treeData?.filter((n: any) => n.parent_id === node.member_id).length || 0;
+        const childrenCount = treeData.filter((n: any) => n.parent_id === node.member_id).length;
         return {
+          id: node.id,
           member_id: node.member_id,
           parent_id: node.parent_id,
           level: node.level,
           position: node.position,
-          member_name: `${node.profiles?.first_name} ${node.profiles?.last_name}`,
+          member_name: `${node.profiles?.first_name || ""} ${node.profiles?.last_name || ""}`.trim(),
           member_number: node.profiles?.member_number || "N/A",
           children_count: childrenCount,
         };
@@ -93,15 +94,15 @@ const MLMManagement = () => {
 
       setTreeNodes(nodesWithChildren);
 
-      // Fetch distributions
+      // Fetch distributions with member details
       const { data: distData, error: distError } = await supabase
         .from("mlm_distributions")
         .select(`
           id,
+          member_id,
           amount,
           distribution_date,
           is_company_share,
-          project_support_payment_id,
           profiles!mlm_distributions_member_id_fkey (
             first_name,
             last_name,
@@ -112,43 +113,33 @@ const MLMManagement = () => {
 
       if (distError) throw distError;
 
-      const formattedDistributions = distData?.map((dist: any) => ({
+      const formattedDist = distData?.map((dist: any) => ({
         id: dist.id,
-        member_name: `${dist.profiles?.first_name} ${dist.profiles?.last_name}`,
+        member_id: dist.member_id,
+        member_name: `${dist.profiles?.first_name || ""} ${dist.profiles?.last_name || ""}`.trim(),
         member_number: dist.profiles?.member_number || "N/A",
         amount: dist.amount,
         distribution_date: dist.distribution_date,
         is_company_share: dist.is_company_share,
-        payment_id: dist.project_support_payment_id,
       })) || [];
 
-      setDistributions(formattedDistributions);
+      setDistributions(formattedDist);
 
       // Calculate stats
-      const totalDistributions = distData?.length || 0;
-      const totalAmount = distData?.reduce((sum: number, d: any) => sum + Number(d.amount), 0) || 0;
-      const companyEarnings = distData?.filter((d: any) => d.is_company_share).reduce((sum: number, d: any) => sum + Number(d.amount), 0) || 0;
-
-      // Fetch reserve fund
-      const { data: reserveData, error: reserveError } = await supabase
+      const totalDistributed = formattedDist.reduce((sum, d) => sum + Number(d.amount), 0);
+      
+      const { data: reserveData } = await supabase
         .from("project_support_contributions")
         .select("reserve_amount")
         .eq("payment_status", "approved");
 
-      if (reserveError) throw reserveError;
-
-      const totalReserve = reserveData?.reduce((sum, r) => sum + Number(r.reserve_amount), 0) || 0;
-
-      // Active participants (members with at least one distribution)
-      const uniqueMembers = new Set(distData?.map((d: any) => d.member_id));
-      const activeParticipants = uniqueMembers.size;
+      const totalReserve = reserveData?.reduce((sum, r) => sum + Number(r.reserve_amount || 0), 0) || 0;
 
       setStats({
-        total_distributions: totalDistributions,
-        total_amount_distributed: totalAmount,
-        total_reserve_fund: totalReserve,
-        active_participants: activeParticipants,
-        company_earnings: companyEarnings,
+        total_members: nodesWithChildren.length,
+        total_distributed: totalDistributed,
+        total_reserve: totalReserve,
+        total_distributions: formattedDist.length,
       });
 
     } catch (error: any) {
@@ -162,7 +153,7 @@ const MLMManagement = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
   }
@@ -173,21 +164,22 @@ const MLMManagement = () => {
         <AdminSidebar />
         <div className="flex-1">
           <DashboardHeader />
-          <main className="p-6 space-y-6">
+          <main className="container mx-auto p-6 space-y-6">
             <div>
               <h1 className="text-3xl font-bold">MLM Management</h1>
               <p className="text-muted-foreground">Manage and monitor the MLM distribution system</p>
             </div>
 
             {/* Stats Cards */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+            <div className="grid gap-4 md:grid-cols-4">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Distributions</CardTitle>
-                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                  <CardTitle className="text-sm font-medium">Total Members</CardTitle>
+                  <Users className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{stats.total_distributions}</div>
+                  <div className="text-2xl font-bold">{stats.total_members}</div>
+                  <p className="text-xs text-muted-foreground">In MLM tree</p>
                 </CardContent>
               </Card>
 
@@ -197,43 +189,34 @@ const MLMManagement = () => {
                   <DollarSign className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">₦{stats.total_amount_distributed.toLocaleString()}</div>
+                  <div className="text-2xl font-bold">₦{stats.total_distributed.toLocaleString()}</div>
+                  <p className="text-xs text-muted-foreground">All-time MLM earnings</p>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Reserve Fund</CardTitle>
-                  <DollarSign className="h-4 w-4 text-muted-foreground" />
+                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">₦{stats.total_reserve_fund.toLocaleString()}</div>
-                  <p className="text-xs text-muted-foreground">Cooperative fund (₦200 per payment)</p>
+                  <div className="text-2xl font-bold">₦{stats.total_reserve.toLocaleString()}</div>
+                  <p className="text-xs text-muted-foreground">Cooperative fund (₦200/payment)</p>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Active Participants</CardTitle>
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{stats.active_participants}</div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Company Earnings</CardTitle>
+                  <CardTitle className="text-sm font-medium">Distributions</CardTitle>
                   <Network className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">₦{stats.company_earnings.toLocaleString()}</div>
+                  <div className="text-2xl font-bold">{stats.total_distributions}</div>
+                  <p className="text-xs text-muted-foreground">Total distribution events</p>
                 </CardContent>
               </Card>
             </div>
 
-            {/* Tabs */}
             <Tabs defaultValue="tree" className="w-full">
               <TabsList>
                 <TabsTrigger value="tree">MLM Tree</TabsTrigger>
@@ -244,16 +227,16 @@ const MLMManagement = () => {
                 <Card>
                   <CardHeader>
                     <CardTitle>MLM Tree Structure</CardTitle>
-                    <p className="text-sm text-muted-foreground">
-                      Ternary tree structure (max 3 children per node). 4th referral automatically assigned to another member.
-                    </p>
+                    <CardDescription>
+                      Ternary tree showing member hierarchy (max 3 direct referrals per member)
+                    </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <Table>
                       <TableHeader>
                         <TableRow>
                           <TableHead>Member</TableHead>
-                          <TableHead>Member #</TableHead>
+                          <TableHead>Member Number</TableHead>
                           <TableHead>Level</TableHead>
                           <TableHead>Position</TableHead>
                           <TableHead>Children</TableHead>
@@ -262,20 +245,18 @@ const MLMManagement = () => {
                       </TableHeader>
                       <TableBody>
                         {treeNodes.map((node) => (
-                          <TableRow key={node.member_id}>
+                          <TableRow key={node.id}>
                             <TableCell className="font-medium">{node.member_name}</TableCell>
                             <TableCell>{node.member_number}</TableCell>
                             <TableCell>
                               <Badge variant="outline">Level {node.level}</Badge>
                             </TableCell>
-                            <TableCell>Pos {node.position}</TableCell>
+                            <TableCell>{node.position}</TableCell>
                             <TableCell>{node.children_count}/3</TableCell>
                             <TableCell>
-                              {node.children_count >= 3 ? (
-                                <Badge variant="secondary">Full</Badge>
-                              ) : (
-                                <Badge variant="default">Available</Badge>
-                              )}
+                              <Badge variant={node.children_count >= 3 ? "destructive" : "default"}>
+                                {node.children_count >= 3 ? "Full" : "Available"}
+                              </Badge>
                             </TableCell>
                           </TableRow>
                         ))}
@@ -289,9 +270,9 @@ const MLMManagement = () => {
                 <Card>
                   <CardHeader>
                     <CardTitle>Distribution History</CardTitle>
-                    <p className="text-sm text-muted-foreground">
-                      All MLM distributions (₦30 per member per distribution event)
-                    </p>
+                    <CardDescription>
+                      All MLM earnings distributed to members (₦30 per distribution event)
+                    </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <Table>
@@ -299,7 +280,7 @@ const MLMManagement = () => {
                         <TableRow>
                           <TableHead>Date</TableHead>
                           <TableHead>Member</TableHead>
-                          <TableHead>Member #</TableHead>
+                          <TableHead>Member Number</TableHead>
                           <TableHead>Amount</TableHead>
                           <TableHead>Type</TableHead>
                         </TableRow>
@@ -314,11 +295,9 @@ const MLMManagement = () => {
                             <TableCell>{dist.member_number}</TableCell>
                             <TableCell>₦{dist.amount.toLocaleString()}</TableCell>
                             <TableCell>
-                              {dist.is_company_share ? (
-                                <Badge variant="secondary">Company</Badge>
-                              ) : (
-                                <Badge variant="default">Member</Badge>
-                              )}
+                              <Badge variant={dist.is_company_share ? "secondary" : "default"}>
+                                {dist.is_company_share ? "Company Share" : "Member Share"}
+                              </Badge>
                             </TableCell>
                           </TableRow>
                         ))}
@@ -333,6 +312,4 @@ const MLMManagement = () => {
       </div>
     </SidebarProvider>
   );
-};
-
-export default MLMManagement;
+}

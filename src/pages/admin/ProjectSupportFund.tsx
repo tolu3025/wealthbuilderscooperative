@@ -84,12 +84,22 @@ const ProjectSupportFund = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
+      // Get the admin's profile ID
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (profileError) throw profileError;
+      if (!profile) throw new Error('Admin profile not found');
+
       const { error } = await supabase
         .from('project_support_contributions')
         .update({ 
           payment_status: 'approved',
           approved_at: new Date().toISOString(),
-          approved_by: user.id
+          approved_by: profile.id
         })
         .eq('id', contributionId);
 

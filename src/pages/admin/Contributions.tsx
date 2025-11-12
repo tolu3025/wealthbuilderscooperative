@@ -140,25 +140,18 @@ const Contributions = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('user_id', user.id)
-        .single();
-
-      if (!profile) throw new Error('Admin profile not found');
-
       // Approve each selected contribution
       for (const contributionId of selectedProjectSupport) {
-        const { error } = await supabase.rpc(
-          'approve_project_support_contribution' as any,
-          {
-            p_contribution_id: contributionId,
-            p_admin_profile_id: profile.id
-          }
-        );
+        const { error: updateError } = await supabase
+          .from('project_support_contributions')
+          .update({
+            payment_status: 'approved',
+            approved_at: new Date().toISOString(),
+            approved_by: user?.id
+          })
+          .eq('id', contributionId);
 
-        if (error) throw error;
+        if (updateError) throw updateError;
       }
 
       toast.success(`${selectedProjectSupport.size} project support contribution(s) approved`);

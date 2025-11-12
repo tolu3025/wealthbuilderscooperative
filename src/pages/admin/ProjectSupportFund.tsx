@@ -46,7 +46,15 @@ const ProjectSupportFund = () => {
       const { data, error } = await supabase
         .from('project_support_contributions')
         .select(`
-          *,
+          id,
+          member_id,
+          amount,
+          contribution_month,
+          payment_status,
+          receipt_url,
+          created_at,
+          approved_at,
+          approved_by,
           profiles!project_support_contributions_member_id_fkey (
             first_name,
             last_name,

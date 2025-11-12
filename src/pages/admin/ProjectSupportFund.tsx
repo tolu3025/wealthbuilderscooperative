@@ -55,7 +55,7 @@ const ProjectSupportFund = () => {
           created_at,
           approved_at,
           approved_by,
-          profiles!project_support_contributions_member_id_fkey (
+          profiles:member_id (
             first_name,
             last_name,
             member_number,

@@ -391,7 +391,7 @@ const Contribute = () => {
                   <p>The ₦500 Project Support Fund is <strong>compulsory</strong> for all members.</p>
                   <p className="font-semibold">⏰ Deadline: {lastThursdayFormatted} (Last Thursday of the month)</p>
                   <p className="text-red-700 dark:text-red-300">
-                    ⚠️ Members who don't pay by the deadline will NOT receive Real Estate Bonus (MLM earnings) for that month.
+                    ⚠️ Members who don't pay by the deadline will NOT receive Real Estate Bonus earnings for that month.
                   </p>
                 </div>
               </AlertDescription>

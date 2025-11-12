@@ -44,7 +44,7 @@ import CommissionReport from "./pages/admin/CommissionReport";
 import WithdrawalHistory from "./pages/admin/WithdrawalHistory";
 import ProjectSupportFund from "./pages/admin/ProjectSupportFund";
 import MemberBalanceAdjustment from "./pages/admin/MemberBalanceAdjustment";
-import MLMManagement from "./pages/admin/MLMManagement";
+import MLMManagement from "./pages/admin/BonusDistribution";
 
 const queryClient = new QueryClient();
 

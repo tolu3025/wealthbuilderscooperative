@@ -373,7 +373,7 @@ const Withdraw = () => {
                     <option value="bonus">All Bonuses (₦{totalBonuses.toLocaleString()} - Inviter's + Real Estate)</option>
                   </select>
                   <p className="text-sm text-muted-foreground">
-                    Bonus includes Inviter's Bonus (₦1,000/referral) + Real Estate Bonus (MLM). Minimum withdrawal: ₦1,000
+                    Bonus includes Inviter's Bonus (₦1,000/referral) + Real Estate Bonus. Minimum withdrawal: ₦1,000
                   </p>
                 </div>
 

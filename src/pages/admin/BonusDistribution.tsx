@@ -10,7 +10,7 @@ import { AdminSidebar } from "@/components/AdminSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { SidebarProvider } from "@/components/ui/sidebar";
 
-interface MLMTreeNode {
+interface BonusTreeNode {
   id: string;
   member_id: string;
   parent_id: string | null;
@@ -21,7 +21,7 @@ interface MLMTreeNode {
   children_count: number;
 }
 
-interface MLMDistribution {
+interface BonusDistribution {
   id: string;
   project_support_payment_id: string;
   member_id: string;
@@ -34,7 +34,7 @@ interface MLMDistribution {
   is_company_share: boolean;
 }
 
-interface MLMStats {
+interface BonusStats {
   totalDistributions: number;
   totalAmountDistributed: number;
   totalReserveFund: number;
@@ -42,11 +42,11 @@ interface MLMStats {
   companyEarnings: number;
 }
 
-export default function MLMManagement() {
+export default function BonusDistribution() {
   const [loading, setLoading] = useState(true);
-  const [treeData, setTreeData] = useState<MLMTreeNode[]>([]);
-  const [distributions, setDistributions] = useState<MLMDistribution[]>([]);
-  const [stats, setStats] = useState<MLMStats>({
+  const [treeData, setTreeData] = useState<BonusTreeNode[]>([]);
+  const [distributions, setDistributions] = useState<BonusDistribution[]>([]);
+  const [stats, setStats] = useState<BonusStats>({
     totalDistributions: 0,
     totalAmountDistributed: 0,
     totalReserveFund: 0,
@@ -55,14 +55,14 @@ export default function MLMManagement() {
   });
 
   useEffect(() => {
-    fetchMLMData();
+    fetchBonusData();
   }, []);
 
-  const fetchMLMData = async () => {
+  const fetchBonusData = async () => {
     try {
       setLoading(true);
 
-      // Fetch MLM tree with member details
+      // Fetch bonus tree with member details
       const { data: treeNodes, error: treeError } = await supabase
         .from("mlm_tree")
         .select(`
@@ -92,7 +92,7 @@ export default function MLMManagement() {
 
       setTreeData(treeWithCounts);
 
-      // Fetch MLM distributions with member details
+      // Fetch bonus distributions with member details
       const { data: distData, error: distError } = await supabase
         .from("mlm_distributions")
         .select(`
@@ -156,10 +156,10 @@ export default function MLMManagement() {
         companyEarnings: companyTotal,
       });
 
-      toast.success("MLM data loaded");
+      toast.success("Bonus data loaded");
     } catch (error: any) {
-      console.error("Error fetching MLM data:", error);
-      toast.error("Failed to load MLM data");
+      console.error("Error fetching bonus data:", error);
+      toast.error("Failed to load bonus data");
     } finally {
       setLoading(false);
     }
@@ -182,8 +182,8 @@ export default function MLMManagement() {
           
           <main className="p-6 space-y-6">
             <div className="mb-6">
-              <h1 className="text-3xl font-bold">MLM Management</h1>
-              <p className="text-muted-foreground">Manage project support fund MLM distributions and tree structure</p>
+              <h1 className="text-3xl font-bold">Bonus Distribution Management</h1>
+              <p className="text-muted-foreground">Manage project support fund bonus distributions and referral structure</p>
             </div>
             {/* Stats Overview */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
@@ -242,13 +242,13 @@ export default function MLMManagement() {
             <Tabs defaultValue="distributions" className="space-y-4">
               <TabsList>
                 <TabsTrigger value="distributions">Distribution History</TabsTrigger>
-                <TabsTrigger value="tree">MLM Tree</TabsTrigger>
+                <TabsTrigger value="tree">Referral Tree</TabsTrigger>
               </TabsList>
 
               <TabsContent value="distributions" className="space-y-4">
                 <Card>
                   <CardHeader>
-                    <CardTitle>MLM Distribution History</CardTitle>
+                    <CardTitle>Bonus Distribution History</CardTitle>
                     <CardDescription>
                       All ₦30 distributions from project support fund payments
                     </CardDescription>
@@ -302,7 +302,7 @@ export default function MLMManagement() {
               <TabsContent value="tree" className="space-y-4">
                 <Card>
                   <CardHeader>
-                    <CardTitle>MLM Tree Structure</CardTitle>
+                    <CardTitle>Referral Tree Structure</CardTitle>
                     <CardDescription>
                       Ternary tree (max 3 direct referrals per member)
                     </CardDescription>

@@ -176,7 +176,7 @@ const ProjectSupportFund = () => {
               </p>
               <Alert className="mt-3 border-red-500/50 bg-red-50 dark:bg-red-950/20">
                 <AlertDescription className="text-sm text-red-900 dark:text-red-100">
-                  <strong className="text-red-700 dark:text-red-300">⚠️ MANDATORY Payment:</strong> Members must pay by the last Thursday of each month to receive Real Estate Bonus (MLM earnings) for that month.
+                  <strong className="text-red-700 dark:text-red-300">⚠️ MANDATORY Payment:</strong> Members must pay by the last Thursday of each month to receive Real Estate Bonus earnings for that month.
                 </AlertDescription>
               </Alert>
             </div>

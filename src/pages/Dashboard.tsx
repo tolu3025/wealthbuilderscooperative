@@ -153,16 +153,6 @@ const Dashboard = () => {
           .eq('invited_by', profile.id)
           .eq('registration_status', 'active');
 
-        // Fetch referral commissions only (for invite bonus tracking)
-        const { data: referralCommissions, count: referralCommissionsCount } = await supabase
-          .from('commissions')
-          .select('amount', { count: 'exact' })
-          .eq('member_id', profile.id)
-          .eq('commission_type', 'referral')
-          .eq('status', 'approved');
-        
-        const totalReferralCommissions = referralCommissions?.reduce((sum, c) => sum + Number(c.amount), 0) || 0;
-
         // Fetch recent dividends for display only
         const { data: dividends } = await supabase
           .from('dividends')
@@ -192,7 +182,7 @@ const Dashboard = () => {
           invitedBy: profile.invited_by,
           state: profile.state || '',
           referralCount: referralCount || 0,
-          totalCommissions: totalReferralCommissions,
+          totalCommissions: totalCommissions,
           recentDividends,
           dividendBalance: totalDividends,
           nextContributionDue: nextDue.toLocaleDateString()

@@ -498,6 +498,96 @@ export type Database = {
           },
         ]
       }
+      mlm_distributions: {
+        Row: {
+          amount: number
+          distribution_date: string | null
+          distribution_pool: number
+          id: string
+          is_company_share: boolean | null
+          member_id: string
+          participants_count: number
+          project_support_payment_id: string
+        }
+        Insert: {
+          amount?: number
+          distribution_date?: string | null
+          distribution_pool?: number
+          id?: string
+          is_company_share?: boolean | null
+          member_id: string
+          participants_count?: number
+          project_support_payment_id: string
+        }
+        Update: {
+          amount?: number
+          distribution_date?: string | null
+          distribution_pool?: number
+          id?: string
+          is_company_share?: boolean | null
+          member_id?: string
+          participants_count?: number
+          project_support_payment_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mlm_distributions_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mlm_distributions_project_support_payment_id_fkey"
+            columns: ["project_support_payment_id"]
+            isOneToOne: false
+            referencedRelation: "project_support_contributions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mlm_tree: {
+        Row: {
+          created_at: string | null
+          id: string
+          level: number
+          member_id: string
+          parent_id: string | null
+          position: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          level?: number
+          member_id: string
+          parent_id?: string | null
+          position: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          level?: number
+          member_id?: string
+          parent_id?: string | null
+          position?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mlm_tree_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mlm_tree_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       monthly_settlements: {
         Row: {
           broad_sheet_data: Json | null
@@ -700,10 +790,13 @@ export type Database = {
           approved_by: string | null
           contribution_month: string | null
           created_at: string | null
+          distribution_amount: number | null
           id: string
           member_id: string
+          mlm_distributed: boolean | null
           payment_status: string | null
           receipt_url: string | null
+          reserve_amount: number | null
         }
         Insert: {
           amount?: number
@@ -711,10 +804,13 @@ export type Database = {
           approved_by?: string | null
           contribution_month?: string | null
           created_at?: string | null
+          distribution_amount?: number | null
           id?: string
           member_id: string
+          mlm_distributed?: boolean | null
           payment_status?: string | null
           receipt_url?: string | null
+          reserve_amount?: number | null
         }
         Update: {
           amount?: number
@@ -722,10 +818,13 @@ export type Database = {
           approved_by?: string | null
           contribution_month?: string | null
           created_at?: string | null
+          distribution_amount?: number | null
           id?: string
           member_id?: string
+          mlm_distributed?: boolean | null
           payment_status?: string | null
           receipt_url?: string | null
+          reserve_amount?: number | null
         }
         Relationships: [
           {
@@ -987,10 +1086,19 @@ export type Database = {
         Args: { p_amount: number; p_month: string }
         Returns: undefined
       }
+      assign_to_mlm_tree: {
+        Args: { p_inviter_id: string; p_member_id: string }
+        Returns: undefined
+      }
       check_dividend_eligibility: {
         Args: { p_member_id: string }
         Returns: boolean
       }
+      distribute_mlm_earnings: {
+        Args: { p_payment_id: string }
+        Returns: undefined
+      }
+      find_available_mlm_parent: { Args: never; Returns: string }
       generate_invite_code: { Args: never; Returns: string }
       generate_member_number: { Args: never; Returns: string }
       generate_pin: { Args: never; Returns: string }

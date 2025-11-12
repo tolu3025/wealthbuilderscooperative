@@ -11,7 +11,8 @@ import {
   Settings,
   Users,
   Briefcase,
-  History
+  History,
+  Network
 } from "lucide-react";
 import {
   Sidebar,
@@ -38,6 +39,7 @@ const menuItems = [
   { title: "Properties", url: "/admin/properties", icon: Building2 },
   { title: "State Reps", url: "/admin/state-reps", icon: UsersIcon },
   { title: "Commissions", url: "/admin/commissions", icon: DollarSign },
+  { title: "MLM Management", url: "/admin/mlm", icon: Network },
   { title: "Monthly Settlement", url: "/admin/settlements", icon: BarChart3 },
   { title: "User Management", url: "/admin/users", icon: Users },
   { title: "Blog", url: "/admin/blog", icon: FileText },

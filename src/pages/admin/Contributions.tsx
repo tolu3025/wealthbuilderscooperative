@@ -231,8 +231,7 @@ const Contributions = () => {
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="contributions" className="mt-6"
-
+              <TabsContent value="contributions" className="mt-6">
               <Card>
                 <CardHeader>
                   <CardTitle>Pending Monthly Contributions</CardTitle>

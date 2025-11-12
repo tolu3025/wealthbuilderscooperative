@@ -102,14 +102,11 @@ const ProjectSupportFund = () => {
       if (profileError) throw profileError;
       if (!profile) throw new Error('Admin profile not found');
 
-      const { error } = await supabase
-        .from('project_support_contributions')
-        .update({ 
-          payment_status: 'approved',
-          approved_at: new Date().toISOString(),
-          approved_by: profile.id
-        })
-        .eq('id', contributionId);
+      // Call the security definer function to bypass RLS
+      const { error } = await supabase.rpc('approve_project_support_contribution', {
+        p_contribution_id: contributionId,
+        p_admin_profile_id: profile.id
+      });
 
       if (error) throw error;
 

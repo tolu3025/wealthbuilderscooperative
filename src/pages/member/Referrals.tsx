@@ -4,7 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Copy, Users, DollarSign, Loader2, Share2 } from "lucide-react";
+import { Copy, Users, DollarSign, Loader2, Share2, Wallet } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -24,6 +24,7 @@ const Referrals = () => {
   const [referralCount, setReferralCount] = useState(0);
   const [commissions, setCommissions] = useState<Commission[]>([]);
   const [totalEarned, setTotalEarned] = useState(0);
+  const [availableBalance, setAvailableBalance] = useState(0);
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState("");
   const { toast } = useToast();
@@ -63,8 +64,19 @@ const Referrals = () => {
           .order('created_at', { ascending: false });
 
         setCommissions(commissionsData || []);
+        
+        // Calculate total earned from all commissions (all-time earnings)
         const total = commissionsData?.reduce((sum, c) => sum + Number(c.amount), 0) || 0;
         setTotalEarned(total);
+
+        // Get available balance from member_balances (current balance after withdrawals)
+        const { data: balance } = await supabase
+          .from('member_balances')
+          .select('total_commissions')
+          .eq('member_id', profile.id)
+          .single();
+        
+        setAvailableBalance(balance?.total_commissions || 0);
       }
     } catch (error: any) {
       toast({
@@ -128,14 +140,14 @@ const Referrals = () => {
             <div>
               <h1 className="text-3xl font-bold mb-2">Invite</h1>
               <p className="text-muted-foreground">
-                Earn ₦500 for every member you invite
+                Earn ₦1,000 for every member you invite
               </p>
             </div>
 
             <Alert className="bg-gradient-to-r from-primary/10 to-secondary/10 border-primary">
               <Share2 className="h-4 w-4" />
               <AlertDescription className="font-medium">
-                <strong>Earn ₦500 per invite!</strong> Share your invite code and earn commission when new members join.
+                <strong>Earn ₦1,000 per invite!</strong> Share your invite code and earn commission when new members join.
               </AlertDescription>
             </Alert>
 
@@ -166,7 +178,7 @@ const Referrals = () => {
               </CardContent>
             </Card>
 
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="grid md:grid-cols-3 gap-4">
               <Card className="border-l-4 border-l-primary">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -184,6 +196,23 @@ const Referrals = () => {
                 </CardContent>
               </Card>
 
+              <Card className="border-l-4 border-l-green-500">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Wallet className="h-5 w-5" />
+                    Available Balance
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-4xl font-bold text-green-600">
+                    ₦{availableBalance.toLocaleString()}
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Current withdrawable balance
+                  </p>
+                </CardContent>
+              </Card>
+
               <Card className="border-l-4 border-l-secondary">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -196,7 +225,7 @@ const Referrals = () => {
                     ₦{totalEarned.toLocaleString()}
                   </div>
                   <p className="text-sm text-muted-foreground mt-2">
-                    Commission earned
+                    All-time earnings (including withdrawn)
                   </p>
                 </CardContent>
               </Card>

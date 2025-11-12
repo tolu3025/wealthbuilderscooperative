@@ -186,7 +186,7 @@ export default function BonusDistribution() {
               <p className="text-muted-foreground">Manage project support fund bonus distributions and referral structure</p>
             </div>
             {/* Stats Overview */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Total Distributions</CardTitle>
@@ -254,18 +254,20 @@ export default function BonusDistribution() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Date</TableHead>
-                          <TableHead>Member</TableHead>
-                          <TableHead>Member #</TableHead>
-                          <TableHead>Amount</TableHead>
-                          <TableHead>Pool</TableHead>
-                          <TableHead>Participants</TableHead>
-                          <TableHead>Type</TableHead>
-                        </TableRow>
-                      </TableHeader>
+                    <div className="overflow-x-auto -mx-4 sm:mx-0">
+                      <div className="inline-block min-w-full align-middle">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead className="whitespace-nowrap">Date</TableHead>
+                              <TableHead className="whitespace-nowrap">Member</TableHead>
+                              <TableHead className="whitespace-nowrap">Member #</TableHead>
+                              <TableHead className="whitespace-nowrap">Amount</TableHead>
+                              <TableHead className="whitespace-nowrap">Pool</TableHead>
+                              <TableHead className="whitespace-nowrap">Participants</TableHead>
+                              <TableHead className="whitespace-nowrap">Type</TableHead>
+                            </TableRow>
+                          </TableHeader>
                       <TableBody>
                         {distributions.map((dist) => (
                           <TableRow key={dist.id}>
@@ -294,7 +296,9 @@ export default function BonusDistribution() {
                           </TableRow>
                         )}
                       </TableBody>
-                    </Table>
+                        </Table>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -308,17 +312,19 @@ export default function BonusDistribution() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Level</TableHead>
-                          <TableHead>Member</TableHead>
-                          <TableHead>Member #</TableHead>
-                          <TableHead>Position</TableHead>
-                          <TableHead>Children</TableHead>
-                          <TableHead>Status</TableHead>
-                        </TableRow>
-                      </TableHeader>
+                    <div className="overflow-x-auto -mx-4 sm:mx-0">
+                      <div className="inline-block min-w-full align-middle">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead className="whitespace-nowrap">Level</TableHead>
+                              <TableHead className="whitespace-nowrap">Member</TableHead>
+                              <TableHead className="whitespace-nowrap">Member #</TableHead>
+                              <TableHead className="whitespace-nowrap">Position</TableHead>
+                              <TableHead className="whitespace-nowrap">Children</TableHead>
+                              <TableHead className="whitespace-nowrap">Status</TableHead>
+                            </TableRow>
+                          </TableHeader>
                       <TableBody>
                         {treeData.map((node) => (
                           <TableRow key={node.id}>
@@ -344,7 +350,9 @@ export default function BonusDistribution() {
                           </TableRow>
                         )}
                       </TableBody>
-                    </Table>
+                        </Table>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
               </TabsContent>

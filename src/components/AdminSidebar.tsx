@@ -41,6 +41,7 @@ const menuItems = [
   { title: "Monthly Settlement", url: "/admin/settlements", icon: BarChart3 },
   { title: "User Management", url: "/admin/users", icon: Users },
   { title: "Blog", url: "/admin/blog", icon: FileText },
+  { title: "Balance Adjustment", url: "/admin/balance-adjustment", icon: Settings },
 ];
 
 export function AdminSidebar() {

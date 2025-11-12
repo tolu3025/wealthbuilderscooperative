@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { CopyPhoneButton } from "@/components/CopyPhoneButton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { PaymentWarningBanner } from "@/components/PaymentWarningBanner";
 
 const Contribute = () => {
   const navigate = useNavigate();
@@ -231,6 +232,8 @@ const Contribute = () => {
             <h1 className="text-3xl font-bold mb-2">Make a Contribution</h1>
             <p className="text-muted-foreground">Submit your monthly contribution for {currentMonth}</p>
           </div>
+
+          <PaymentWarningBanner />
 
           {isActingMember && (
             <Alert>

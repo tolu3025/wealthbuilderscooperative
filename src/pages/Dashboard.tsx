@@ -19,6 +19,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { MemberSidebar } from "@/components/MemberSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { AnnouncementBanner } from "@/components/AnnouncementBanner";
+import { PaymentWarningBanner } from "@/components/PaymentWarningBanner";
 
 interface MemberData {
   id: string;
@@ -297,6 +298,7 @@ const Dashboard = () => {
           <DashboardHeader userName={userName} avatarUrl={avatarUrl} />
           <main className="flex-1 p-6 bg-muted/30 overflow-auto">
             <AnnouncementBanner />
+            <PaymentWarningBanner />
             {/* Welcome Section */}
             <div className="mb-6">
               <h1 className="text-3xl font-bold mb-2">Welcome back, {memberData.name.split(' ')[0]}! 👋</h1>

@@ -1086,6 +1086,10 @@ export type Database = {
         Args: { p_amount: number; p_month: string }
         Returns: undefined
       }
+      approve_project_support_contribution: {
+        Args: { p_admin_profile_id: string; p_contribution_id: string }
+        Returns: undefined
+      }
       assign_to_mlm_tree: {
         Args: { p_inviter_id: string; p_member_id: string }
         Returns: undefined

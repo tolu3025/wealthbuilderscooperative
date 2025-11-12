@@ -150,10 +150,13 @@ const Contributions = () => {
 
       // Approve each selected contribution
       for (const contributionId of selectedProjectSupport) {
-        const { error } = await supabase.rpc('approve_project_support_contribution', {
-          p_contribution_id: contributionId,
-          p_admin_profile_id: profile.id
-        });
+        const { error } = await supabase.rpc(
+          'approve_project_support_contribution' as any,
+          {
+            p_contribution_id: contributionId,
+            p_admin_profile_id: profile.id
+          }
+        );
 
         if (error) throw error;
       }

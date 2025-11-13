@@ -80,7 +80,9 @@ const Hero = () => {
                   <div className="absolute inset-0 -m-2 sm:-m-3 md:-m-4 bg-white/25 rounded-full backdrop-blur-sm border border-white/40" />
                   
                   {/* Logo */}
-                  <img src={logo} alt="WealthBuilders Cooperative" className="relative w-32 h-32 sm:w-40 sm:h-40 md:w-52 md:h-52 drop-shadow-2xl brightness-125 contrast-110 hover:scale-105 transition-transform" style={{ filter: 'drop-shadow(0 0 40px rgba(255, 195, 0, 0.6))' }} />
+                  <img src={logo} alt="WealthBuilders Cooperative" className="relative w-32 h-32 sm:w-40 sm:h-40 md:w-52 md:h-52 drop-shadow-2xl brightness-125 contrast-110 hover:scale-105 transition-transform" style={{
+                  filter: 'drop-shadow(0 0 40px rgba(255, 195, 0, 0.6))'
+                }} />
                 </div>
               </div>
 
@@ -128,21 +130,16 @@ const Hero = () => {
               </div>
 
               {/* Stats */}
-              {!loading && <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6 max-w-4xl mx-auto px-4 animate-fade-in" style={{
+              {!loading && <div style={{
               animationDelay: '0.4s'
-            }}>
+            }} className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6 max-w-4xl mx-auto animate-fade-in px-0 my-[4px]">
                   <div className="bg-white/10 backdrop-blur-md rounded-xl md:rounded-2xl p-4 md:p-6 border border-white/20">
                     <div className="text-2xl md:text-4xl font-bold text-accent mb-1 md:mb-2">
                       {stats.memberCount}+
                     </div>
                     <div className="text-xs md:text-sm text-white/80">Active Members</div>
                   </div>
-                  <div className="bg-white/10 backdrop-blur-md rounded-xl md:rounded-2xl p-4 md:p-6 border border-white/20">
-                    <div className="text-2xl md:text-4xl font-bold text-accent mb-1 md:mb-2">
-                      ₦{(stats.totalCapital / 1000000).toFixed(1)}M+
-                    </div>
-                    <div className="text-xs md:text-sm text-white/80">Total Capital</div>
-                  </div>
+                  
                   <div className="bg-white/10 backdrop-blur-md rounded-xl md:rounded-2xl p-4 md:p-6 border border-white/20">
                     <div className="text-2xl md:text-4xl font-bold text-accent mb-1 md:mb-2">
                       {stats.propertiesCount}+

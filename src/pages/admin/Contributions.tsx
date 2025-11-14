@@ -34,12 +34,15 @@ const Contributions = () => {
       // For each contribution, check if there's a project support payment
       const contributionsWithProjectSupport = await Promise.all(
         (data || []).map(async (contrib) => {
-          const { data: projectSupport } = await supabase
+          const { data: projectSupports } = await supabase
             .from('project_support_contributions')
             .select('id, amount, payment_status, receipt_url')
             .eq('member_id', contrib.member_id)
             .eq('contribution_month', contrib.contribution_month || new Date(contrib.created_at).toISOString().slice(0, 7) + '-01')
-            .maybeSingle();
+            .order('created_at', { ascending: false });
+          
+          // Get the most recent project support payment
+          const projectSupport = projectSupports && projectSupports.length > 0 ? projectSupports[0] : null;
           
           return {
             ...contrib,

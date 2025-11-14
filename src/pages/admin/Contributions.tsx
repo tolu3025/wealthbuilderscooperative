@@ -233,7 +233,11 @@ const Contributions = () => {
                                     <span className="text-orange-600 font-medium">
                                       ₦{Number(contrib.project_support_payment.amount).toLocaleString()}
                                     </span>
-                                    <Badge variant="outline" className="text-xs w-fit">Pending</Badge>
+                                    {contrib.project_support_payment.receipt_url ? (
+                                      <Badge variant="outline" className="text-xs w-fit">Paid - Pending Approval</Badge>
+                                    ) : (
+                                      <Badge variant="secondary" className="text-xs">No Receipt</Badge>
+                                    )}
                                   </div>
                                 ) : (
                                   <Badge variant="secondary" className="text-xs">Not Paid</Badge>

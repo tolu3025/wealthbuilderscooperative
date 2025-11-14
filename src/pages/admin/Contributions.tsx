@@ -39,7 +39,7 @@ const Contributions = () => {
             .select('id, amount, payment_status, receipt_url')
             .eq('member_id', contrib.member_id)
             .eq('contribution_month', contrib.contribution_month || new Date(contrib.created_at).toISOString().slice(0, 7) + '-01')
-            .single();
+            .maybeSingle();
           
           return {
             ...contrib,

@@ -15,6 +15,28 @@ const PendingRegistrations = () => {
 
   useEffect(() => {
     fetchPendingRegistrations();
+    
+    // Set up real-time subscription for profile changes
+    const channel = supabase
+      .channel('pending-registrations-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'profiles',
+          filter: 'registration_status=eq.pending_approval'
+        },
+        (payload) => {
+          console.log('Profile change detected:', payload);
+          fetchPendingRegistrations();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchPendingRegistrations = async () => {

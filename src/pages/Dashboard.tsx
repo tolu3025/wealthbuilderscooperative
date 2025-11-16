@@ -65,6 +65,52 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchDashboardData();
+    
+    // Set up real-time subscriptions for data changes
+    const contributionChannel = supabase
+      .channel('dashboard-contribution-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'contributions'
+        },
+        () => fetchDashboardData()
+      )
+      .subscribe();
+
+    const commissionChannel = supabase
+      .channel('dashboard-commission-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'commissions'
+        },
+        () => fetchDashboardData()
+      )
+      .subscribe();
+
+    const profileChannel = supabase
+      .channel('dashboard-profile-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profiles'
+        },
+        () => fetchDashboardData()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(contributionChannel);
+      supabase.removeChannel(commissionChannel);
+      supabase.removeChannel(profileChannel);
+    };
   }, []);
 
   const fetchDashboardData = async () => {

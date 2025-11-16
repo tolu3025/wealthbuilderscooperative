@@ -31,6 +31,45 @@ const Referrals = () => {
 
   useEffect(() => {
     fetchReferralData();
+    
+    // Set up real-time subscription for profile changes (new referrals)
+    const profileChannel = supabase
+      .channel('referrals-profile-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'profiles'
+        },
+        (payload) => {
+          console.log('Profile change detected:', payload);
+          fetchReferralData();
+        }
+      )
+      .subscribe();
+
+    // Set up real-time subscription for commission changes
+    const commissionChannel = supabase
+      .channel('referrals-commission-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'commissions'
+        },
+        (payload) => {
+          console.log('Commission change detected:', payload);
+          fetchReferralData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(profileChannel);
+      supabase.removeChannel(commissionChannel);
+    };
   }, []);
 
   const fetchReferralData = async () => {

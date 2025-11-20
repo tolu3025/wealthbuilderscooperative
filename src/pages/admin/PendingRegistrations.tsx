@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, Loader2 } from "lucide-react";
+import { CheckCircle, Loader2, Download, Eye } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -43,7 +43,13 @@ const PendingRegistrations = () => {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select(`
+          *,
+          registration_fees (
+            payment_receipt_url,
+            status
+          )
+        `)
         .eq('registration_status', 'pending_approval')
         .order('created_at', { ascending: false });
 
@@ -61,6 +67,10 @@ const PendingRegistrations = () => {
     const year = new Date().getFullYear().toString().slice(-2);
     const randomDigits = Math.floor(10000 + Math.random() * 90000);
     return `WB${year}${randomDigits}`;
+  };
+
+  const downloadReceipt = (url: string) => {
+    window.open(url, '_blank');
   };
 
   const approveRegistration = async (profileId: string) => {
@@ -165,6 +175,7 @@ const PendingRegistrations = () => {
                         <TableHead>Phone</TableHead>
                         <TableHead>State</TableHead>
                         <TableHead>Date</TableHead>
+                        <TableHead>Payment Proof</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -178,6 +189,30 @@ const PendingRegistrations = () => {
                           <TableCell>{reg.phone}</TableCell>
                           <TableCell>{reg.state}</TableCell>
                           <TableCell>{new Date(reg.created_at).toLocaleDateString()}</TableCell>
+                          <TableCell>
+                            {reg.registration_fees?.[0]?.payment_receipt_url ? (
+                              <div className="flex gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => downloadReceipt(reg.registration_fees[0].payment_receipt_url)}
+                                >
+                                  <Download className="h-4 w-4 mr-1" />
+                                  Download
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => window.open(reg.registration_fees[0].payment_receipt_url, '_blank')}
+                                >
+                                  <Eye className="h-4 w-4 mr-1" />
+                                  View
+                                </Button>
+                              </div>
+                            ) : (
+                              <span className="text-muted-foreground text-sm">No receipt</span>
+                            )}
+                          </TableCell>
                           <TableCell className="text-right">
                             <Button
                               size="sm"

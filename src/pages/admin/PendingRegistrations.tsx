@@ -69,8 +69,100 @@ const PendingRegistrations = () => {
     return `WB${year}${randomDigits}`;
   };
 
-  const downloadReceipt = (url: string) => {
-    window.open(url, '_blank');
+  const viewReceipt = async (receiptPath: string) => {
+    try {
+      // Handle both old URL format and new path format
+      let filePath = receiptPath;
+      let bucket = 'payment-receipts';
+      
+      // If it's a full URL, extract the path
+      if (receiptPath.includes('http')) {
+        const urlParts = receiptPath.split('/storage/v1/object/public/payment-receipts/');
+        if (urlParts.length === 2) {
+          filePath = urlParts[1];
+        } else {
+          // Try to open old format URLs directly
+          window.open(receiptPath, '_blank');
+          return;
+        }
+      } else if (receiptPath.includes('/')) {
+        // New format: "bucket/userId/filename"
+        const parts = receiptPath.split('/');
+        if (parts[0] === 'payment-receipts') {
+          bucket = parts[0];
+          filePath = parts.slice(1).join('/');
+        } else {
+          filePath = receiptPath;
+        }
+      }
+      
+      // Create signed URL for viewing (valid for 60 seconds)
+      const { data, error } = await supabase.storage
+        .from(bucket)
+        .createSignedUrl(filePath, 60);
+      
+      if (error) throw error;
+      
+      if (data?.signedUrl) {
+        window.open(data.signedUrl, '_blank');
+      } else {
+        throw new Error('Failed to generate view link');
+      }
+    } catch (error: any) {
+      console.error('View error:', error);
+      toast.error(error.message || 'Failed to view receipt');
+    }
+  };
+
+  const downloadReceipt = async (receiptPath: string) => {
+    try {
+      // Handle both old URL format and new path format
+      let filePath = receiptPath;
+      let bucket = 'payment-receipts';
+      
+      // If it's a full URL, extract the path
+      if (receiptPath.includes('http')) {
+        const urlParts = receiptPath.split('/storage/v1/object/public/payment-receipts/');
+        if (urlParts.length === 2) {
+          filePath = urlParts[1];
+        } else {
+          throw new Error('Invalid receipt URL format');
+        }
+      } else if (receiptPath.includes('/')) {
+        // New format: "bucket/userId/filename"
+        const parts = receiptPath.split('/');
+        if (parts[0] === 'payment-receipts') {
+          bucket = parts[0];
+          filePath = parts.slice(1).join('/');
+        } else {
+          filePath = receiptPath;
+        }
+      }
+      
+      // Download using Supabase storage
+      const { data, error } = await supabase.storage
+        .from(bucket)
+        .download(filePath);
+      
+      if (error) throw error;
+      
+      // Create download link
+      const fileExtension = filePath.split('.').pop() || 'jpg';
+      const blob = new Blob([data], { type: data.type });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `registration-receipt-${Date.now()}.${fileExtension}`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      toast.success('Receipt downloaded successfully');
+    } catch (error: any) {
+      console.error('Download error:', error);
+      toast.error(error.message || 'Failed to download receipt');
+    }
   };
 
   const approveRegistration = async (profileId: string) => {
@@ -203,7 +295,7 @@ const PendingRegistrations = () => {
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  onClick={() => window.open(reg.registration_fees[0].payment_receipt_url, '_blank')}
+                                  onClick={() => viewReceipt(reg.registration_fees[0].payment_receipt_url)}
                                 >
                                   <Eye className="h-4 w-4 mr-1" />
                                   View

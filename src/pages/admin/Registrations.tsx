@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Download, Loader2 } from "lucide-react";
+import { CheckCircle, Download, Loader2, Eye } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -105,34 +105,93 @@ const Registrations = () => {
     }
   };
 
-  const downloadReceipt = async (receiptUrl: string) => {
+  const viewReceipt = async (receiptPath: string) => {
     try {
-      // Extract the file path from the Supabase storage URL
-      const url = new URL(receiptUrl);
-      const pathParts = url.pathname.split('/');
-      const bucketIndex = pathParts.findIndex(part => part === 'payment-receipts');
+      // Handle both old URL format and new path format
+      let filePath = receiptPath;
+      let bucket = 'payment-receipts';
       
-      if (bucketIndex === -1) {
-        throw new Error('Invalid receipt URL');
+      // If it's a full URL, extract the path
+      if (receiptPath.includes('http')) {
+        const urlParts = receiptPath.split('/storage/v1/object/public/payment-receipts/');
+        if (urlParts.length === 2) {
+          filePath = urlParts[1];
+        } else {
+          // Try to open old format URLs directly
+          window.open(receiptPath, '_blank');
+          return;
+        }
+      } else if (receiptPath.includes('/')) {
+        // New format: "bucket/userId/filename"
+        const parts = receiptPath.split('/');
+        if (parts[0] === 'payment-receipts') {
+          bucket = parts[0];
+          filePath = parts.slice(1).join('/');
+        } else {
+          filePath = receiptPath;
+        }
       }
       
-      const filePath = pathParts.slice(bucketIndex + 1).join('/');
+      // Create signed URL for viewing (valid for 60 seconds)
+      const { data, error } = await supabase.storage
+        .from(bucket)
+        .createSignedUrl(filePath, 60);
+      
+      if (error) throw error;
+      
+      if (data?.signedUrl) {
+        window.open(data.signedUrl, '_blank');
+      } else {
+        throw new Error('Failed to generate view link');
+      }
+    } catch (error: any) {
+      console.error('View error:', error);
+      toast.error(error.message || 'Failed to view receipt');
+    }
+  };
+
+  const downloadReceipt = async (receiptPath: string) => {
+    try {
+      // Handle both old URL format and new path format
+      let filePath = receiptPath;
+      let bucket = 'payment-receipts';
+      
+      // If it's a full URL, extract the path
+      if (receiptPath.includes('http')) {
+        const urlParts = receiptPath.split('/storage/v1/object/public/payment-receipts/');
+        if (urlParts.length === 2) {
+          filePath = urlParts[1];
+        } else {
+          throw new Error('Invalid receipt URL format');
+        }
+      } else if (receiptPath.includes('/')) {
+        // New format: "bucket/userId/filename"
+        const parts = receiptPath.split('/');
+        if (parts[0] === 'payment-receipts') {
+          bucket = parts[0];
+          filePath = parts.slice(1).join('/');
+        } else {
+          filePath = receiptPath;
+        }
+      }
       
       // Download using Supabase storage
       const { data, error } = await supabase.storage
-        .from('payment-receipts')
+        .from(bucket)
         .download(filePath);
       
       if (error) throw error;
       
       // Create download link
-      const url2 = window.URL.createObjectURL(data);
+      const fileExtension = filePath.split('.').pop() || 'jpg';
+      const blob = new Blob([data], { type: data.type });
+      const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url2;
-      a.download = `registration-receipt-${Date.now()}.jpg`;
+      a.href = url;
+      a.download = `registration-receipt-${Date.now()}.${fileExtension}`;
       document.body.appendChild(a);
       a.click();
-      window.URL.revokeObjectURL(url2);
+      window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
       
       toast.success('Receipt downloaded successfully');
@@ -209,14 +268,24 @@ const Registrations = () => {
                           <TableCell>{reg.profiles?.phone}</TableCell>
                           <TableCell>
                             {reg.payment_receipt_url ? (
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => downloadReceipt(reg.payment_receipt_url)}
-                              >
-                                <Download className="h-4 w-4 mr-1" />
-                                Download
-                              </Button>
+                              <div className="flex gap-1">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => viewReceipt(reg.payment_receipt_url)}
+                                >
+                                  <Eye className="h-4 w-4 mr-1" />
+                                  View
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => downloadReceipt(reg.payment_receipt_url)}
+                                >
+                                  <Download className="h-4 w-4 mr-1" />
+                                  Download
+                                </Button>
+                              </div>
                             ) : (
                               <Badge variant="secondary">No receipt</Badge>
                             )}

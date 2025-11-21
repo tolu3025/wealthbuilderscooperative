@@ -20,6 +20,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { CopyPhoneButton } from "@/components/CopyPhoneButton";
 import { CreditCard, Receipt } from "lucide-react";
+import { PasswordInput } from "@/components/PasswordInput";
 
 const registerSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
@@ -437,10 +438,11 @@ const Register = () => {
                         <FormItem>
                           <FormLabel>Password *</FormLabel>
                           <FormControl>
-                            <Input 
-                              type="password"
-                              placeholder="Create a secure password (min. 8 characters)" 
-                              {...field}
+                            <PasswordInput
+                              value={field.value}
+                              onChange={field.onChange}
+                              placeholder="Create a secure password (min. 8 characters)"
+                              disabled={loading}
                             />
                           </FormControl>
                           <FormMessage />
@@ -455,10 +457,11 @@ const Register = () => {
                         <FormItem>
                           <FormLabel>Confirm Password *</FormLabel>
                           <FormControl>
-                            <Input 
-                              type="password"
-                              placeholder="Re-enter your password" 
-                              {...field}
+                            <PasswordInput
+                              value={field.value}
+                              onChange={field.onChange}
+                              placeholder="Re-enter your password"
+                              disabled={loading}
                             />
                           </FormControl>
                           <FormMessage />

@@ -314,7 +314,7 @@ const AdminDashboard = () => {
                     <li>Withdrawals - Process member withdrawal requests</li>
                     <li>Dividends - Distribute profits to eligible members</li>
                     <li>Properties - Manage property listings</li>
-                    <li>Commissions - Review referral and state rep commissions</li>
+                    <li>Commissions - Review invite and state rep commissions</li>
                     <li>Monthly Settlements - Generate financial reports</li>
                   </ul>
                 </div>

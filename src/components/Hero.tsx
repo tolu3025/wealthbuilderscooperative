@@ -205,7 +205,7 @@ const Hero = () => {
               {[{
               step: "1",
               title: "Register & Join",
-              description: "Pay ₦5,000 registration fee and choose your member type: Contributor (eligible for dividends) or Acting Member (project support only). Use an invite code to earn your referrer ₦1,000 bonus.",
+              description: "Pay ₦5,000 registration fee and choose your member type: Contributor (eligible for dividends) or Acting Member (project support only). Use an invite link to earn ₦1,000 bonus for each invite.",
               color: "primary"
             }, {
               step: "2",

@@ -467,7 +467,7 @@ const Dashboard = () => {
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">Total Referrals</p>
+                    <p className="text-sm text-muted-foreground mb-1">Total Invites</p>
                     <div className="text-3xl font-bold text-amber-600">
                       {memberData.referralCount}
                     </div>
@@ -478,7 +478,7 @@ const Dashboard = () => {
                     <div className="text-3xl font-bold text-orange-600">
                       ₦{memberData.totalCommissions.toLocaleString()}
                     </div>
-                    <p className="text-xs text-muted-foreground mt-1">₦1,000 per referral</p>
+                    <p className="text-xs text-muted-foreground mt-1">₦1,000 per invite</p>
                   </div>
                 </div>
                 <div className="flex items-center justify-between pt-3 border-t">

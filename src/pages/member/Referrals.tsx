@@ -138,19 +138,11 @@ const Referrals = () => {
 
   const shareInviteLink = () => {
     const link = `${window.location.origin}/register?ref=${inviteCode}`;
-    if (navigator.share) {
-      navigator.share({
-        title: 'Join WealthBuilders Cooperative',
-        text: `Use my code ${inviteCode} to join WealthBuilders!`,
-        url: link
-      });
-    } else {
-      navigator.clipboard.writeText(link);
-      toast({
-        title: "Link copied!",
-        description: "Share this link with friends",
-      });
-    }
+    navigator.clipboard.writeText(link);
+    toast({
+      title: "Link copied!",
+      description: "Share this invite link with friends",
+    });
   };
 
   if (loading) {
@@ -177,7 +169,7 @@ const Referrals = () => {
           <DashboardHeader userName={userName} />
           <main className="flex-1 p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 overflow-x-hidden">
             <div>
-              <h1 className="text-3xl font-bold mb-2">Invite</h1>
+              <h1 className="text-3xl font-bold mb-2">Invite Dashboard</h1>
               <p className="text-muted-foreground">
                 Earn ₦1,000 for every member you invite
               </p>
@@ -192,28 +184,19 @@ const Referrals = () => {
 
             <Card className="border-primary shadow-lg">
               <CardHeader>
-                <CardTitle>Your Invite Code</CardTitle>
-                <CardDescription>Share this code with friends and family</CardDescription>
+                <CardTitle>Your Invite Link</CardTitle>
+                <CardDescription>Share this link with friends and family</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center gap-2">
-                  <code className="flex-1 bg-muted px-4 py-3 rounded-lg font-mono text-2xl font-bold text-center">
-                    {inviteCode}
+                  <code className="flex-1 bg-muted px-4 py-3 rounded-lg text-sm break-all">
+                    {`${window.location.origin}/register?ref=${inviteCode}`}
                   </code>
-                  <Button size="lg" onClick={copyInviteCode}>
+                  <Button size="lg" onClick={shareInviteLink}>
                     <Copy className="h-4 w-4 mr-2" />
-                    Copy
+                    Copy Link
                   </Button>
                 </div>
-                <Button 
-                  className="w-full" 
-                  variant="outline" 
-                  size="lg"
-                  onClick={shareInviteLink}
-                >
-                  <Share2 className="h-4 w-4 mr-2" />
-                  Share Invite Link
-                </Button>
               </CardContent>
             </Card>
 

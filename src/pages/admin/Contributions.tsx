@@ -297,17 +297,30 @@ const Contributions = () => {
                               <TableCell className="text-blue-600 font-medium">
                                 ₦{Number(contrib.savings_amount).toLocaleString()}
                               </TableCell>
-                              <TableCell>
-                                {hasProjectSupport ? (
+                               <TableCell>
+                                {hasProjectSupport && contrib.project_support_payment.receipt_url ? (
                                   <div className="flex flex-col gap-1">
                                     <span className="text-orange-600 font-medium">
                                       ₦{Number(contrib.project_support_payment.amount).toLocaleString()}
                                     </span>
-                                    {contrib.project_support_payment.receipt_url ? (
-                                      <Badge variant="outline" className="text-xs w-fit">Paid - Pending Approval</Badge>
-                                    ) : (
-                                      <Badge variant="secondary" className="text-xs">No Receipt</Badge>
-                                    )}
+                                    <div className="flex gap-1">
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => viewReceipt(contrib.project_support_payment.receipt_url)}
+                                      >
+                                        <Eye className="h-4 w-4 mr-1" />
+                                        View
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={() => downloadReceipt(contrib.project_support_payment.receipt_url)}
+                                      >
+                                        <Download className="h-4 w-4 mr-1" />
+                                        Download
+                                      </Button>
+                                    </div>
                                   </div>
                                 ) : (
                                   <Badge variant="secondary" className="text-xs">Not Paid</Badge>

@@ -183,7 +183,7 @@ export default function BonusDistribution() {
           <main className="p-6 space-y-6">
             <div className="mb-6">
               <h1 className="text-3xl font-bold">Bonus Distribution Management</h1>
-              <p className="text-muted-foreground">Manage project support fund bonus distributions and referral structure</p>
+              <p className="text-muted-foreground">Manage project support fund bonus distributions and invite structure</p>
             </div>
             {/* Stats Overview */}
             <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
@@ -242,7 +242,7 @@ export default function BonusDistribution() {
             <Tabs defaultValue="distributions" className="space-y-4">
               <TabsList>
                 <TabsTrigger value="distributions">Distribution History</TabsTrigger>
-                <TabsTrigger value="tree">Referral Tree</TabsTrigger>
+                <TabsTrigger value="tree">Invite Tree</TabsTrigger>
               </TabsList>
 
               <TabsContent value="distributions" className="space-y-4">
@@ -306,9 +306,9 @@ export default function BonusDistribution() {
               <TabsContent value="tree" className="space-y-4">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Referral Tree Structure</CardTitle>
+                    <CardTitle>Invite Tree Structure</CardTitle>
                     <CardDescription>
-                      Ternary tree (max 3 direct referrals per member)
+                      Ternary tree (max 3 direct invites per member)
                     </CardDescription>
                   </CardHeader>
                   <CardContent>

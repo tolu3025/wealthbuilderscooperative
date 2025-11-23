@@ -34,6 +34,14 @@ const Contributions = () => {
       // For each contribution, check if there's a matching project support payment for the same month
       const contributionsWithProjectSupport = await Promise.all(
         (data || []).map(async (contrib) => {
+          // If this contribution has no project support amount recorded, treat as not paid
+          if (!contrib.project_support_amount || Number(contrib.project_support_amount) <= 0) {
+            return {
+              ...contrib,
+              project_support_payment: null,
+            };
+          }
+
           const { data: projectSupports } = await supabase
             .from('project_support_contributions')
             .select('id, amount, payment_status, receipt_url, contribution_month')

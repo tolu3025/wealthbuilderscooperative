@@ -31,18 +31,27 @@ const Contributions = () => {
 
       if (error) throw error;
       
-      // For each contribution, check if there's a matching project support payment for the same month
+      // For each contribution, check if there's a project support payment for the same month
       const contributionsWithProjectSupport = await Promise.all(
         (data || []).map(async (contrib) => {
+          // Extract month from contribution
+          const contribMonth = contrib.contribution_month 
+            ? new Date(contrib.contribution_month).toISOString().slice(0, 7)
+            : new Date(contrib.created_at).toISOString().slice(0, 7);
+          
           const { data: projectSupports } = await supabase
             .from('project_support_contributions')
-            .select('id, amount, payment_status, receipt_url, contribution_month')
+            .select('id, amount, payment_status, receipt_url, created_at, contribution_month')
             .eq('member_id', contrib.member_id)
-            .eq('contribution_month', contrib.contribution_month)
             .order('created_at', { ascending: false });
           
-          // Only treat as paid if there is a PSF record for this month with an actual receipt
-          const projectSupport = projectSupports?.find(ps => ps.receipt_url) || null;
+          // Find PSF payment for the same month with a receipt
+          const projectSupport = projectSupports?.find(ps => {
+            const psMonth = ps.contribution_month 
+              ? new Date(ps.contribution_month).toISOString().slice(0, 7)
+              : new Date(ps.created_at).toISOString().slice(0, 7);
+            return psMonth === contribMonth && ps.receipt_url;
+          }) || null;
           
           return {
             ...contrib,

@@ -55,16 +55,9 @@ const Login = () => {
 
       navigate("/dashboard");
     } catch (error: any) {
-      let errorMessage = error.message || "Invalid email or password";
-      
-      // Handle network errors specifically
-      if (error.message === "Failed to fetch" || error.name === "TypeError") {
-        errorMessage = "Unable to connect to server. Please check your internet connection and try again.";
-      }
-      
       toast({
         title: "Login failed",
-        description: errorMessage,
+        description: error.message || "Invalid email or password",
         variant: "destructive",
       });
     } finally {

@@ -20,7 +20,6 @@ import { MemberSidebar } from "@/components/MemberSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { AnnouncementBanner } from "@/components/AnnouncementBanner";
 import { PaymentWarningBanner } from "@/components/PaymentWarningBanner";
-import { MemberTypeUpgrade } from "@/components/MemberTypeUpgrade";
 
 interface MemberData {
   id: string;
@@ -39,7 +38,6 @@ interface MemberData {
   recentDividends: number;
   dividendBalance: number;
   nextContributionDue: string;
-  memberType: string;
 }
 
 interface StateRep {
@@ -223,7 +221,7 @@ const Dashboard = () => {
           memberNumber: profile.member_number || 'Pending',
           totalCapital,
           totalSavings,
-          monthlyContribution: profile.member_type === 'acting_member' ? 500 : 5500,
+          monthlyContribution: 5500,
           eligibleForDividend,
           memberSince: new Date(profile.created_at).toLocaleDateString(),
           inviteCode: profile.invite_code || '',
@@ -233,8 +231,7 @@ const Dashboard = () => {
           totalCommissions: totalCommissions,
           recentDividends,
           dividendBalance: totalDividends,
-          nextContributionDue: nextDue.toLocaleDateString(),
-          memberType: profile.member_type || 'contributor'
+          nextContributionDue: nextDue.toLocaleDateString()
         });
 
         // Fetch state representative
@@ -338,18 +335,6 @@ const Dashboard = () => {
           <main className="flex-1 p-6 bg-muted/30 overflow-auto">
             <AnnouncementBanner />
             <PaymentWarningBanner />
-            
-            {/* Member Type Upgrade Section */}
-            {memberData.memberType === 'acting_member' && (
-              <div className="mb-6">
-                <MemberTypeUpgrade 
-                  currentMemberType={memberData.memberType}
-                  profileId={memberData.id}
-                  onUpgradeComplete={fetchDashboardData}
-                />
-              </div>
-            )}
-            
             {/* Welcome Section */}
             <div className="mb-6">
               <h1 className="text-3xl font-bold mb-2">Welcome back, {memberData.name.split(' ')[0]}! 👋</h1>

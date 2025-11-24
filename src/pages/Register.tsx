@@ -279,7 +279,7 @@ const Register = () => {
                               <RadioGroupItem value="acting_member" id="acting_member" />
                               <Label htmlFor="acting_member" className="cursor-pointer flex-1">
                                 <div className="font-medium">Acting Member</div>
-                                <div className="text-sm text-muted-foreground">Pay ₦500 monthly project support</div>
+                                <div className="text-sm text-muted-foreground">Pay ₦500 monthly, no dividends</div>
                               </Label>
                             </div>
                           </RadioGroup>

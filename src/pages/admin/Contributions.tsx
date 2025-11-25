@@ -31,18 +31,27 @@ const Contributions = () => {
 
       if (error) throw error;
       
-      // For each contribution, check if there's a project support payment
+      // For each contribution, check if there's a project support payment for the same month
       const contributionsWithProjectSupport = await Promise.all(
         (data || []).map(async (contrib) => {
+          // Extract month from contribution
+          const contribMonth = contrib.contribution_month 
+            ? new Date(contrib.contribution_month).toISOString().slice(0, 7)
+            : new Date(contrib.created_at).toISOString().slice(0, 7);
+          
           const { data: projectSupports } = await supabase
             .from('project_support_contributions')
-            .select('id, amount, payment_status, receipt_url')
+            .select('id, amount, payment_status, receipt_url, created_at, contribution_month')
             .eq('member_id', contrib.member_id)
-            .eq('contribution_month', contrib.contribution_month || new Date(contrib.created_at).toISOString().slice(0, 7) + '-01')
             .order('created_at', { ascending: false });
           
-          // Get the most recent project support payment
-          const projectSupport = projectSupports && projectSupports.length > 0 ? projectSupports[0] : null;
+          // Find PSF payment for the same month with a receipt
+          const projectSupport = projectSupports?.find(ps => {
+            const psMonth = ps.contribution_month 
+              ? new Date(ps.contribution_month).toISOString().slice(0, 7)
+              : new Date(ps.created_at).toISOString().slice(0, 7);
+            return psMonth === contribMonth && ps.receipt_url;
+          }) || null;
           
           return {
             ...contrib,
@@ -278,8 +287,11 @@ const Contributions = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {pendingContribs.map((contrib: any) => {
-                          const hasProjectSupport = contrib.project_support_payment && contrib.project_support_payment.payment_status === 'pending';
+                      {pendingContribs.map((contrib: any) => {
+                          // Check if PSF was actually paid (has receipt and is pending approval)
+                          const hasPSFReceipt = contrib.project_support_payment && 
+                                                contrib.project_support_payment.receipt_url && 
+                                                contrib.project_support_payment.payment_status === 'pending';
                           
                           return (
                             <TableRow key={contrib.id}>
@@ -298,9 +310,12 @@ const Contributions = () => {
                                 ₦{Number(contrib.savings_amount).toLocaleString()}
                               </TableCell>
                                <TableCell>
-                                {hasProjectSupport && contrib.project_support_payment.receipt_url ? (
+                                {hasPSFReceipt ? (
                                   <div className="flex flex-col gap-1">
-                                    <span className="text-orange-600 font-medium">
+                                    <Badge variant="outline" className="text-orange-600 border-orange-600 w-fit">
+                                      Paid - Pending Approval
+                                    </Badge>
+                                    <span className="text-orange-600 font-medium text-sm">
                                       ₦{Number(contrib.project_support_payment.amount).toLocaleString()}
                                     </span>
                                     <div className="flex gap-1">
@@ -323,7 +338,7 @@ const Contributions = () => {
                                     </div>
                                   </div>
                                 ) : (
-                                  <Badge variant="secondary" className="text-xs">Not Paid</Badge>
+                                  <Badge variant="destructive" className="text-xs">Not Paid</Badge>
                                 )}
                               </TableCell>
                               <TableCell>
@@ -357,11 +372,11 @@ const Contributions = () => {
                                   onClick={() => approveContribution(
                                     contrib.id, 
                                     contrib.member_id,
-                                    hasProjectSupport ? contrib.project_support_payment.id : undefined
+                                    hasPSFReceipt ? contrib.project_support_payment.id : undefined
                                   )}
                                 >
                                   <CheckCircle className="h-4 w-4 mr-1" />
-                                  Approve{hasProjectSupport ? ' Both' : ''}
+                                  Approve{hasPSFReceipt ? ' Both' : ''}
                                 </Button>
                               </TableCell>
                             </TableRow>

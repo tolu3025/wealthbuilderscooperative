@@ -3,7 +3,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, ShieldOff, Loader2, Search, Plus } from "lucide-react";
+import { Trash2, ShieldOff, Loader2, Search, Plus, KeyRound } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -48,6 +57,9 @@ const UserManagement = () => {
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [resetPasswordUserId, setResetPasswordUserId] = useState<string | null>(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [resettingPassword, setResettingPassword] = useState(false);
 
   useEffect(() => {
     fetchUsers();
@@ -149,6 +161,38 @@ const UserManagement = () => {
       fetchUsers();
     } catch (error: any) {
       toast.error("Failed to delete account: " + error.message);
+    }
+  };
+
+  const handleResetPassword = async () => {
+    if (!resetPasswordUserId || !newPassword) {
+      toast.error("Please enter a new password");
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
+
+    setResettingPassword(true);
+
+    try {
+      const { error } = await supabase.auth.admin.updateUserById(
+        resetPasswordUserId,
+        { password: newPassword }
+      );
+
+      if (error) throw error;
+
+      toast.success("Password reset successfully");
+      setResetPasswordUserId(null);
+      setNewPassword("");
+    } catch (error: any) {
+      console.error("Error resetting password:", error);
+      toast.error(error.message || "Failed to reset password");
+    } finally {
+      setResettingPassword(false);
     }
   };
 
@@ -285,6 +329,50 @@ const UserManagement = () => {
                             </TableCell>
                             <TableCell className="text-right">
                               <div className="flex justify-end gap-2">
+                                <Dialog open={resetPasswordUserId === user.user_id} onOpenChange={(open) => {
+                                  if (!open) {
+                                    setResetPasswordUserId(null);
+                                    setNewPassword("");
+                                  }
+                                }}>
+                                  <DialogTrigger asChild>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => setResetPasswordUserId(user.user_id)}
+                                    >
+                                      <KeyRound className="h-4 w-4" />
+                                    </Button>
+                                  </DialogTrigger>
+                                  <DialogContent>
+                                    <DialogHeader>
+                                      <DialogTitle>Reset Password</DialogTitle>
+                                      <DialogDescription>
+                                        Set a new password for {user.first_name} {user.last_name}
+                                      </DialogDescription>
+                                    </DialogHeader>
+                                    <div className="space-y-4">
+                                      <div className="space-y-2">
+                                        <Label htmlFor="newPassword">New Password</Label>
+                                        <Input
+                                          id="newPassword"
+                                          type="password"
+                                          value={newPassword}
+                                          onChange={(e) => setNewPassword(e.target.value)}
+                                          placeholder="Enter new password (min. 6 characters)"
+                                          disabled={resettingPassword}
+                                        />
+                                      </div>
+                                      <Button
+                                        onClick={handleResetPassword}
+                                        disabled={resettingPassword}
+                                        className="w-full"
+                                      >
+                                        {resettingPassword ? "Resetting..." : "Reset Password"}
+                                      </Button>
+                                    </div>
+                                  </DialogContent>
+                                </Dialog>
                                 
                                 <AlertDialog>
                                   <AlertDialogTrigger asChild>

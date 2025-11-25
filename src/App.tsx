@@ -37,6 +37,7 @@ import NotFound from "./pages/NotFound";
 import MemberDividends from "./pages/member/Dividends";
 import Referrals from "./pages/member/Referrals";
 import Profile from "./pages/member/Profile";
+import ChangePassword from "./pages/member/ChangePassword";
 import StateRepDashboard from "./pages/StateRepDashboard";
 import DirectorDashboard from "./pages/DirectorDashboard";
 import MonthlySettlements from "./pages/admin/MonthlySettlements";
@@ -46,6 +47,7 @@ import MemberBalanceAdjustment from "./pages/admin/MemberBalanceAdjustment";
 import MLMManagement from "./pages/admin/BonusDistribution";
 import PropertyPlans from "./pages/member/PropertyPlans";
 import PlanEnrollments from "./pages/admin/PlanEnrollments";
+import PSFManagement from "./pages/admin/PSFManagement";
 
 const queryClient = new QueryClient();
 
@@ -143,6 +145,14 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/member/change-password"
+              element={
+                <ProtectedRoute>
+                  <ChangePassword />
+                </ProtectedRoute>
+              }
+            />
             <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
             <Route path="/admin/registrations" element={<AdminRoute><PendingRegistrations /></AdminRoute>} />
             <Route path="/admin/contributions" element={<AdminRoute><Contributions /></AdminRoute>} />
@@ -158,6 +168,7 @@ const App = () => (
             <Route path="/admin/balance-adjustment" element={<AdminRoute><MemberBalanceAdjustment /></AdminRoute>} />
             <Route path="/admin/mlm" element={<AdminRoute><MLMManagement /></AdminRoute>} />
             <Route path="/admin/plan-enrollments" element={<AdminRoute><PlanEnrollments /></AdminRoute>} />
+            <Route path="/admin/psf-management" element={<AdminRoute><PSFManagement /></AdminRoute>} />
             <Route path="/admin/reports" element={<AdminRoute><Reports /></AdminRoute>} />
             <Route path="/state-rep" element={<ProtectedRoute><StateRepDashboard /></ProtectedRoute>} />
             <Route path="/director" element={<ProtectedRoute><DirectorDashboard /></ProtectedRoute>} />

@@ -11,7 +11,8 @@ import {
   FileText,
   Briefcase,
   MapPin,
-  Building2
+  Building2,
+  Lock
 } from "lucide-react";
 import {
   Sidebar,
@@ -35,6 +36,7 @@ const baseMenuItems = [
   { title: "My Invites", url: "/member/referrals", icon: UserPlus },
   { title: "Blog", url: "/blog", icon: FileText },
   { title: "Profile", url: "/member/profile", icon: User },
+  { title: "Change Password", url: "/member/change-password", icon: Lock },
   { title: "Support", url: "/contact", icon: HelpCircle },
 ];
 

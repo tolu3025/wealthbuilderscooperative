@@ -49,7 +49,7 @@ import MemberBalanceAdjustment from "./pages/admin/MemberBalanceAdjustment";
 import MLMManagement from "./pages/admin/BonusDistribution";
 import PropertyPlans from "./pages/member/PropertyPlans";
 import PlanEnrollments from "./pages/admin/PlanEnrollments";
-import PSFManagement from "./pages/admin/PSFManagement";
+import ProjectSupportFund from "./pages/admin/ProjectSupportFund";
 
 const queryClient = new QueryClient();
 
@@ -186,7 +186,7 @@ const App = () => (
             <Route path="/admin/balance-adjustment" element={<AdminRoute><MemberBalanceAdjustment /></AdminRoute>} />
             <Route path="/admin/mlm" element={<AdminRoute><MLMManagement /></AdminRoute>} />
             <Route path="/admin/plan-enrollments" element={<AdminRoute><PlanEnrollments /></AdminRoute>} />
-            <Route path="/admin/psf-management" element={<AdminRoute><PSFManagement /></AdminRoute>} />
+            <Route path="/admin/project-support" element={<AdminRoute><ProjectSupportFund /></AdminRoute>} />
             <Route path="/admin/reports" element={<AdminRoute><Reports /></AdminRoute>} />
             <Route path="/state-rep" element={<ProtectedRoute><StateRepDashboard /></ProtectedRoute>} />
             <Route path="/director" element={<ProtectedRoute><DirectorDashboard /></ProtectedRoute>} />

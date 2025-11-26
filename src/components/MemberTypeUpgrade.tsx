@@ -42,14 +42,18 @@ export const MemberTypeUpgrade = ({
 
     setLoading(true);
     try {
-      // Update profile with new member type and breakdown
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      // Update profile with new member type and breakdown using user_id for RLS
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ 
           member_type: 'contributor',
           breakdown_type: breakdownType,
         })
-        .eq('id', profileId);
+        .eq('user_id', user.id);
 
       if (updateError) throw updateError;
 

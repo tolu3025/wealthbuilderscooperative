@@ -4,17 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
 import { Check, X, Eye, Download, Loader2 } from "lucide-react";
 import { format } from "date-fns";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/AdminSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
 
@@ -31,7 +25,7 @@ interface PSFContribution {
   member_email: string;
 }
 
-export default function PSFManagement() {
+export default function ProjectSupportFund() {
   const [loading, setLoading] = useState(true);
   const [pendingPSF, setPendingPSF] = useState<PSFContribution[]>([]);
   const [approvedPSF, setApprovedPSF] = useState<PSFContribution[]>([]);
@@ -84,23 +78,6 @@ export default function PSFManagement() {
     }
   };
 
-  const createNotification = async (userId: string, title: string, message: string, type: string, relatedId: string) => {
-    try {
-      const { error } = await supabase.from("notifications").insert({
-        user_id: userId,
-        title,
-        message,
-        type,
-        related_id: relatedId,
-        read: false,
-      });
-
-      if (error) throw error;
-    } catch (error: any) {
-      console.error("Error creating notification:", error);
-    }
-  };
-
   const approvePSF = async (psfId: string, memberName: string) => {
     setProcessingId(psfId);
     try {
@@ -109,7 +86,7 @@ export default function PSFManagement() {
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("id")
+        .select("id, user_id")
         .eq("user_id", user.id)
         .single();
 
@@ -136,13 +113,13 @@ export default function PSFManagement() {
 
       // Create notification for member
       if (psfData?.profiles?.user_id) {
-        await createNotification(
-          psfData.profiles.user_id,
-          "PSF Payment Approved ✅",
-          `Your Project Support Fund payment of ₦500 has been approved and credited to your account.`,
-          "psf_approved",
-          psfId
-        );
+        await supabase.from("notifications").insert({
+          user_id: psfData.profiles.user_id,
+          title: "PSF Payment Approved ✅",
+          message: `Your Project Support Fund payment of ₦500 has been approved and credited to your account.`,
+          type: "psf_approved",
+          related_id: psfId,
+        });
       }
 
       toast.success(`PSF payment for ${memberName} approved successfully`);
@@ -175,13 +152,13 @@ export default function PSFManagement() {
 
       // Create notification for member
       if (psfData?.profiles?.user_id) {
-        await createNotification(
-          psfData.profiles.user_id,
-          "PSF Payment Declined ❌",
-          `Your Project Support Fund payment has been declined. Please contact support or re-upload a valid receipt.`,
-          "psf_declined",
-          psfId
-        );
+        await supabase.from("notifications").insert({
+          user_id: psfData.profiles.user_id,
+          title: "PSF Payment Declined ❌",
+          message: `Your Project Support Fund payment has been declined. Please contact support or re-upload a valid receipt.`,
+          type: "psf_declined",
+          related_id: psfId,
+        });
       }
 
       toast.success(`PSF payment for ${memberName} declined`);
@@ -328,66 +305,61 @@ export default function PSFManagement() {
     </Table>
   );
 
-  return (() => {
-    try {
-      console.log("PSFManagement page rendering");
-      return (
-        <div className="flex min-h-screen">
+  if (loading) {
+    return (
+      <SidebarProvider>
+        <div className="min-h-screen flex w-full">
           <AdminSidebar />
-          <div className="flex-1">
-            <DashboardHeader />
-            <div className="p-8">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Project Support Fund Management</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {loading ? (
-                    <div className="flex justify-center items-center py-12">
-                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                    </div>
-                  ) : (
-                    <Tabs defaultValue="pending" className="w-full">
-                      <TabsList className="grid w-full grid-cols-3">
-                        <TabsTrigger value="pending">
-                          Pending ({pendingPSF.length})
-                        </TabsTrigger>
-                        <TabsTrigger value="approved">
-                          Approved ({approvedPSF.length})
-                        </TabsTrigger>
-                        <TabsTrigger value="declined">
-                          Declined ({declinedPSF.length})
-                        </TabsTrigger>
-                      </TabsList>
-
-                      <TabsContent value="pending">
-                        {renderTable(pendingPSF, true, "pending")}
-                      </TabsContent>
-
-                      <TabsContent value="approved">
-                        {renderTable(approvedPSF, false, "approved")}
-                      </TabsContent>
-
-                      <TabsContent value="declined">
-                        {renderTable(declinedPSF, false, "declined")}
-                      </TabsContent>
-                    </Tabs>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
+          <div className="flex-1 flex items-center justify-center">
+            <Loader2 className="h-12 w-12 animate-spin text-primary" />
           </div>
         </div>
-      );
-    } catch (error) {
-      console.error("Error rendering PSFManagement page:", error);
-      return (
-        <div className="flex min-h-screen items-center justify-center">
-          <p className="text-destructive font-medium">
-            Failed to load Project Support Fund Management page.
-          </p>
+      </SidebarProvider>
+    );
+  }
+
+  return (
+    <SidebarProvider defaultOpen={false}>
+      <div className="min-h-screen flex w-full">
+        <AdminSidebar />
+        <div className="flex-1 flex flex-col min-w-0">
+          <DashboardHeader userName="Admin" />
+          <main className="flex-1 p-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Project Support Fund Management</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Tabs defaultValue="pending" className="w-full">
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="pending">
+                      Pending ({pendingPSF.length})
+                    </TabsTrigger>
+                    <TabsTrigger value="approved">
+                      Approved ({approvedPSF.length})
+                    </TabsTrigger>
+                    <TabsTrigger value="declined">
+                      Declined ({declinedPSF.length})
+                    </TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="pending">
+                    {renderTable(pendingPSF, true, "pending")}
+                  </TabsContent>
+
+                  <TabsContent value="approved">
+                    {renderTable(approvedPSF, false, "approved")}
+                  </TabsContent>
+
+                  <TabsContent value="declined">
+                    {renderTable(declinedPSF, false, "declined")}
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
+          </main>
         </div>
-      );
-    }
-  })();
+      </div>
+    </SidebarProvider>
+  );
 }

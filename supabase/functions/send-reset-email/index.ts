@@ -84,6 +84,10 @@ serve(async (req) => {
           },
         ],
         subject: "Reset Your Password",
+        settings: {
+          track_clicks: false,
+          track_opens: false,
+        },
         html: `
           <!DOCTYPE html>
           <html lang="en">

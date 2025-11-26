@@ -328,52 +328,66 @@ export default function PSFManagement() {
     </Table>
   );
 
-  return (
-    <div className="flex min-h-screen">
-      <AdminSidebar />
-      <div className="flex-1">
-        <DashboardHeader />
-        <div className="p-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>Project Support Fund Management</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {loading ? (
-                <div className="flex justify-center items-center py-12">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                </div>
-              ) : (
-                <Tabs defaultValue="pending" className="w-full">
-                  <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="pending">
-                      Pending ({pendingPSF.length})
-                    </TabsTrigger>
-                    <TabsTrigger value="approved">
-                      Approved ({approvedPSF.length})
-                    </TabsTrigger>
-                    <TabsTrigger value="declined">
-                      Declined ({declinedPSF.length})
-                    </TabsTrigger>
-                  </TabsList>
+  return (() => {
+    try {
+      console.log("PSFManagement page rendering");
+      return (
+        <div className="flex min-h-screen">
+          <AdminSidebar />
+          <div className="flex-1">
+            <DashboardHeader />
+            <div className="p-8">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Project Support Fund Management</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {loading ? (
+                    <div className="flex justify-center items-center py-12">
+                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    </div>
+                  ) : (
+                    <Tabs defaultValue="pending" className="w-full">
+                      <TabsList className="grid w-full grid-cols-3">
+                        <TabsTrigger value="pending">
+                          Pending ({pendingPSF.length})
+                        </TabsTrigger>
+                        <TabsTrigger value="approved">
+                          Approved ({approvedPSF.length})
+                        </TabsTrigger>
+                        <TabsTrigger value="declined">
+                          Declined ({declinedPSF.length})
+                        </TabsTrigger>
+                      </TabsList>
 
-                  <TabsContent value="pending">
-                    {renderTable(pendingPSF, true, "pending")}
-                  </TabsContent>
+                      <TabsContent value="pending">
+                        {renderTable(pendingPSF, true, "pending")}
+                      </TabsContent>
 
-                  <TabsContent value="approved">
-                    {renderTable(approvedPSF, false, "approved")}
-                  </TabsContent>
+                      <TabsContent value="approved">
+                        {renderTable(approvedPSF, false, "approved")}
+                      </TabsContent>
 
-                  <TabsContent value="declined">
-                    {renderTable(declinedPSF, false, "declined")}
-                  </TabsContent>
-                </Tabs>
-              )}
-            </CardContent>
-          </Card>
+                      <TabsContent value="declined">
+                        {renderTable(declinedPSF, false, "declined")}
+                      </TabsContent>
+                    </Tabs>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
-  );
+      );
+    } catch (error) {
+      console.error("Error rendering PSFManagement page:", error);
+      return (
+        <div className="flex min-h-screen items-center justify-center">
+          <p className="text-destructive font-medium">
+            Failed to load Project Support Fund Management page.
+          </p>
+        </div>
+      );
+    }
+  })();
 }

@@ -13,7 +13,7 @@ import {
   Briefcase,
   History,
   Network,
-  Receipt
+  HandCoins
 } from "lucide-react";
 import {
   Sidebar,
@@ -33,7 +33,7 @@ const menuItems = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
   { title: "Registrations", url: "/admin/registrations", icon: UserCheck },
   { title: "Contributions", url: "/admin/contributions", icon: Wallet },
-  { title: "PSF Management", url: "/admin/psf-management", icon: Receipt },
+  { title: "Project Support Fund", url: "/admin/project-support", icon: HandCoins },
   { title: "Dividends", url: "/admin/dividends", icon: TrendingUp },
   { title: "Withdrawals", url: "/admin/withdrawals", icon: ArrowDownLeft },
   { title: "Withdrawal History", url: "/admin/withdrawal-history", icon: History },

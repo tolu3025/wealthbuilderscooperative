@@ -56,13 +56,16 @@ serve(async (req) => {
       throw new Error("Failed to create reset token");
     }
 
-    // Get website URL from environment or use default
-    const websiteUrl = Deno.env.get("WEBSITE_URL") || "https://wealthbuildersinpropertiescooperative.com";
-    const resetUrl = `${websiteUrl}/reset-password?token=${token}`;
-
-    // Send email via MailerSend
+    // Get configuration from environment variables
     const mailersendApiKey = Deno.env.get("MAILERSEND_API_KEY");
-    const fromEmail = Deno.env.get("FROM_EMAIL") || "no-reply@trial-0r83ql3jr3xg9yjr.mlsender.net";
+    const fromEmail = Deno.env.get("FROM_EMAIL");
+    const websiteUrl = Deno.env.get("WEBSITE_URL");
+
+    if (!mailersendApiKey || !fromEmail || !websiteUrl) {
+      throw new Error("Missing required environment variables: MAILERSEND_API_KEY, FROM_EMAIL, or WEBSITE_URL");
+    }
+
+    const resetUrl = `${websiteUrl}/reset-password?token=${token}`;
 
     const emailResponse = await fetch("https://api.mailersend.com/v1/email", {
       method: "POST",
@@ -83,35 +86,121 @@ serve(async (req) => {
         subject: "Reset Your Password",
         html: `
           <!DOCTYPE html>
-          <html>
+          <html lang="en">
             <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Reset Your Password</title>
               <style>
-                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                .header { background-color: #0052CC; color: white; padding: 20px; text-align: center; }
-                .content { background-color: #f9f9f9; padding: 30px; }
-                .button { display: inline-block; padding: 12px 30px; background-color: #0052CC; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
-                .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+                body { 
+                  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+                  line-height: 1.6; 
+                  color: #333; 
+                  margin: 0; 
+                  padding: 0; 
+                  background-color: #f4f4f4; 
+                }
+                .container { 
+                  max-width: 600px; 
+                  margin: 40px auto; 
+                  background: white; 
+                  border-radius: 8px; 
+                  overflow: hidden; 
+                  box-shadow: 0 2px 8px rgba(0,0,0,0.1); 
+                }
+                .header { 
+                  background: linear-gradient(135deg, #0052CC 0%, #003d99 100%); 
+                  color: white; 
+                  padding: 40px 20px; 
+                  text-align: center; 
+                }
+                .header h1 { 
+                  margin: 0; 
+                  font-size: 28px; 
+                  font-weight: 600; 
+                }
+                .content { 
+                  padding: 40px 30px; 
+                  background-color: #ffffff; 
+                }
+                .content p { 
+                  margin: 0 0 16px 0; 
+                  font-size: 16px; 
+                  color: #555; 
+                }
+                .button-container { 
+                  text-align: center; 
+                  margin: 32px 0; 
+                }
+                .button { 
+                  display: inline-block; 
+                  padding: 14px 40px; 
+                  background-color: #0052CC; 
+                  color: white !important; 
+                  text-decoration: none; 
+                  border-radius: 6px; 
+                  font-weight: 600; 
+                  font-size: 16px; 
+                  transition: background-color 0.3s ease; 
+                }
+                .button:hover { 
+                  background-color: #003d99; 
+                }
+                .link-box { 
+                  background-color: #f9f9f9; 
+                  border: 1px solid #e0e0e0; 
+                  border-radius: 4px; 
+                  padding: 12px; 
+                  margin: 20px 0; 
+                  word-break: break-all; 
+                  font-size: 14px; 
+                  color: #0052CC; 
+                }
+                .warning { 
+                  background-color: #fff3cd; 
+                  border-left: 4px solid #ffc107; 
+                  padding: 12px 16px; 
+                  margin: 20px 0; 
+                  font-size: 14px; 
+                  color: #856404; 
+                }
+                .footer { 
+                  background-color: #f9f9f9; 
+                  text-align: center; 
+                  padding: 24px 20px; 
+                  color: #666; 
+                  font-size: 13px; 
+                  border-top: 1px solid #e0e0e0; 
+                }
+                .footer p { 
+                  margin: 4px 0; 
+                }
               </style>
             </head>
             <body>
               <div class="container">
                 <div class="header">
-                  <h1>Password Reset Request</h1>
+                  <h1>🔐 Password Reset Request</h1>
                 </div>
                 <div class="content">
-                  <p>Hello,</p>
-                  <p>We received a request to reset your password for your WealthBuilders Cooperative account.</p>
-                  <p>Click the button below to reset your password. This link will expire in 15 minutes.</p>
-                  <div style="text-align: center;">
-                    <a href="${resetUrl}" class="button">Reset Password</a>
+                  <p><strong>Hello,</strong></p>
+                  <p>We received a request to reset your password for your <strong>WealthBuilders Cooperative</strong> account.</p>
+                  <p>Click the button below to securely reset your password:</p>
+                  <div class="button-container">
+                    <a href="${resetUrl}" class="button">Reset My Password</a>
                   </div>
                   <p>Or copy and paste this link into your browser:</p>
-                  <p style="word-break: break-all; color: #0052CC;">${resetUrl}</p>
-                  <p>If you didn't request a password reset, you can safely ignore this email. Your password will not be changed.</p>
+                  <div class="link-box">${resetUrl}</div>
+                  <div class="warning">
+                    ⚠️ <strong>Important:</strong> This link will expire in <strong>15 minutes</strong> for security reasons.
+                  </div>
+                  <p>If you didn't request a password reset, you can safely ignore this email. Your password will remain unchanged.</p>
+                  <p style="margin-top: 32px; color: #888; font-size: 14px;">For security reasons, we cannot reset your password without clicking the link above.</p>
                 </div>
                 <div class="footer">
-                  <p>© ${new Date().getFullYear()} WealthBuilders Cooperative. All Rights Reserved.</p>
+                  <p><strong>WealthBuilders Cooperative</strong></p>
+                  <p>Building Wealth Through Property Investment</p>
+                  <p style="margin-top: 12px;">© ${new Date().getFullYear()} WealthBuilders Cooperative. All Rights Reserved.</p>
                 </div>
               </div>
             </body>

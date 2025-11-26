@@ -11,6 +11,8 @@ import ScrollToTop from "@/components/ScrollToTop";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import PendingRegistrations from "./pages/admin/PendingRegistrations";
 import Registrations from "./pages/admin/Registrations";
@@ -82,6 +84,22 @@ const App = () => (
               element={
                 <ProtectedRoute requireAuth={false}>
                   <Register />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/forgot-password"
+              element={
+                <ProtectedRoute requireAuth={false}>
+                  <ForgotPassword />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/reset-password"
+              element={
+                <ProtectedRoute requireAuth={false}>
+                  <ResetPassword />
                 </ProtectedRoute>
               }
             />

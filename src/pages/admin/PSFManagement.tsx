@@ -199,7 +199,7 @@ export default function PSFManagement() {
       let fullUrl = receiptUrl;
       if (!receiptUrl.startsWith("http")) {
         const { data, error } = await supabase.storage
-          .from("payment-receipts")
+          .from("psf_receipts")
           .createSignedUrl(receiptUrl, 3600);
 
         if (error) throw error;
@@ -215,7 +215,7 @@ export default function PSFManagement() {
   const downloadReceipt = async (receiptUrl: string, memberName: string) => {
     try {
       const { data, error } = await supabase.storage
-        .from("payment-receipts")
+        .from("psf_receipts")
         .download(receiptUrl);
 
       if (error) throw error;

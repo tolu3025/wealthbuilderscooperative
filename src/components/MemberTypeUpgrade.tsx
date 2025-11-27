@@ -23,12 +23,22 @@ export const MemberTypeUpgrade = ({
   const [loading, setLoading] = useState(false);
   const [receiptUrl, setReceiptUrl] = useState<string>("");
   const [breakdownType, setBreakdownType] = useState<"80_20" | "100_capital">("80_20");
+  const [authUserId, setAuthUserId] = useState<string>("");
   const { toast } = useToast();
 
   // Only show to acting members
   if (currentMemberType !== "acting_member") {
     return null;
   }
+
+  // Get auth user ID on component mount
+  useState(() => {
+    const getAuthUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) setAuthUserId(user.id);
+    };
+    getAuthUser();
+  });
 
   const handleUpgrade = async () => {
     if (!receiptUrl) {
@@ -153,12 +163,14 @@ export const MemberTypeUpgrade = ({
 
         <div>
           <Label className="mb-2 block">Upload Payment Receipt</Label>
-          <FileUpload
-            userId={profileId}
-            onUploadComplete={(url) => setReceiptUrl(url)}
-            bucket="payment-receipts"
-            fileType="upgrade"
-          />
+          {authUserId && (
+            <FileUpload
+              userId={authUserId}
+              onUploadComplete={(url) => setReceiptUrl(url)}
+              bucket="payment-receipts"
+              fileType="upgrade"
+            />
+          )}
           {receiptUrl && (
             <div className="mt-2 flex items-center gap-2 text-sm text-green-600">
               <CheckCircle2 className="h-4 w-4" />

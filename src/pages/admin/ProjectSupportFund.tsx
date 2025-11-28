@@ -92,12 +92,12 @@ export default function ProjectSupportFund() {
 
       if (!profile) throw new Error("Admin profile not found");
 
-      // Get PSF details to find member's user_id
-      const { data: psfData } = await supabase
-        .from("project_support_contributions")
-        .select("member_id, profiles!project_support_contributions_member_id_fkey(user_id)")
-        .eq("id", psfId)
-        .single();
+    // Get PSF details to find member's user_id
+    const { data: psfData } = await supabase
+      .from("project_support_contributions")
+      .select("member_id, profiles!project_support_contributions_member_id_fkey(user_id)")
+      .eq("id", psfId)
+      .maybeSingle();
 
       // Approve PSF
       const { error: approveError } = await supabase
@@ -135,12 +135,12 @@ export default function ProjectSupportFund() {
   const declinePSF = async (psfId: string, memberName: string) => {
     setProcessingId(psfId);
     try {
-      // Get PSF details to find member's user_id
-      const { data: psfData } = await supabase
-        .from("project_support_contributions")
-        .select("member_id, profiles!project_support_contributions_member_id_fkey(user_id)")
-        .eq("id", psfId)
-        .single();
+    // Get PSF details to find member's user_id
+    const { data: psfData } = await supabase
+      .from("project_support_contributions")
+      .select("member_id, profiles!project_support_contributions_member_id_fkey(user_id)")
+      .eq("id", psfId)
+      .maybeSingle();
 
       // Decline PSF
       const { error: declineError } = await supabase

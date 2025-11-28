@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -32,13 +32,13 @@ export const MemberTypeUpgrade = ({
   }
 
   // Get auth user ID on component mount
-  useState(() => {
+  useEffect(() => {
     const getAuthUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) setAuthUserId(user.id);
     };
     getAuthUser();
-  });
+  }, []);
 
   const handleUpgrade = async () => {
     if (!receiptUrl) {

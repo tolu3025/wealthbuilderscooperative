@@ -212,13 +212,17 @@ const AccountUpgrades = () => {
 
   const downloadReceipt = async (receiptUrl: string) => {
     try {
-      const fileName = receiptUrl.split('/').pop() || 'receipt';
+      // Extract the path from the full storage path (format: "payment-receipts/userId/filename")
+      const pathParts = receiptUrl.split('/');
+      const filePath = pathParts.slice(1).join('/'); // Remove bucket name, keep userId/filename
+      
       const { data, error } = await supabase.storage
         .from('payment-receipts')
-        .download(receiptUrl);
+        .download(filePath);
 
       if (error) throw error;
 
+      const fileName = pathParts[pathParts.length - 1] || 'receipt';
       const url = URL.createObjectURL(data);
       const link = document.createElement('a');
       link.href = url;
@@ -299,7 +303,7 @@ const AccountUpgrades = () => {
               className="mt-1"
             >
               <Download className="h-4 w-4 mr-2" />
-              View Receipt
+              Download Receipt
             </Button>
           </div>
         </div>

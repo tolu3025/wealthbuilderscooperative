@@ -131,7 +131,8 @@ const Withdraw = () => {
         bankName: formData.bankName,
       });
 
-      if (monthsContributed < 3) {
+      // 3-month restriction applies to all withdrawal types except bonus
+      if (monthsContributed < 3 && formData.withdrawalType !== 'bonus') {
         throw new Error("You must contribute for at least 3 months before withdrawing");
       }
 
@@ -172,8 +173,8 @@ const Withdraw = () => {
         if (totalBonuses - amount < 0) {
           throw new Error("This withdrawal would result in a negative bonus balance");
         }
-        if (amount < 1000) {
-          throw new Error("Minimum bonus withdrawal is ₦1,000");
+        if (amount < 2000) {
+          throw new Error("Minimum bonus withdrawal is ₦2,000");
         }
       }
 
@@ -338,10 +339,17 @@ const Withdraw = () => {
             <Alert>
               <AlertDescription>
                 <strong>Withdrawal Information:</strong> After 3 months, you can withdraw from savings (₦{totalSavings.toLocaleString()}), 
-                accumulated dividends (₦{totalDividends.toLocaleString()}), and bonuses (₦{totalBonuses.toLocaleString()}). 
-                Capital (₦{totalCapital.toLocaleString()}) cannot be withdrawn below ₦50,000 minimum share capital.
+                accumulated dividends (₦{totalDividends.toLocaleString()}), and capital (₦{totalCapital.toLocaleString()}, cannot be withdrawn below ₦50,000 minimum).
                 <br /><br />
-                <strong>Bonus withdrawals:</strong> Includes both Inviter's Bonus (₦1,000 per invite) and Real Estate Bonus from project support fund. Minimum: ₦1,000
+                <strong>Bonus withdrawals:</strong> Available anytime! Includes Inviter's Bonus (₦1,000 per invite) + Real Estate Bonus. Balance: ₦{totalBonuses.toLocaleString()}. Minimum: ₦2,000
+              </AlertDescription>
+            </Alert>
+          )}
+          
+          {!isEligible && totalBonuses >= 2000 && (
+            <Alert>
+              <AlertDescription>
+                <strong>Bonus Withdrawal Available:</strong> You can withdraw your bonuses (₦{totalBonuses.toLocaleString()}) anytime, even before 3 months! Minimum: ₦2,000
               </AlertDescription>
             </Alert>
           )}
@@ -365,7 +373,7 @@ const Withdraw = () => {
                     value={formData.withdrawalType}
                     onChange={(e) => setFormData({ ...formData, withdrawalType: e.target.value })}
                     className="w-full h-10 px-3 rounded-md border border-input bg-background"
-                    disabled={!isEligible}
+                    disabled={!isEligible && formData.withdrawalType !== 'bonus'}
                   >
                     <option value="savings">Savings (₦{totalSavings.toLocaleString()})</option>
                     <option value="capital">Capital (₦{totalCapital.toLocaleString()})</option>
@@ -373,7 +381,7 @@ const Withdraw = () => {
                     <option value="bonus">All Bonuses (₦{totalBonuses.toLocaleString()} - Inviter's + Real Estate)</option>
                   </select>
                   <p className="text-sm text-muted-foreground">
-                    Bonus includes Inviter's Bonus (₦1,000/invite) + Real Estate Bonus. Minimum withdrawal: ₦1,000
+                    Bonus includes Inviter's Bonus (₦1,000/invite) + Real Estate Bonus. Minimum withdrawal: ₦2,000. No 3-month wait required!
                   </p>
                 </div>
 
@@ -386,7 +394,7 @@ const Withdraw = () => {
                     value={formData.amount}
                     onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                     max={totalAvailableBalance}
-                    disabled={!isEligible}
+                    disabled={!isEligible && formData.withdrawalType !== 'bonus'}
                     required
                   />
                   <p className="text-sm text-muted-foreground">
@@ -405,7 +413,7 @@ const Withdraw = () => {
                     placeholder="Enter account name"
                     value={formData.accountName}
                     onChange={(e) => setFormData({ ...formData, accountName: e.target.value })}
-                    disabled={!isEligible}
+                    disabled={!isEligible && formData.withdrawalType !== 'bonus'}
                     required
                   />
                 </div>
@@ -417,7 +425,7 @@ const Withdraw = () => {
                     placeholder="Enter account number"
                     value={formData.accountNumber}
                     onChange={(e) => setFormData({ ...formData, accountNumber: e.target.value })}
-                    disabled={!isEligible}
+                    disabled={!isEligible && formData.withdrawalType !== 'bonus'}
                     required
                   />
                 </div>
@@ -429,12 +437,17 @@ const Withdraw = () => {
                     placeholder="Enter bank name"
                     value={formData.bankName}
                     onChange={(e) => setFormData({ ...formData, bankName: e.target.value })}
-                    disabled={!isEligible}
+                    disabled={!isEligible && formData.withdrawalType !== 'bonus'}
                     required
                   />
                 </div>
 
-                <Button type="submit" disabled={!isEligible || submitting} className="w-full" size="lg">
+                <Button 
+                  type="submit" 
+                  disabled={(!isEligible && formData.withdrawalType !== 'bonus') || submitting} 
+                  className="w-full" 
+                  size="lg"
+                >
                   {submitting ? "Submitting..." : "Submit Request"}
                 </Button>
               </form>

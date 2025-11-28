@@ -13,7 +13,8 @@ import {
   Briefcase,
   History,
   Network,
-  HandCoins
+  HandCoins,
+  UserCog
 } from "lucide-react";
 import {
   Sidebar,
@@ -32,6 +33,7 @@ import { Building2, Users as UsersIcon, Boxes } from "lucide-react";
 const menuItems = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
   { title: "Registrations", url: "/admin/registrations", icon: UserCheck },
+  { title: "Account Upgrades", url: "/admin/account-upgrades", icon: UserCog },
   { title: "Contributions", url: "/admin/contributions", icon: Wallet },
   { title: "Project Support Fund", url: "/admin/project-support", icon: HandCoins },
   { title: "Dividends", url: "/admin/dividends", icon: TrendingUp },

@@ -498,6 +498,60 @@ export type Database = {
           },
         ]
       }
+      member_upgrade_requests: {
+        Row: {
+          breakdown_type: string
+          created_at: string | null
+          decline_reason: string | null
+          id: string
+          member_id: string
+          receipt_url: string
+          requested_at: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+        }
+        Insert: {
+          breakdown_type: string
+          created_at?: string | null
+          decline_reason?: string | null
+          id?: string
+          member_id: string
+          receipt_url: string
+          requested_at?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Update: {
+          breakdown_type?: string
+          created_at?: string | null
+          decline_reason?: string | null
+          id?: string
+          member_id?: string
+          receipt_url?: string
+          requested_at?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "member_upgrade_requests_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "member_upgrade_requests_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mlm_distributions: {
         Row: {
           amount: number

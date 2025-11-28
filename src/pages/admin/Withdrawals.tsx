@@ -39,27 +39,12 @@ const Withdrawals = () => {
           // Fetch member balance
           const { data: balance } = await supabase
             .from('member_balances')
-            .select('total_savings, total_capital')
+            .select('total_savings, total_capital, total_commissions, total_dividends')
             .eq('member_id', memberId)
             .single();
 
-          // Fetch dividend balance
-          const { data: dividends } = await supabase
-            .from('dividends')
-            .select('amount, status')
-            .eq('member_id', memberId)
-            .eq('status', 'calculated');
-          
-          const dividendBalance = dividends?.reduce((sum, d) => sum + Number(d.amount), 0) || 0;
-
-          // Fetch bonus balance (commissions)
-          const { data: commissions } = await supabase
-            .from('commissions')
-            .select('amount')
-            .eq('member_id', memberId)
-            .eq('status', 'approved');
-
-          const bonusBalance = commissions?.reduce((sum, c) => sum + Number(c.amount), 0) || 0;
+          const bonusBalance = balance?.total_commissions || 0;
+          const dividendBalance = balance?.total_dividends || 0;
 
           return {
             ...withdrawal,
@@ -95,29 +80,14 @@ const Withdrawals = () => {
 
       const { data: balance } = await supabase
         .from('member_balances')
-        .select('total_savings, total_capital, months_contributed')
+        .select('total_savings, total_capital, total_commissions, total_dividends, months_contributed')
         .eq('member_id', memberId)
         .single();
 
       if (!balance) throw new Error('Member balance not found');
 
-      // Get dividend balance
-      const { data: dividends } = await supabase
-        .from('dividends')
-        .select('amount')
-        .eq('member_id', memberId)
-        .eq('status', 'calculated');
-      
-      const dividendBalance = dividends?.reduce((sum, d) => sum + Number(d.amount), 0) || 0;
-
-      // Get bonus balance
-      const { data: commissions } = await supabase
-        .from('commissions')
-        .select('amount')
-        .eq('member_id', memberId)
-        .eq('status', 'approved');
-
-      const bonusBalance = commissions?.reduce((sum, c) => sum + Number(c.amount), 0) || 0;
+      const bonusBalance = balance.total_commissions || 0;
+      const dividendBalance = balance.total_dividends || 0;
 
       // Validate based on withdrawal type
       if (withdrawalType === 'savings') {

@@ -437,8 +437,9 @@ const Contribute = () => {
                   <label className="text-sm font-medium">Upload Project Support Receipt *</label>
                   <FileUpload
                     onUploadComplete={setProjectSupportReceipt}
-                    userId={user?.id || ''}
+                    userId={user?.id || ""}
                     fileType="project-support"
+                    bucket="payment-receipts"
                   />
                 </div>
 

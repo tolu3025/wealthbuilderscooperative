@@ -233,9 +233,10 @@ const AccountUpgrades = () => {
         description: "Receipt is being downloaded",
       });
     } catch (error: any) {
+      console.error('Receipt download error:', error);
       toast({
         title: "Download Failed",
-        description: error.message,
+        description: error?.message || "Unable to download receipt. Please check if the file exists.",
         variant: "destructive",
       });
     }

@@ -50,6 +50,7 @@ import MLMManagement from "./pages/admin/BonusDistribution";
 import PropertyPlans from "./pages/member/PropertyPlans";
 import PlanEnrollments from "./pages/admin/PlanEnrollments";
 import ProjectSupportFund from "./pages/admin/ProjectSupportFund";
+import AccountUpgrades from "./pages/admin/AccountUpgrades";
 
 const queryClient = new QueryClient();
 
@@ -173,6 +174,7 @@ const App = () => (
             />
             <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
             <Route path="/admin/registrations" element={<AdminRoute><PendingRegistrations /></AdminRoute>} />
+            <Route path="/admin/account-upgrades" element={<AdminRoute><AccountUpgrades /></AdminRoute>} />
             <Route path="/admin/contributions" element={<AdminRoute><Contributions /></AdminRoute>} />
             <Route path="/admin/withdrawals" element={<AdminRoute><Withdrawals /></AdminRoute>} />
             <Route path="/admin/dividends" element={<AdminRoute><AdminDividends /></AdminRoute>} />

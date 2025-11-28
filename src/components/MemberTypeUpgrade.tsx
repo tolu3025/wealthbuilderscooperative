@@ -52,48 +52,28 @@ export const MemberTypeUpgrade = ({
 
     setLoading(true);
     try {
-      // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
-
-      // Update profile with new member type and breakdown using user_id for RLS
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ 
-          member_type: 'contributor',
-          breakdown_type: breakdownType,
-        })
-        .eq('user_id', user.id);
-
-      if (updateError) throw updateError;
-
-      // Create first contribution record
-      const { error: contribError } = await supabase
-        .from('contributions')
+      // Submit upgrade request for admin verification
+      const { error: requestError } = await supabase
+        .from('member_upgrade_requests')
         .insert({
           member_id: profileId,
-          amount: 5500,
-          capital_amount: breakdownType === "80_20" ? 4000 : 5000,
-          savings_amount: breakdownType === "80_20" ? 1000 : 0,
-          project_support_amount: 500,
-          payment_status: 'pending',
+          breakdown_type: breakdownType,
           receipt_url: receiptUrl,
-          payment_date: new Date().toISOString(),
-          contribution_month: new Date().toISOString(),
+          status: 'pending',
         });
 
-      if (contribError) throw contribError;
+      if (requestError) throw requestError;
 
       toast({
-        title: "Upgrade Successful!",
-        description: "Your account has been upgraded to Full Member. Your contribution is pending admin approval.",
+        title: "Upgrade Request Submitted!",
+        description: "Your upgrade request has been submitted for admin verification. You'll be notified once approved.",
       });
 
       onUpgradeComplete();
     } catch (error: any) {
       toast({
-        title: "Upgrade Failed",
-        description: error.message || "Failed to upgrade account",
+        title: "Submission Failed",
+        description: error.message || "Failed to submit upgrade request",
         variant: "destructive",
       });
     } finally {
@@ -185,8 +165,11 @@ export const MemberTypeUpgrade = ({
           className="w-full"
           size="lg"
         >
-          {loading ? "Processing..." : "Complete Upgrade"}
+          {loading ? "Submitting..." : "Submit for Verification"}
         </Button>
+        <p className="text-xs text-center text-muted-foreground">
+          Your request will be reviewed by an admin before your account is upgraded
+        </p>
       </CardContent>
     </Card>
   );

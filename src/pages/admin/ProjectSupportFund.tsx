@@ -171,14 +171,26 @@ export default function ProjectSupportFund() {
     }
   };
 
+  const getStoragePath = (receiptUrl: string) => {
+    // Strip bucket prefix if it was stored as "bucket/path"
+    if (receiptUrl.startsWith("payment-receipts/")) {
+      return receiptUrl.replace(/^payment-receipts\//, "");
+    }
+    if (receiptUrl.startsWith("psf_receipts/")) {
+      return receiptUrl.replace(/^psf_receipts\//, "");
+    }
+    return receiptUrl;
+  };
+ 
   const viewReceipt = async (receiptUrl: string) => {
     try {
       let fullUrl = receiptUrl;
       if (!receiptUrl.startsWith("http")) {
+        const path = getStoragePath(receiptUrl);
         const { data, error } = await supabase.storage
-          .from("psf_receipts")
-          .createSignedUrl(receiptUrl, 3600);
-
+          .from("payment-receipts")
+          .createSignedUrl(path, 3600);
+ 
         if (error) throw error;
         fullUrl = data.signedUrl;
       }
@@ -188,24 +200,25 @@ export default function ProjectSupportFund() {
       toast.error("Failed to view receipt");
     }
   };
-
+ 
   const downloadReceipt = async (receiptUrl: string, memberName: string) => {
     try {
+      const path = getStoragePath(receiptUrl);
       const { data, error } = await supabase.storage
-        .from("psf_receipts")
-        .download(receiptUrl);
-
+        .from("payment-receipts")
+        .download(path);
+ 
       if (error) throw error;
-
+ 
       const url = URL.createObjectURL(data);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `PSF_Receipt_${memberName}_${new Date().getTime()}.pdf`;
+      a.download = `PSF_Receipt_${memberName}_${new Date().getTime()}`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-
+ 
       toast.success("Receipt downloaded successfully");
     } catch (error: any) {
       console.error("Error downloading receipt:", error);

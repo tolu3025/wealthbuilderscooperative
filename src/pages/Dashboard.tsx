@@ -158,7 +158,7 @@ const Dashboard = () => {
           .from('member_balances')
           .select('*')
           .eq('member_id', profile.id)
-          .single();
+          .maybeSingle();
 
         const totalCapital = balance?.total_capital || 0;
         const totalSavings = balance?.total_savings || 0;

@@ -95,7 +95,7 @@ const Referrals = () => {
         .eq('registration_status', 'active');
         setReferralCount(count || 0);
 
-        // Get commissions
+        // Get commissions for display
         const { data: commissionsData } = await supabase
           .from('commissions')
           .select('*')
@@ -104,16 +104,29 @@ const Referrals = () => {
 
         setCommissions(commissionsData || []);
         
-        // Calculate total earned from all commissions (all-time earnings)
-        const total = commissionsData?.reduce((sum, c) => sum + Number(c.amount), 0) || 0;
-        setTotalEarned(total);
+        // Calculate total earned from approved commissions only
+        const commissionEarnings = commissionsData
+          ?.filter(c => c.status === 'approved')
+          .reduce((sum, c) => sum + Number(c.amount), 0) || 0;
 
-        // Get available balance from member_balances (current balance after withdrawals)
+        // Get MLM earnings (exclude company shares)
+        const { data: mlmData } = await supabase
+          .from('mlm_distributions')
+          .select('amount')
+          .eq('member_id', profile.id)
+          .eq('is_company_share', false);
+
+        const mlmEarnings = mlmData?.reduce((sum, m) => sum + Number(m.amount), 0) || 0;
+
+        // Total earned = commissions + MLM
+        setTotalEarned(commissionEarnings + mlmEarnings);
+
+        // Get current balance from member_balances (already accounts for withdrawals via triggers)
         const { data: balance } = await supabase
           .from('member_balances')
           .select('total_commissions')
           .eq('member_id', profile.id)
-          .single();
+          .maybeSingle();
         
         setAvailableBalance(balance?.total_commissions || 0);
       }

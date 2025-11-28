@@ -83,7 +83,7 @@ const Withdraw = () => {
         .from('member_balances')
         .select('*')
         .eq('member_id', profileData.id)
-        .single();
+        .maybeSingle();
 
       const savings = balance?.total_savings || 0;
       const capital = balance?.total_capital || 0;

@@ -373,7 +373,6 @@ const Withdraw = () => {
                     value={formData.withdrawalType}
                     onChange={(e) => setFormData({ ...formData, withdrawalType: e.target.value })}
                     className="w-full h-10 px-3 rounded-md border border-input bg-background"
-                    disabled={!isEligible && formData.withdrawalType !== 'bonus'}
                   >
                     <option value="savings">Savings (₦{totalSavings.toLocaleString()})</option>
                     <option value="capital">Capital (₦{totalCapital.toLocaleString()})</option>

@@ -169,7 +169,17 @@ const PendingRegistrations = () => {
     try {
       const memberNumber = await generateMemberNumber();
       
+      // CRITICAL: Update registration fee status to 'approved' FIRST
+      // This triggers create_referral_commissions() database function
+      const { error: feeError } = await supabase
+        .from('registration_fees')
+        .update({ status: 'approved' })
+        .eq('member_id', profileId);
+
+      if (feeError) throw feeError;
+      
       // Update profile to active status with member number
+      // This triggers approve_commissions_on_activation() which approves pending commissions
       const { error: updateError } = await supabase
         .from('profiles')
         .update({

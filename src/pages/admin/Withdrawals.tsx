@@ -3,9 +3,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Loader2, AlertCircle } from "lucide-react";
+import { CheckCircle, Loader2, AlertCircle, FileDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/AdminSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
@@ -166,6 +168,55 @@ const Withdrawals = () => {
     }
   };
 
+  const exportToPDF = () => {
+    try {
+      const doc = new jsPDF();
+      
+      // Add title
+      doc.setFontSize(18);
+      doc.text('Withdrawal Requests Report', 14, 20);
+      
+      // Add generation date
+      doc.setFontSize(10);
+      doc.text(`Generated: ${new Date().toLocaleDateString()}`, 14, 28);
+      
+      // Prepare table data
+      const tableData = pendingWithdrawals.map(w => {
+        const withdrawalType = w.withdrawal_type || 'savings';
+        const typeBalance = w.balances?.[withdrawalType] || 0;
+        
+        return [
+          `${w.profiles?.first_name} ${w.profiles?.last_name}`,
+          w.profiles?.member_number || '',
+          withdrawalType,
+          `₦${Number(w.amount).toLocaleString()}`,
+          `₦${typeBalance.toLocaleString()}`,
+          w.bank_name,
+          w.account_number,
+          w.account_name,
+          w.status,
+          new Date(w.requested_at).toLocaleDateString()
+        ];
+      });
+      
+      // Add table
+      autoTable(doc, {
+        head: [['Member', 'Member #', 'Type', 'Amount', 'Balance', 'Bank', 'Acc #', 'Acc Name', 'Status', 'Date']],
+        body: tableData,
+        startY: 35,
+        styles: { fontSize: 8 },
+        headStyles: { fillColor: [0, 82, 204] }
+      });
+      
+      // Save PDF
+      doc.save(`withdrawal-requests-${new Date().toISOString().split('T')[0]}.pdf`);
+      toast.success('PDF downloaded successfully');
+    } catch (error: any) {
+      console.error('Error generating PDF:', error);
+      toast.error('Failed to generate PDF');
+    }
+  };
+
   const completeWithdrawal = async (withdrawalId: string, memberId: string) => {
     try {
       const { data: profile } = await supabase
@@ -227,11 +278,17 @@ const Withdrawals = () => {
         <div className="flex-1 flex flex-col min-w-0">
           <DashboardHeader userName="Admin" />
           <main className="flex-1 p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 overflow-x-hidden">
-            <div>
-              <h1 className="text-3xl font-bold mb-2">Withdrawal Requests</h1>
-              <p className="text-muted-foreground">
-                Review and process member withdrawal requests
-              </p>
+            <div className="flex justify-between items-center">
+              <div>
+                <h1 className="text-3xl font-bold mb-2">Withdrawal Requests</h1>
+                <p className="text-muted-foreground">
+                  Review and process member withdrawal requests
+                </p>
+              </div>
+              <Button onClick={exportToPDF} className="gap-2">
+                <FileDown className="h-4 w-4" />
+                Download PDF
+              </Button>
             </div>
 
             <Card>

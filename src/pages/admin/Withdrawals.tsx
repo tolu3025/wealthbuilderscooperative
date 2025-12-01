@@ -3,11 +3,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Loader2, AlertCircle, FileDown } from "lucide-react";
+import { CheckCircle, Loader2, AlertCircle, FileDown, FileSpreadsheet } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/AdminSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
@@ -249,6 +250,52 @@ const Withdrawals = () => {
     }
   };
 
+  const exportToExcel = () => {
+    try {
+      const excelData = pendingWithdrawals.map(w => {
+        const withdrawalType = w.withdrawal_type || 'savings';
+        const typeBalance = w.balances?.[withdrawalType] || 0;
+        
+        return {
+          'Member Name': `${w.profiles?.first_name} ${w.profiles?.last_name}`,
+          'Member Number': w.profiles?.member_number || '',
+          'Type': withdrawalType.charAt(0).toUpperCase() + withdrawalType.slice(1),
+          'Amount': `₦${Number(w.amount).toLocaleString()}`,
+          'Available Balance': `₦${typeBalance.toLocaleString()}`,
+          'Bank Name': w.bank_name,
+          'Account Number': w.account_number,
+          'Account Name': w.account_name,
+          'Status': w.status.charAt(0).toUpperCase() + w.status.slice(1),
+          'Date Requested': new Date(w.requested_at).toLocaleDateString()
+        };
+      });
+
+      const worksheet = XLSX.utils.json_to_sheet(excelData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Withdrawal Requests');
+      
+      // Set column widths
+      worksheet['!cols'] = [
+        { wch: 25 }, // Member Name
+        { wch: 15 }, // Member Number
+        { wch: 12 }, // Type
+        { wch: 15 }, // Amount
+        { wch: 18 }, // Available Balance
+        { wch: 20 }, // Bank Name
+        { wch: 18 }, // Account Number
+        { wch: 25 }, // Account Name
+        { wch: 12 }, // Status
+        { wch: 15 }  // Date Requested
+      ];
+
+      XLSX.writeFile(workbook, `withdrawal-requests-${new Date().toISOString().split('T')[0]}.xlsx`);
+      toast.success('Excel file downloaded successfully');
+    } catch (error: any) {
+      console.error('Error generating Excel:', error);
+      toast.error('Failed to generate Excel file');
+    }
+  };
+
   const completeWithdrawal = async (withdrawalId: string, memberId: string) => {
     try {
       const { data: profile } = await supabase
@@ -317,10 +364,16 @@ const Withdrawals = () => {
                   Review and process member withdrawal requests
                 </p>
               </div>
-              <Button onClick={exportToPDF} className="gap-2">
-                <FileDown className="h-4 w-4" />
-                Download PDF
-              </Button>
+              <div className="flex gap-2">
+                <Button onClick={exportToExcel} variant="outline" className="gap-2">
+                  <FileSpreadsheet className="h-4 w-4" />
+                  Download Excel
+                </Button>
+                <Button onClick={exportToPDF} className="gap-2">
+                  <FileDown className="h-4 w-4" />
+                  Download PDF
+                </Button>
+              </div>
             </div>
 
             <Card>

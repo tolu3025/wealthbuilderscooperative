@@ -46,12 +46,25 @@ const Login = () => {
 
       if (error) throw error;
 
+      // Check user's registration status
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('registration_status')
+        .eq('user_id', authData.user.id)
+        .single();
+
       toast({
         title: "Login successful",
         description: "Welcome back!",
       });
 
-      navigate("/dashboard");
+      // Redirect based on registration status
+      if (profile?.registration_status === 'pending_payment' || 
+          profile?.registration_status === 'pending_approval') {
+        navigate("/upload-receipt");
+      } else {
+        navigate("/dashboard");
+      }
     } catch (error: any) {
       let errorMessage = error.message || "Invalid email or password";
       

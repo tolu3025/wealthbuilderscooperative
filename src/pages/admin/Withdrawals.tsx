@@ -172,6 +172,9 @@ const Withdrawals = () => {
     try {
       const doc = new jsPDF({ orientation: 'landscape' });
       
+      // Set font to helvetica for better compatibility
+      doc.setFont('helvetica');
+      
       // Add title
       doc.setFontSize(18);
       doc.text('Withdrawal Requests Report', 14, 15);
@@ -180,7 +183,7 @@ const Withdrawals = () => {
       doc.setFontSize(11);
       doc.text(`Generated: ${new Date().toLocaleDateString()}`, 14, 22);
       
-      // Prepare table data
+      // Prepare table data with plain numbers (no currency symbols)
       const tableData = pendingWithdrawals.map(w => {
         const withdrawalType = w.withdrawal_type || 'savings';
         const typeBalance = w.balances?.[withdrawalType] || 0;
@@ -189,8 +192,8 @@ const Withdrawals = () => {
           `${w.profiles?.first_name} ${w.profiles?.last_name}`,
           w.profiles?.member_number || '',
           withdrawalType.charAt(0).toUpperCase() + withdrawalType.slice(1),
-          `₦${Number(w.amount).toLocaleString()}`,
-          `₦${typeBalance.toLocaleString()}`,
+          Number(w.amount).toFixed(2),
+          typeBalance.toFixed(2),
           w.bank_name,
           w.account_number,
           w.account_name,
@@ -199,17 +202,19 @@ const Withdrawals = () => {
         ];
       });
       
-      // Add table with optimized column widths
+      // Add table with fixed column widths
       autoTable(doc, {
         head: [['Member Name', 'Member #', 'Type', 'Amount', 'Balance', 'Bank', 'Account #', 'Account Name', 'Status', 'Date']],
         body: tableData,
         startY: 28,
         styles: { 
+          font: 'helvetica',
           fontSize: 8,
           cellPadding: 2.5,
           lineWidth: 0.1,
           lineColor: [200, 200, 200],
-          overflow: 'linebreak'
+          overflow: 'linebreak',
+          valign: 'middle'
         },
         headStyles: { 
           fillColor: [0, 82, 204],
@@ -219,16 +224,16 @@ const Withdrawals = () => {
           fontSize: 9
         },
         columnStyles: {
-          0: { cellWidth: 28 }, // Member Name
-          1: { cellWidth: 18 }, // Member #
+          0: { cellWidth: 30 }, // Member Name
+          1: { cellWidth: 20 }, // Member #
           2: { cellWidth: 18 }, // Type
-          3: { cellWidth: 25, fontStyle: 'bold', halign: 'right' }, // Amount - wider and bold
-          4: { cellWidth: 25, halign: 'right' }, // Balance - wider
-          5: { cellWidth: 22 }, // Bank
-          6: { cellWidth: 22 }, // Account #
-          7: { cellWidth: 28 }, // Account Name
+          3: { cellWidth: 24, fontStyle: 'bold', halign: 'right' }, // Amount
+          4: { cellWidth: 24, halign: 'right' }, // Balance
+          5: { cellWidth: 24 }, // Bank
+          6: { cellWidth: 24 }, // Account #
+          7: { cellWidth: 30 }, // Account Name
           8: { cellWidth: 18 }, // Status
-          9: { cellWidth: 20 } // Date
+          9: { cellWidth: 22 } // Date
         },
         alternateRowStyles: {
           fillColor: [245, 247, 250]

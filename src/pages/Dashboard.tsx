@@ -476,7 +476,7 @@ const Dashboard = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Users className="h-5 w-5 text-amber-600" />
-                  Invite Bonus Dashboard
+                  Invite and Real Estate Bonus Dashboard
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">

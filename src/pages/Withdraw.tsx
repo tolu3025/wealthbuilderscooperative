@@ -173,8 +173,8 @@ const Withdraw = () => {
         if (totalBonuses - amount < 0) {
           throw new Error("This withdrawal would result in a negative bonus balance");
         }
-        if (amount < 2000) {
-          throw new Error("Minimum bonus withdrawal is ₦2,000");
+        if (amount < 1000) {
+          throw new Error("Minimum bonus withdrawal is ₦1,000");
         }
       }
 
@@ -341,15 +341,15 @@ const Withdraw = () => {
                 <strong>Withdrawal Information:</strong> After 3 months, you can withdraw from savings (₦{totalSavings.toLocaleString()}), 
                 accumulated dividends (₦{totalDividends.toLocaleString()}), and capital (₦{totalCapital.toLocaleString()}, cannot be withdrawn below ₦50,000 minimum).
                 <br /><br />
-                <strong>Bonus withdrawals:</strong> Available anytime! Includes Inviter's Bonus (₦1,000 per invite) + Real Estate Bonus. Balance: ₦{totalBonuses.toLocaleString()}. Minimum: ₦2,000
+                <strong>Bonus withdrawals:</strong> Available anytime! Includes Inviter's Bonus (₦1,000 per invite) + Real Estate Bonus. Balance: ₦{totalBonuses.toLocaleString()}. Minimum: ₦1,000
               </AlertDescription>
             </Alert>
           )}
           
-          {!isEligible && totalBonuses >= 2000 && (
+          {!isEligible && totalBonuses >= 1000 && (
             <Alert>
               <AlertDescription>
-                <strong>Bonus Withdrawal Available:</strong> You can withdraw your bonuses (₦{totalBonuses.toLocaleString()}) anytime, even before 3 months! Minimum: ₦2,000
+                <strong>Bonus Withdrawal Available:</strong> You can withdraw your bonuses (₦{totalBonuses.toLocaleString()}) anytime, even before 3 months! Minimum: ₦1,000
               </AlertDescription>
             </Alert>
           )}
@@ -380,7 +380,7 @@ const Withdraw = () => {
                     <option value="bonus">All Bonuses (₦{totalBonuses.toLocaleString()} - Inviter's + Real Estate)</option>
                   </select>
                   <p className="text-sm text-muted-foreground">
-                    Bonus includes Inviter's Bonus (₦1,000/invite) + Real Estate Bonus. Minimum withdrawal: ₦2,000. No 3-month wait required!
+                    Bonus includes Inviter's Bonus (₦1,000/invite) + Real Estate Bonus. Minimum withdrawal: ₦1,000. No 3-month wait required!
                   </p>
                 </div>
 

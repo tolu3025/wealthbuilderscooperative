@@ -201,17 +201,6 @@ const Dashboard = () => {
           .eq('invited_by', profile.id)
           .eq('registration_status', 'active');
 
-        // Calculate ONLY referral earnings (₦1,000 per invite)
-        // DO NOT include MLM or other bonuses here
-        const { data: referralCommissions } = await supabase
-          .from('commissions')
-          .select('amount')
-          .eq('member_id', profile.id)
-          .eq('commission_type', 'referral')
-          .eq('status', 'approved');
-
-        const totalReferralEarnings = referralCommissions?.reduce((sum, c) => sum + Number(c.amount), 0) || 0;
-
         // Fetch recent dividends for display only
         const { data: dividends } = await supabase
           .from('dividends')
@@ -241,7 +230,7 @@ const Dashboard = () => {
           invitedBy: profile.invited_by,
           state: profile.state || '',
           referralCount: referralCount || 0,
-          totalCommissions: totalReferralEarnings, // ONLY referral earnings, NOT total_commissions
+          totalCommissions: totalCommissions,
           recentDividends,
           dividendBalance: totalDividends,
           nextContributionDue: nextDue.toLocaleDateString(),

@@ -26,6 +26,7 @@ import { DashboardHeader } from "@/components/DashboardHeader";
 
 const Dividends = () => {
   const [distributions, setDistributions] = useState<any[]>([]);
+  const [memberDividends, setMemberDividends] = useState<any[]>([]);
   const [dividendProfit, setDividendProfit] = useState("");
   const [dividendRate, setDividendRate] = useState("10");
   const [loading, setLoading] = useState(true);
@@ -44,6 +45,16 @@ const Dividends = () => {
         .select('*')
         .order('created_at', { ascending: false });
       setDistributions(distributionsData || []);
+
+      // Fetch all member dividends with member info
+      const { data: dividendsData } = await supabase
+        .from('dividends')
+        .select(`
+          *,
+          profiles!inner(first_name, last_name, member_number, phone)
+        `)
+        .order('distribution_date', { ascending: false });
+      setMemberDividends(dividendsData || []);
 
       // Calculate totals
       const distributed = distributionsData?.reduce((sum, d) => sum + Number(d.total_profit), 0) || 0;
@@ -318,6 +329,57 @@ const Dividends = () => {
                     </>
                   )}
                 </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Member Dividend Monitor</CardTitle>
+                <CardDescription>
+                  Track all individual member dividend records
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {memberDividends.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">No member dividends yet</p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Member</TableHead>
+                          <TableHead>Member #</TableHead>
+                          <TableHead>Phone</TableHead>
+                          <TableHead>Capital</TableHead>
+                          <TableHead>Share %</TableHead>
+                          <TableHead>Amount</TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Status</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {memberDividends.map((dividend: any) => (
+                          <TableRow key={dividend.id}>
+                            <TableCell className="font-medium">
+                              {dividend.profiles?.first_name} {dividend.profiles?.last_name}
+                            </TableCell>
+                            <TableCell>{dividend.profiles?.member_number || 'N/A'}</TableCell>
+                            <TableCell>{dividend.profiles?.phone || 'N/A'}</TableCell>
+                            <TableCell>₦{Number(dividend.member_capital_at_distribution || 0).toLocaleString()}</TableCell>
+                            <TableCell>{Number(dividend.dividend_percentage || 0).toFixed(2)}%</TableCell>
+                            <TableCell className="font-semibold">₦{Number(dividend.amount).toLocaleString()}</TableCell>
+                            <TableCell>{new Date(dividend.distribution_date).toLocaleDateString()}</TableCell>
+                            <TableCell>
+                              <Badge variant={dividend.status === 'calculated' ? 'default' : 'secondary'}>
+                                {dividend.status}
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
               </CardContent>
             </Card>
 

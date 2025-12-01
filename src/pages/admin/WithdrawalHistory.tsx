@@ -5,15 +5,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Download, Loader2, Calendar, Filter, FileDown } from "lucide-react";
+import { Download, Loader2, Calendar, Filter } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/AdminSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import * as XLSX from 'xlsx';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
 
 const WithdrawalHistory = () => {
   const [withdrawals, setWithdrawals] = useState<any[]>([]);
@@ -141,67 +139,6 @@ const WithdrawalHistory = () => {
     }
   };
 
-  const exportToPDF = () => {
-    try {
-      const doc = new jsPDF({ orientation: 'landscape' });
-      
-      // Add title
-      doc.setFontSize(18);
-      doc.text('Withdrawal History Report', 14, 15);
-      
-      // Add generation date and summary
-      doc.setFontSize(11);
-      doc.text(`Generated: ${new Date().toLocaleDateString()}`, 14, 22);
-      doc.text(`Total Records: ${filteredWithdrawals.length}`, 14, 28);
-      doc.text(`Total Amount: ₦${getTotalAmount().toLocaleString()}`, 120, 28);
-      
-      // Prepare table data
-      const tableData = filteredWithdrawals.map(w => [
-        new Date(w.requested_at).toLocaleDateString(),
-        `${w.profiles?.first_name} ${w.profiles?.last_name}`,
-        w.profiles?.member_number || '',
-        (w.withdrawal_type || 'savings').charAt(0).toUpperCase() + (w.withdrawal_type || 'savings').slice(1),
-        `₦${Number(w.amount).toLocaleString()}`,
-        w.bank_name,
-        w.account_number,
-        w.account_name,
-        w.status.charAt(0).toUpperCase() + w.status.slice(1),
-        w.processed_at ? new Date(w.processed_at).toLocaleDateString() : '-'
-      ]);
-      
-      // Add table
-      autoTable(doc, {
-        head: [['Date', 'Member Name', 'Member #', 'Type', 'Amount', 'Bank', 'Account #', 'Account Name', 'Status', 'Processed']],
-        body: tableData,
-        startY: 34,
-        styles: { 
-          fontSize: 9,
-          cellPadding: 3,
-          lineWidth: 0.1,
-          lineColor: [200, 200, 200]
-        },
-        headStyles: { 
-          fillColor: [0, 82, 204],
-          textColor: [255, 255, 255],
-          fontStyle: 'bold',
-          halign: 'center'
-        },
-        columnStyles: {
-          4: { fontStyle: 'bold', halign: 'right' } // Amount column
-        },
-        alternateRowStyles: {
-          fillColor: [245, 247, 250]
-        }
-      });
-      
-      // Save PDF
-      doc.save(`withdrawal-history-${new Date().toISOString().split('T')[0]}.pdf`);
-      toast.success('PDF downloaded successfully');
-    } catch (error: any) {
-      console.error('Error generating PDF:', error);
-      toast.error('Failed to generate PDF');
-    }
-  };
 
   const clearFilters = () => {
     setStatusFilter("all");
@@ -251,16 +188,10 @@ const WithdrawalHistory = () => {
                   Complete history of all withdrawal transactions
                 </p>
               </div>
-              <div className="flex gap-2">
-                <Button onClick={exportToPDF} variant="outline" className="gap-2">
-                  <FileDown className="h-4 w-4" />
-                  Download PDF
-                </Button>
-                <Button onClick={exportToExcel} className="gap-2">
-                  <Download className="h-4 w-4" />
-                  Export to Excel
-                </Button>
-              </div>
+              <Button onClick={exportToExcel} className="gap-2">
+                <Download className="h-4 w-4" />
+                Export to Excel
+              </Button>
             </div>
 
             {/* Summary Cards */}

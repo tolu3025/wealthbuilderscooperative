@@ -105,8 +105,12 @@ const App = () => (
               }
             />
             <Route
-              path="/register/upload-receipt"
-              element={<UploadReceipt />}
+              path="/upload-receipt"
+              element={
+                <ProtectedRoute>
+                  <UploadReceipt />
+                </ProtectedRoute>
+              }
             />
             <Route
               path="/dashboard"

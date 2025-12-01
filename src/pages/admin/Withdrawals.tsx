@@ -170,15 +170,15 @@ const Withdrawals = () => {
 
   const exportToPDF = () => {
     try {
-      const doc = new jsPDF();
+      const doc = new jsPDF({ orientation: 'landscape' });
       
       // Add title
       doc.setFontSize(18);
-      doc.text('Withdrawal Requests Report', 14, 20);
+      doc.text('Withdrawal Requests Report', 14, 15);
       
       // Add generation date
-      doc.setFontSize(10);
-      doc.text(`Generated: ${new Date().toLocaleDateString()}`, 14, 28);
+      doc.setFontSize(11);
+      doc.text(`Generated: ${new Date().toLocaleDateString()}`, 14, 22);
       
       // Prepare table data
       const tableData = pendingWithdrawals.map(w => {
@@ -188,24 +188,41 @@ const Withdrawals = () => {
         return [
           `${w.profiles?.first_name} ${w.profiles?.last_name}`,
           w.profiles?.member_number || '',
-          withdrawalType,
+          withdrawalType.charAt(0).toUpperCase() + withdrawalType.slice(1),
           `₦${Number(w.amount).toLocaleString()}`,
           `₦${typeBalance.toLocaleString()}`,
           w.bank_name,
           w.account_number,
           w.account_name,
-          w.status,
+          w.status.charAt(0).toUpperCase() + w.status.slice(1),
           new Date(w.requested_at).toLocaleDateString()
         ];
       });
       
       // Add table
       autoTable(doc, {
-        head: [['Member', 'Member #', 'Type', 'Amount', 'Balance', 'Bank', 'Acc #', 'Acc Name', 'Status', 'Date']],
+        head: [['Member Name', 'Member #', 'Type', 'Amount', 'Balance', 'Bank', 'Account #', 'Account Name', 'Status', 'Date']],
         body: tableData,
-        startY: 35,
-        styles: { fontSize: 8 },
-        headStyles: { fillColor: [0, 82, 204] }
+        startY: 28,
+        styles: { 
+          fontSize: 9,
+          cellPadding: 3,
+          lineWidth: 0.1,
+          lineColor: [200, 200, 200]
+        },
+        headStyles: { 
+          fillColor: [0, 82, 204],
+          textColor: [255, 255, 255],
+          fontStyle: 'bold',
+          halign: 'center'
+        },
+        columnStyles: {
+          3: { fontStyle: 'bold', halign: 'right' }, // Amount column
+          4: { halign: 'right' } // Balance column
+        },
+        alternateRowStyles: {
+          fillColor: [245, 247, 250]
+        }
       });
       
       // Save PDF

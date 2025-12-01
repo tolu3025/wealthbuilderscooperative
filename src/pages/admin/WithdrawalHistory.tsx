@@ -143,39 +143,55 @@ const WithdrawalHistory = () => {
 
   const exportToPDF = () => {
     try {
-      const doc = new jsPDF();
+      const doc = new jsPDF({ orientation: 'landscape' });
       
       // Add title
       doc.setFontSize(18);
-      doc.text('Withdrawal History Report', 14, 20);
+      doc.text('Withdrawal History Report', 14, 15);
       
       // Add generation date and summary
-      doc.setFontSize(10);
-      doc.text(`Generated: ${new Date().toLocaleDateString()}`, 14, 28);
-      doc.text(`Total Records: ${filteredWithdrawals.length}`, 14, 34);
-      doc.text(`Total Amount: ₦${getTotalAmount().toLocaleString()}`, 14, 40);
+      doc.setFontSize(11);
+      doc.text(`Generated: ${new Date().toLocaleDateString()}`, 14, 22);
+      doc.text(`Total Records: ${filteredWithdrawals.length}`, 14, 28);
+      doc.text(`Total Amount: ₦${getTotalAmount().toLocaleString()}`, 120, 28);
       
       // Prepare table data
       const tableData = filteredWithdrawals.map(w => [
         new Date(w.requested_at).toLocaleDateString(),
         `${w.profiles?.first_name} ${w.profiles?.last_name}`,
         w.profiles?.member_number || '',
-        w.withdrawal_type || 'savings',
+        (w.withdrawal_type || 'savings').charAt(0).toUpperCase() + (w.withdrawal_type || 'savings').slice(1),
         `₦${Number(w.amount).toLocaleString()}`,
         w.bank_name,
         w.account_number,
         w.account_name,
-        w.status,
+        w.status.charAt(0).toUpperCase() + w.status.slice(1),
         w.processed_at ? new Date(w.processed_at).toLocaleDateString() : '-'
       ]);
       
       // Add table
       autoTable(doc, {
-        head: [['Date', 'Member', 'Member #', 'Type', 'Amount', 'Bank', 'Acc #', 'Acc Name', 'Status', 'Processed']],
+        head: [['Date', 'Member Name', 'Member #', 'Type', 'Amount', 'Bank', 'Account #', 'Account Name', 'Status', 'Processed']],
         body: tableData,
-        startY: 46,
-        styles: { fontSize: 7 },
-        headStyles: { fillColor: [0, 82, 204] }
+        startY: 34,
+        styles: { 
+          fontSize: 9,
+          cellPadding: 3,
+          lineWidth: 0.1,
+          lineColor: [200, 200, 200]
+        },
+        headStyles: { 
+          fillColor: [0, 82, 204],
+          textColor: [255, 255, 255],
+          fontStyle: 'bold',
+          halign: 'center'
+        },
+        columnStyles: {
+          4: { fontStyle: 'bold', halign: 'right' } // Amount column
+        },
+        alternateRowStyles: {
+          fillColor: [245, 247, 250]
+        }
       });
       
       // Save PDF

@@ -192,7 +192,7 @@ const Register = () => {
 
         // Redirect to upload receipt page
         setTimeout(() => {
-          navigate("/register/upload-receipt");
+          navigate("/upload-receipt");
         }, 1500);
       }
     } catch (error: any) {

@@ -87,12 +87,12 @@ const Referrals = () => {
         setUserName(`${profile.first_name} ${profile.last_name}`);
         setInviteCode(profile.invite_code || '');
 
-      // Get referral count - only count active members
-      const { count } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true })
-        .eq('invited_by', profile.id)
-        .eq('registration_status', 'active');
+        // Get referral count - only count active members
+        const { count } = await supabase
+          .from('profiles')
+          .select('*', { count: 'exact', head: true })
+          .eq('invited_by', profile.id)
+          .eq('registration_status', 'active');
         setReferralCount(count || 0);
 
         // Get commissions for display
@@ -104,31 +104,29 @@ const Referrals = () => {
 
         setCommissions(commissionsData || []);
         
-        // Calculate total earned from approved commissions only
-        const commissionEarnings = commissionsData
-          ?.filter(c => c.status === 'approved')
-          .reduce((sum, c) => sum + Number(c.amount), 0) || 0;
+        // Calculate total earned from approved REFERRAL commissions only
+        const approvedReferralCommissions = commissionsData
+          ?.filter(c => c.status === 'approved' && c.commission_type === 'referral')
+          .map(c => Number(c.amount)) || [];
 
-        // Get MLM earnings (exclude company shares)
-        const { data: mlmData } = await supabase
-          .from('mlm_distributions')
-          .select('amount')
+        const commissionEarnings = approvedReferralCommissions.reduce((sum, amount) => sum + amount, 0);
+
+        // Get total bonus withdrawals (so available balance = earned - withdrawn)
+        const { data: bonusWithdrawals } = await supabase
+          .from('withdrawal_requests')
+          .select('amount, withdrawal_type, status')
           .eq('member_id', profile.id)
-          .eq('is_company_share', false);
+          .eq('withdrawal_type', 'bonus')
+          .in('status', ['approved', 'completed']);
 
-        const mlmEarnings = mlmData?.reduce((sum, m) => sum + Number(m.amount), 0) || 0;
+        const totalBonusWithdrawn = bonusWithdrawals
+          ?.reduce((sum, w) => sum + Number(w.amount), 0) || 0;
 
-        // Total earned = commissions + MLM
-        setTotalEarned(commissionEarnings + mlmEarnings);
+        // Total earned is fixed at ₦1,000 per approved invite (referral commissions)
+        setTotalEarned(commissionEarnings);
 
-        // Get current balance from member_balances (already accounts for withdrawals via triggers)
-        const { data: balance } = await supabase
-          .from('member_balances')
-          .select('total_commissions')
-          .eq('member_id', profile.id)
-          .maybeSingle();
-        
-        setAvailableBalance(balance?.total_commissions || 0);
+        // Available balance = earned referral bonus minus any approved/completed withdrawals
+        setAvailableBalance(Math.max(commissionEarnings - totalBonusWithdrawn, 0));
       }
     } catch (error: any) {
       toast({

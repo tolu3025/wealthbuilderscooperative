@@ -104,9 +104,10 @@ const Referrals = () => {
 
         setCommissions(commissionsData || []);
         
-        // Calculate total earned from approved commissions
-        const commissionEarnings = commissionsData
-          ?.filter(c => c.status === 'approved')
+        // Calculate total invite earnings STRICTLY from referral commissions only
+        // Business rule: each verified active invite pays exactly ₦1,000 to the inviter
+        const referralCommissionEarnings = commissionsData
+          ?.filter(c => c.status === 'approved' && c.commission_type === 'referral')
           .reduce((sum, c) => sum + Number(c.amount), 0) || 0;
 
         // Get MLM earnings (exclude company shares)
@@ -118,7 +119,7 @@ const Referrals = () => {
 
         const mlmEarnings = mlmData?.reduce((sum, m) => sum + Number(m.amount), 0) || 0;
 
-        // Get approved withdrawals
+        // Get approved withdrawals (bonus type covers both invite and MLM bonuses)
         const { data: withdrawalData } = await supabase
           .from('withdrawal_requests')
           .select('amount')
@@ -128,11 +129,11 @@ const Referrals = () => {
 
         const withdrawnAmount = withdrawalData?.reduce((sum, w) => sum + Number(w.amount), 0) || 0;
 
-        // Total earned = commissions + MLM (all-time earnings including withdrawn)
-        setTotalEarned(commissionEarnings + mlmEarnings);
+        // Total earned from invites (what members see here) comes ONLY from referral commissions
+        setTotalEarned(referralCommissionEarnings);
 
-        // Available balance = total earned - withdrawn
-        const calculatedBalance = commissionEarnings + mlmEarnings - withdrawnAmount;
+        // Available balance = total commissions (from balances table) already accounts for MLM + withdrawals
+        const calculatedBalance = referralCommissionEarnings + mlmEarnings - withdrawnAmount;
 
         // Get balance from member_balances table
         const { data: balance } = await supabase
@@ -149,7 +150,7 @@ const Referrals = () => {
           console.warn('Balance mismatch detected:', {
             database: balance.total_commissions,
             calculated: calculatedBalance,
-            commissions: commissionEarnings,
+            referralOnly: referralCommissionEarnings,
             mlm: mlmEarnings,
             withdrawn: withdrawnAmount
           });

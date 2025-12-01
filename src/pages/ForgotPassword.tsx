@@ -25,17 +25,24 @@ export default function ForgotPassword() {
 
     setLoading(true);
     try {
+      console.log('Sending password reset request for:', email);
+      
       const { data, error } = await supabase.functions.invoke("send-reset-email", {
         body: { email },
       });
 
-      if (error) throw error;
+      console.log('Password reset response:', { data, error });
+
+      if (error) {
+        console.error('Reset email error:', error);
+        throw error;
+      }
 
       setEmailSent(true);
-      toast.success("Password reset email sent! Check your inbox.");
+      toast.success("Password reset email sent! Please check your inbox and spam folder.");
     } catch (error: any) {
       console.error("Error sending reset email:", error);
-      toast.error(error.message || "Failed to send reset email. Please try again.");
+      toast.error(error.message || "Failed to send reset email. Please try again or contact support.");
     } finally {
       setLoading(false);
     }
@@ -58,7 +65,7 @@ export default function ForgotPassword() {
             <Alert>
               <Mail className="h-4 w-4" />
               <AlertDescription>
-                Click the link in the email to reset your password. The link will expire in 15 minutes.
+                Click the link in the email to reset your password. The link will expire in 15 minutes. If you don't see the email, please check your spam folder.
               </AlertDescription>
             </Alert>
             <Button

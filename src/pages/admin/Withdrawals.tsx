@@ -199,26 +199,36 @@ const Withdrawals = () => {
         ];
       });
       
-      // Add table
+      // Add table with optimized column widths
       autoTable(doc, {
         head: [['Member Name', 'Member #', 'Type', 'Amount', 'Balance', 'Bank', 'Account #', 'Account Name', 'Status', 'Date']],
         body: tableData,
         startY: 28,
         styles: { 
-          fontSize: 9,
-          cellPadding: 3,
+          fontSize: 8,
+          cellPadding: 2.5,
           lineWidth: 0.1,
-          lineColor: [200, 200, 200]
+          lineColor: [200, 200, 200],
+          overflow: 'linebreak'
         },
         headStyles: { 
           fillColor: [0, 82, 204],
           textColor: [255, 255, 255],
           fontStyle: 'bold',
-          halign: 'center'
+          halign: 'center',
+          fontSize: 9
         },
         columnStyles: {
-          3: { fontStyle: 'bold', halign: 'right' }, // Amount column
-          4: { halign: 'right' } // Balance column
+          0: { cellWidth: 28 }, // Member Name
+          1: { cellWidth: 18 }, // Member #
+          2: { cellWidth: 18 }, // Type
+          3: { cellWidth: 25, fontStyle: 'bold', halign: 'right' }, // Amount - wider and bold
+          4: { cellWidth: 25, halign: 'right' }, // Balance - wider
+          5: { cellWidth: 22 }, // Bank
+          6: { cellWidth: 22 }, // Account #
+          7: { cellWidth: 28 }, // Account Name
+          8: { cellWidth: 18 }, // Status
+          9: { cellWidth: 20 } // Date
         },
         alternateRowStyles: {
           fillColor: [245, 247, 250]

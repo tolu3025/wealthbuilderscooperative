@@ -5,13 +5,15 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Download, Loader2, Calendar, Filter } from "lucide-react";
+import { Download, Loader2, Calendar, Filter, FileDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/AdminSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const WithdrawalHistory = () => {
   const [withdrawals, setWithdrawals] = useState<any[]>([]);
@@ -139,6 +141,52 @@ const WithdrawalHistory = () => {
     }
   };
 
+  const exportToPDF = () => {
+    try {
+      const doc = new jsPDF();
+      
+      // Add title
+      doc.setFontSize(18);
+      doc.text('Withdrawal History Report', 14, 20);
+      
+      // Add generation date and summary
+      doc.setFontSize(10);
+      doc.text(`Generated: ${new Date().toLocaleDateString()}`, 14, 28);
+      doc.text(`Total Records: ${filteredWithdrawals.length}`, 14, 34);
+      doc.text(`Total Amount: ₦${getTotalAmount().toLocaleString()}`, 14, 40);
+      
+      // Prepare table data
+      const tableData = filteredWithdrawals.map(w => [
+        new Date(w.requested_at).toLocaleDateString(),
+        `${w.profiles?.first_name} ${w.profiles?.last_name}`,
+        w.profiles?.member_number || '',
+        w.withdrawal_type || 'savings',
+        `₦${Number(w.amount).toLocaleString()}`,
+        w.bank_name,
+        w.account_number,
+        w.account_name,
+        w.status,
+        w.processed_at ? new Date(w.processed_at).toLocaleDateString() : '-'
+      ]);
+      
+      // Add table
+      autoTable(doc, {
+        head: [['Date', 'Member', 'Member #', 'Type', 'Amount', 'Bank', 'Acc #', 'Acc Name', 'Status', 'Processed']],
+        body: tableData,
+        startY: 46,
+        styles: { fontSize: 7 },
+        headStyles: { fillColor: [0, 82, 204] }
+      });
+      
+      // Save PDF
+      doc.save(`withdrawal-history-${new Date().toISOString().split('T')[0]}.pdf`);
+      toast.success('PDF downloaded successfully');
+    } catch (error: any) {
+      console.error('Error generating PDF:', error);
+      toast.error('Failed to generate PDF');
+    }
+  };
+
   const clearFilters = () => {
     setStatusFilter("all");
     setTypeFilter("all");
@@ -187,10 +235,16 @@ const WithdrawalHistory = () => {
                   Complete history of all withdrawal transactions
                 </p>
               </div>
-              <Button onClick={exportToExcel} className="gap-2">
-                <Download className="h-4 w-4" />
-                Export to Excel
-              </Button>
+              <div className="flex gap-2">
+                <Button onClick={exportToPDF} variant="outline" className="gap-2">
+                  <FileDown className="h-4 w-4" />
+                  Download PDF
+                </Button>
+                <Button onClick={exportToExcel} className="gap-2">
+                  <Download className="h-4 w-4" />
+                  Export to Excel
+                </Button>
+              </div>
             </div>
 
             {/* Summary Cards */}

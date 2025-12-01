@@ -1194,6 +1194,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      recalculate_member_commission_balances: {
+        Args: never
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "state_rep" | "member" | "director"

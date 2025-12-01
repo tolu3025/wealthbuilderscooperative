@@ -101,6 +101,7 @@ export const MemberTypeUpgrade = ({
               <li>Contribute ₦5,500 monthly (₦5,000 investment + ₦500 support)</li>
               <li>Qualify for property dividend distributions</li>
               <li>Build capital and savings for wealth creation</li>
+              <li>Initial upgrade fee: ₦5,000</li>
             </ul>
           </AlertDescription>
         </Alert>
@@ -128,16 +129,16 @@ export const MemberTypeUpgrade = ({
         <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border">
           <h4 className="font-semibold mb-3">Payment Information</h4>
           <p className="text-sm text-muted-foreground mb-2">
-            Bank: <span className="font-medium text-foreground">Moniepoint MFB</span>
+            Bank: <span className="font-medium text-foreground">FCMB</span>
           </p>
           <p className="text-sm text-muted-foreground mb-2">
-            Account Name: <span className="font-medium text-foreground">WealthBuilders Cooperative</span>
+            Account Name: <span className="font-medium text-foreground">ORISUNBARE(OSG)WEALTH BUILDERS IN PROPT MCSL</span>
           </p>
           <p className="text-sm text-muted-foreground mb-2">
-            Account Number: <span className="font-medium text-foreground">8173684916</span>
+            Account Number: <span className="font-medium text-foreground">1042529824</span>
           </p>
           <p className="text-sm font-semibold text-primary mt-2">
-            Amount: ₦5,500
+            Amount: ₦5,000
           </p>
         </div>
 

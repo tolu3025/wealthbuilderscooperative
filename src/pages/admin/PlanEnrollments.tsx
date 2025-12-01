@@ -13,6 +13,7 @@ import { format } from "date-fns";
 interface EnrollmentData {
   id: string;
   member_name: string;
+  phone: string;
   plan_name: string;
   enrolled_at: string;
   status: string;
@@ -32,7 +33,7 @@ const PlanEnrollments = () => {
         .from('plan_enrollments')
         .select(`
           *,
-          profiles!plan_enrollments_member_id_fkey(first_name, last_name),
+          profiles!plan_enrollments_member_id_fkey(first_name, last_name, phone),
           property_plans!plan_enrollments_plan_id_fkey(name)
         `)
         .order('enrolled_at', { ascending: false });
@@ -42,6 +43,7 @@ const PlanEnrollments = () => {
       const formatted: EnrollmentData[] = data.map((enrollment: any) => ({
         id: enrollment.id,
         member_name: `${enrollment.profiles.first_name} ${enrollment.profiles.last_name}`,
+        phone: enrollment.profiles.phone || 'N/A',
         plan_name: enrollment.property_plans.name,
         enrolled_at: enrollment.enrolled_at,
         status: enrollment.status,
@@ -95,6 +97,7 @@ const PlanEnrollments = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Member</TableHead>
+                      <TableHead>Phone</TableHead>
                       <TableHead>Plan</TableHead>
                       <TableHead>Enrolled Date</TableHead>
                       <TableHead>Status</TableHead>
@@ -103,7 +106,7 @@ const PlanEnrollments = () => {
                   <TableBody>
                     {enrollments.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={4} className="text-center text-muted-foreground">
+                        <TableCell colSpan={5} className="text-center text-muted-foreground">
                           No enrollments found
                         </TableCell>
                       </TableRow>
@@ -113,6 +116,7 @@ const PlanEnrollments = () => {
                           <TableCell className="font-medium">
                             {enrollment.member_name}
                           </TableCell>
+                          <TableCell>{enrollment.phone}</TableCell>
                           <TableCell>{enrollment.plan_name}</TableCell>
                           <TableCell>
                             {format(new Date(enrollment.enrolled_at), 'MMM dd, yyyy')}

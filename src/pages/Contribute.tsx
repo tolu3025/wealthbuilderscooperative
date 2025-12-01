@@ -239,7 +239,7 @@ const Contribute = () => {
             <Alert>
               <Info className="h-4 w-4" />
               <AlertDescription>
-                As an <strong>Acting Member</strong>, your monthly contribution is ₦500. You are not eligible for dividend distributions.
+                As an <strong>Acting Member</strong>, your monthly contribution is ₦500.
               </AlertDescription>
             </Alert>
           )}

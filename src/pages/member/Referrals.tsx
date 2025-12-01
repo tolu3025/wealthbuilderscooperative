@@ -87,12 +87,12 @@ const Referrals = () => {
         setUserName(`${profile.first_name} ${profile.last_name}`);
         setInviteCode(profile.invite_code || '');
 
-      // Get referral count - only count active members
-      const { count } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true })
-        .eq('invited_by', profile.id)
-        .eq('registration_status', 'active');
+        // Get referral count - only count active members
+        const { count } = await supabase
+          .from('profiles')
+          .select('*', { count: 'exact', head: true })
+          .eq('invited_by', profile.id)
+          .eq('registration_status', 'active');
         setReferralCount(count || 0);
 
         // Get commissions for display
@@ -104,7 +104,7 @@ const Referrals = () => {
 
         setCommissions(commissionsData || []);
         
-        // Calculate total earned from approved commissions only
+        // Calculate total earned from approved commissions
         const commissionEarnings = commissionsData
           ?.filter(c => c.status === 'approved')
           .reduce((sum, c) => sum + Number(c.amount), 0) || 0;
@@ -118,19 +118,45 @@ const Referrals = () => {
 
         const mlmEarnings = mlmData?.reduce((sum, m) => sum + Number(m.amount), 0) || 0;
 
-        // Total earned = commissions + MLM
+        // Get approved withdrawals
+        const { data: withdrawalData } = await supabase
+          .from('withdrawal_requests')
+          .select('amount')
+          .eq('member_id', profile.id)
+          .eq('withdrawal_type', 'bonus')
+          .eq('status', 'approved');
+
+        const withdrawnAmount = withdrawalData?.reduce((sum, w) => sum + Number(w.amount), 0) || 0;
+
+        // Total earned = commissions + MLM (all-time earnings including withdrawn)
         setTotalEarned(commissionEarnings + mlmEarnings);
 
-        // Get current balance from member_balances (already accounts for withdrawals via triggers)
+        // Available balance = total earned - withdrawn
+        const calculatedBalance = commissionEarnings + mlmEarnings - withdrawnAmount;
+
+        // Get balance from member_balances table
         const { data: balance } = await supabase
           .from('member_balances')
           .select('total_commissions')
           .eq('member_id', profile.id)
           .maybeSingle();
         
+        // Use database balance (which should match calculated balance after fix)
         setAvailableBalance(balance?.total_commissions || 0);
+
+        // Log for debugging if there's a mismatch
+        if (balance && Math.abs(balance.total_commissions - calculatedBalance) > 0.01) {
+          console.warn('Balance mismatch detected:', {
+            database: balance.total_commissions,
+            calculated: calculatedBalance,
+            commissions: commissionEarnings,
+            mlm: mlmEarnings,
+            withdrawn: withdrawnAmount
+          });
+        }
       }
     } catch (error: any) {
+      console.error('Error fetching referral data:', error);
       toast({
         title: "Error",
         description: error.message,

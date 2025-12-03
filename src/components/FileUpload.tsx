@@ -62,10 +62,20 @@ export const FileUpload = ({ onUploadComplete, userId, fileType = "receipt", buc
 
       if (error) throw error;
 
-      // Return the file path (not public URL since bucket is private)
-      // Store format: bucket/path for easy retrieval
-      const storagePath = `${bucket}/${fileName}`;
-      onUploadComplete(storagePath);
+      // Check if bucket is public (blog-images, avatars, property-images)
+      const publicBuckets = ['blog-images', 'avatars', 'property-images'];
+      
+      if (publicBuckets.includes(bucket)) {
+        // For public buckets, return the public URL
+        const { data: urlData } = supabase.storage
+          .from(bucket)
+          .getPublicUrl(fileName);
+        onUploadComplete(urlData.publicUrl);
+      } else {
+        // For private buckets, return the storage path
+        const storagePath = `${bucket}/${fileName}`;
+        onUploadComplete(storagePath);
+      }
       
       toast({
         title: "Upload successful",

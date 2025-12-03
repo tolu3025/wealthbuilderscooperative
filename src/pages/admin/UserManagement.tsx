@@ -139,17 +139,9 @@ const UserManagement = () => {
     }
   };
 
-  const deleteAccount = async (profileId: string, userId: string, userName: string) => {
+  const deleteAccount = async (userId: string, userName: string) => {
     try {
-      // First delete the profile
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', profileId);
-
-      if (profileError) throw profileError;
-
-      // Use the admin_delete_user function to delete auth user and related data
+      // Use the admin_delete_user function to delete auth user, profile, and all related data
       const { error: deleteError } = await supabase
         .rpc('admin_delete_user', { p_user_id: userId });
 
@@ -397,7 +389,7 @@ const UserManagement = () => {
                                     <AlertDialogFooter>
                                       <AlertDialogCancel>Cancel</AlertDialogCancel>
                                       <AlertDialogAction
-                                        onClick={() => deleteAccount(user.id, user.user_id, `${user.first_name} ${user.last_name}`)}
+                                        onClick={() => deleteAccount(user.user_id, `${user.first_name} ${user.last_name}`)}
                                         className="bg-destructive hover:bg-destructive/90"
                                       >
                                         Delete Account

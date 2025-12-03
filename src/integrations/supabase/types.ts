@@ -1167,6 +1167,11 @@ export type Database = {
         Args: { p_amount: number; p_month: string }
         Returns: undefined
       }
+      admin_change_user_password: {
+        Args: { p_new_password: string; p_user_id: string }
+        Returns: boolean
+      }
+      admin_delete_user: { Args: { p_user_id: string }; Returns: boolean }
       approve_project_support_contribution: {
         Args: { p_admin_profile_id: string; p_contribution_id: string }
         Returns: undefined
@@ -1187,6 +1192,7 @@ export type Database = {
       generate_invite_code: { Args: never; Returns: string }
       generate_member_number: { Args: never; Returns: string }
       generate_pin: { Args: never; Returns: string }
+      get_user_id_by_email: { Args: { p_email: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

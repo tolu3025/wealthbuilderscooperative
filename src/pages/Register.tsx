@@ -110,67 +110,18 @@ const Register = () => {
           .single();
 
         if (profile) {
-          // Handle invite code if provided
+          // Handle invite code if provided - only set invited_by
+          // Commissions are created by the database trigger when registration_fees.status='approved'
           let invitedById = null;
           if (data.inviteCode) {
-            const { data: referrer, error: referrerError } = await supabase
+            const { data: referrer } = await supabase
               .from('profiles')
-              .select('id, state')
+              .select('id')
               .eq('invite_code', data.inviteCode.toUpperCase())
               .single();
 
             if (referrer) {
               invitedById = referrer.id;
-              
-              // Create referral commission for the inviter (₦1,000)
-              await supabase
-                .from('commissions')
-                .insert({
-                  member_id: referrer.id,
-                  invited_member_id: profile.id,
-                  amount: 1000,
-                  commission_type: 'referral',
-                  status: 'pending'
-                });
-
-              // Get referrer's user_id for notification
-              const { data: referrerProfile } = await supabase
-                .from('profiles')
-                .select('user_id, first_name, last_name')
-                .eq('id', referrer.id)
-                .single();
-
-              if (referrerProfile?.user_id) {
-                // Send notification to referrer
-                await supabase
-                  .from('notifications')
-                  .insert({
-                    user_id: referrerProfile.user_id,
-                    title: 'New Invite!',
-                    message: `${data.firstName} ${data.lastName} just joined using your invite code. You've earned ₦1,000!`,
-                    type: 'referral',
-                    related_id: profile.id
-                  });
-              }
-
-              // Create state rep commission if they have a state rep (₦100)
-              const { data: stateRep } = await supabase
-                .from('state_representatives')
-                .select('rep_profile_id')
-                .eq('state', referrer.state)
-                .single();
-
-              if (stateRep?.rep_profile_id) {
-                await supabase
-                  .from('commissions')
-                  .insert({
-                    member_id: stateRep.rep_profile_id,
-                    invited_member_id: profile.id,
-                    amount: 100,
-                    commission_type: 'state_rep',
-                    status: 'pending'
-                  });
-              }
             }
           }
 

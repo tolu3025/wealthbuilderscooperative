@@ -47,10 +47,13 @@ const BlogManagement = () => {
   const [imageUrl, setImageUrl] = useState("");
   const [userId, setUserId] = useState<string>("");
 
-  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<BlogFormData>({
+  const { register, handleSubmit, reset, setValue, watch, formState: { errors, isSubmitting } } = useForm<BlogFormData>({
     resolver: zodResolver(blogSchema),
-    defaultValues: { published: false }
+    defaultValues: { published: false, show_as_banner: false }
   });
+
+  const publishedValue = watch('published');
+  const showAsBannerValue = watch('show_as_banner');
 
   useEffect(() => {
     fetchPosts();
@@ -245,6 +248,7 @@ const BlogManagement = () => {
                 <div className="flex items-center space-x-2">
                   <Switch
                     id="published"
+                    checked={publishedValue}
                     onCheckedChange={(checked) => setValue('published', checked)}
                   />
                   <Label htmlFor="published">Publish immediately</Label>
@@ -253,14 +257,21 @@ const BlogManagement = () => {
                 <div className="flex items-center space-x-2">
                   <Switch
                     id="show_as_banner"
+                    checked={showAsBannerValue}
                     onCheckedChange={(checked) => setValue('show_as_banner', checked)}
                   />
                   <Label htmlFor="show_as_banner">Show as announcement banner</Label>
                 </div>
 
+                {Object.keys(errors).length > 0 && (
+                  <div className="text-sm text-destructive">
+                    Please fix the errors above before submitting.
+                  </div>
+                )}
+
                 <div className="flex gap-2">
-                  <Button type="submit" className="flex-1">
-                    {editing ? "Update" : "Create"} Post
+                  <Button type="submit" className="flex-1" disabled={isSubmitting}>
+                    {isSubmitting ? "Saving..." : editing ? "Update" : "Create"} Post
                   </Button>
                   {editing && (
                     <Button

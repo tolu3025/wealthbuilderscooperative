@@ -31,6 +31,7 @@ import Contribute from "./pages/Contribute";
 import Withdraw from "./pages/Withdraw";
 import About from "./pages/About";
 import Blog from "./pages/Blog";
+import BlogDetails from "./pages/BlogDetails";
 import Contact from "./pages/Contact";
 import Terms from "./pages/Terms";
 import Policy from "./pages/Policy";
@@ -67,6 +68,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/about" element={<About />} />
             <Route path="/blog" element={<Blog />} />
+            <Route path="/blog/:id" element={<BlogDetails />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Policy />} />

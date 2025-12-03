@@ -152,12 +152,14 @@ const BlogManagement = () => {
 
   const handleEdit = (post: BlogPost) => {
     setEditing(post.id);
-    setValue('title', post.title);
-    setValue('excerpt', post.excerpt || '');
-    setValue('content', post.content);
-    setValue('image_url', post.image_url || '');
-    setValue('published', post.published);
-    setValue('show_as_banner', post.show_as_banner || false);
+    reset({
+      title: post.title,
+      excerpt: post.excerpt || '',
+      content: post.content,
+      image_url: post.image_url || '',
+      published: post.published,
+      show_as_banner: post.show_as_banner || false
+    });
     setImageUrl(post.image_url || '');
   };
 

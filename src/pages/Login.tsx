@@ -47,11 +47,23 @@ const Login = () => {
       if (error) throw error;
 
       // Check user's registration status
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('registration_status')
         .eq('user_id', authData.user.id)
         .single();
+
+      // Handle case where user exists in auth but profile was manually deleted
+      if (profileError || !profile) {
+        // Sign out the orphan user
+        await supabase.auth.signOut();
+        toast({
+          title: "Account not found",
+          description: "Your account profile was not found. Please contact support or register again.",
+          variant: "destructive",
+        });
+        return;
+      }
 
       toast({
         title: "Login successful",

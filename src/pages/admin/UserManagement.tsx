@@ -141,7 +141,7 @@ const UserManagement = () => {
 
   const deleteAccount = async (profileId: string, userId: string, userName: string) => {
     try {
-      // Delete profile (this will cascade to other tables due to foreign keys)
+      // First delete the profile
       const { error: profileError } = await supabase
         .from('profiles')
         .delete()
@@ -149,17 +149,16 @@ const UserManagement = () => {
 
       if (profileError) throw profileError;
 
-      // Delete user roles
-      const { error: rolesError } = await supabase
-        .from('user_roles')
-        .delete()
-        .eq('user_id', userId);
+      // Use the admin_delete_user function to delete auth user and related data
+      const { error: deleteError } = await supabase
+        .rpc('admin_delete_user', { p_user_id: userId });
 
-      if (rolesError) throw rolesError;
+      if (deleteError) throw deleteError;
 
-      toast.success(`Account deleted: ${userName}`);
+      toast.success(`Account permanently deleted: ${userName}`);
       fetchUsers();
     } catch (error: any) {
+      console.error("Delete account error:", error);
       toast.error("Failed to delete account: " + error.message);
     }
   };
@@ -178,10 +177,12 @@ const UserManagement = () => {
     setResettingPassword(true);
 
     try {
-      const { error } = await supabase.auth.admin.updateUserById(
-        resetPasswordUserId,
-        { password: newPassword }
-      );
+      // Use the admin_change_user_password database function
+      const { data, error } = await supabase
+        .rpc('admin_change_user_password', { 
+          p_user_id: resetPasswordUserId,
+          p_new_password: newPassword
+        });
 
       if (error) throw error;
 

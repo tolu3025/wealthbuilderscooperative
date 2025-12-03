@@ -1,9 +1,10 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Calendar, User } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Calendar, User, ArrowRight } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -23,6 +24,7 @@ interface BlogPost {
 const Blog = () => {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -65,18 +67,19 @@ const Blog = () => {
             </p>
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-8">
             {loading ? (
               Array(3).fill(0).map((_, i) => (
                 <Card key={i}>
-                  <CardHeader>
-                    <Skeleton className="h-6 w-24 mb-2" />
-                    <Skeleton className="h-8 w-3/4 mb-2" />
-                    <Skeleton className="h-4 w-48" />
-                  </CardHeader>
-                  <CardContent>
-                    <Skeleton className="h-20 w-full" />
-                  </CardContent>
+                  <div className="md:flex">
+                    <Skeleton className="h-48 md:h-auto md:w-64 rounded-t-lg md:rounded-l-lg md:rounded-t-none" />
+                    <div className="flex-1 p-6">
+                      <Skeleton className="h-6 w-3/4 mb-2" />
+                      <Skeleton className="h-4 w-48 mb-4" />
+                      <Skeleton className="h-16 w-full mb-4" />
+                      <Skeleton className="h-10 w-32" />
+                    </div>
+                  </div>
                 </Card>
               ))
             ) : posts.length === 0 ? (
@@ -89,38 +92,52 @@ const Blog = () => {
               </Card>
             ) : (
               posts.map((post) => (
-                <Card key={post.id} className="hover:shadow-elegant transition-shadow">
-                  <CardHeader>
-                    <CardTitle className="text-2xl mb-2">{post.title}</CardTitle>
-                    <CardDescription className="flex items-center gap-4 text-sm">
-                      <span className="flex items-center gap-1">
-                        <Calendar className="h-4 w-4" />
-                        {new Date(post.created_at).toLocaleDateString("en-US", {
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                        })}
-                      </span>
-                      {post.author && (
-                        <span className="flex items-center gap-1">
-                          <User className="h-4 w-4" />
-                          {post.author.first_name} {post.author.last_name}
-                        </span>
-                      )}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    {post.image_url && (
-                      <img 
-                        src={post.image_url} 
-                        alt={post.title}
-                        className="w-full h-48 object-cover rounded-lg mb-4"
-                      />
+                <Card 
+                  key={post.id} 
+                  className="hover:shadow-elegant transition-shadow overflow-hidden cursor-pointer"
+                  onClick={() => navigate(`/blog/${post.id}`)}
+                >
+                  <div className="md:flex">
+                    {post.image_url ? (
+                      <div className="md:w-64 md:flex-shrink-0">
+                        <img 
+                          src={post.image_url} 
+                          alt={post.title}
+                          className="w-full h-48 md:h-full object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <div className="md:w-64 md:flex-shrink-0 bg-muted flex items-center justify-center h-48 md:h-auto">
+                        <span className="text-muted-foreground text-sm">No Image</span>
+                      </div>
                     )}
-                    <p className="text-muted-foreground mb-4">
-                      {post.excerpt || post.content.substring(0, 150) + '...'}
-                    </p>
-                  </CardContent>
+                    <div className="flex-1 p-6">
+                      <CardTitle className="text-xl mb-2 line-clamp-2">{post.title}</CardTitle>
+                      <CardDescription className="flex items-center gap-4 text-sm mb-4">
+                        <span className="flex items-center gap-1">
+                          <Calendar className="h-4 w-4" />
+                          {new Date(post.created_at).toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          })}
+                        </span>
+                        {post.author && (
+                          <span className="flex items-center gap-1">
+                            <User className="h-4 w-4" />
+                            {post.author.first_name} {post.author.last_name}
+                          </span>
+                        )}
+                      </CardDescription>
+                      <p className="text-muted-foreground mb-4 line-clamp-3">
+                        {post.excerpt || post.content.substring(0, 150) + '...'}
+                      </p>
+                      <Button variant="outline" size="sm">
+                        Read More
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
                 </Card>
               ))
             )}

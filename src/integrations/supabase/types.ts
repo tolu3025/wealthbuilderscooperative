@@ -1188,6 +1188,10 @@ export type Database = {
         Args: { p_payment_id: string }
         Returns: undefined
       }
+      ensure_member_in_mlm_tree: {
+        Args: { p_member_id: string }
+        Returns: undefined
+      }
       find_available_mlm_parent: { Args: never; Returns: string }
       generate_invite_code: { Args: never; Returns: string }
       generate_member_number: { Args: never; Returns: string }
@@ -1204,6 +1208,7 @@ export type Database = {
         Args: never
         Returns: undefined
       }
+      sync_all_members_to_mlm_tree: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "state_rep" | "member" | "director"

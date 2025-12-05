@@ -5,6 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Loader2, Users, TrendingUp, DollarSign, Network, Info, ChevronRight, Gift, Coins, Wallet } from "lucide-react";
 import { toast } from "sonner";
 import { AdminSidebar } from "@/components/AdminSidebar";
@@ -12,6 +13,7 @@ import { DashboardHeader } from "@/components/DashboardHeader";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface BonusTreeNode {
   id: string;
@@ -88,6 +90,7 @@ interface BonusStats {
 }
 
 export default function BonusDistribution() {
+  const isMobile = useIsMobile();
   const [loading, setLoading] = useState(true);
   const [treeData, setTreeData] = useState<BonusTreeNode[]>([]);
   const [distributions, setDistributions] = useState<BonusDistribution[]>([]);
@@ -482,66 +485,110 @@ export default function BonusDistribution() {
               <TabsContent value="members" className="space-y-4">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Member Bonus Summary</CardTitle>
-                    <CardDescription>
-                      Click on a member to see detailed breakdown of their bonus earnings
+                    <CardTitle className="text-lg md:text-xl">Member Bonus Summary</CardTitle>
+                    <CardDescription className="text-xs md:text-sm">
+                      {isMobile ? "Tap a member to view breakdown" : "Click on a member to see detailed breakdown of their bonus earnings"}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="overflow-x-auto -mx-4 sm:mx-0">
-                      <div className="inline-block min-w-full align-middle">
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead className="whitespace-nowrap">Member</TableHead>
-                              <TableHead className="whitespace-nowrap">Member #</TableHead>
-                              <TableHead className="whitespace-nowrap text-right">Referrals</TableHead>
-                              <TableHead className="whitespace-nowrap text-right">Referral Earnings</TableHead>
-                              <TableHead className="whitespace-nowrap text-right">MLM Earnings</TableHead>
-                              <TableHead className="whitespace-nowrap text-right">Total Bonus</TableHead>
-                              <TableHead className="whitespace-nowrap text-right">Withdrawn</TableHead>
-                              <TableHead className="whitespace-nowrap text-right">Balance</TableHead>
-                              <TableHead className="whitespace-nowrap">Action</TableHead>
+                    {/* Mobile view - Cards */}
+                    <div className="md:hidden space-y-3">
+                      {memberSummaries.map((member) => (
+                        <Card 
+                          key={member.id}
+                          className="cursor-pointer hover:bg-muted/30 transition-colors"
+                          onClick={() => fetchMemberDetail(member)}
+                        >
+                          <CardContent className="p-4">
+                            <div className="flex justify-between items-start mb-3">
+                              <div>
+                                <div className="font-medium">{member.member_name}</div>
+                                <div className="text-xs text-muted-foreground">{member.member_number}</div>
+                              </div>
+                              <Badge variant={member.available_balance > 0 ? "default" : "secondary"}>
+                                ₦{member.available_balance.toLocaleString()}
+                              </Badge>
+                            </div>
+                            <div className="grid grid-cols-3 gap-2 text-xs">
+                              <div>
+                                <div className="text-muted-foreground">Referral</div>
+                                <div className="font-medium">₦{member.referral_earnings.toLocaleString()}</div>
+                              </div>
+                              <div>
+                                <div className="text-muted-foreground">MLM</div>
+                                <div className="font-medium">₦{member.mlm_earnings.toLocaleString()}</div>
+                              </div>
+                              <div>
+                                <div className="text-muted-foreground">Total</div>
+                                <div className="font-medium">₦{member.total_bonus.toLocaleString()}</div>
+                              </div>
+                            </div>
+                            <div className="flex items-center justify-end mt-3 text-xs text-primary">
+                              View Details <ChevronRight className="h-3 w-3 ml-1" />
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                      {memberSummaries.length === 0 && (
+                        <div className="text-center text-muted-foreground py-8">
+                          No members with bonus data
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Desktop view - Table */}
+                    <div className="hidden md:block overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="whitespace-nowrap">Member</TableHead>
+                            <TableHead className="whitespace-nowrap">Member #</TableHead>
+                            <TableHead className="whitespace-nowrap text-right">Referrals</TableHead>
+                            <TableHead className="whitespace-nowrap text-right">Referral Earnings</TableHead>
+                            <TableHead className="whitespace-nowrap text-right">MLM Earnings</TableHead>
+                            <TableHead className="whitespace-nowrap text-right">Total Bonus</TableHead>
+                            <TableHead className="whitespace-nowrap text-right">Withdrawn</TableHead>
+                            <TableHead className="whitespace-nowrap text-right">Balance</TableHead>
+                            <TableHead className="whitespace-nowrap">Action</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {memberSummaries.map((member) => (
+                            <TableRow 
+                              key={member.id} 
+                              className="cursor-pointer hover:bg-muted/50"
+                              onClick={() => fetchMemberDetail(member)}
+                            >
+                              <TableCell className="font-medium">{member.member_name}</TableCell>
+                              <TableCell>{member.member_number}</TableCell>
+                              <TableCell className="text-right">{member.referral_count}</TableCell>
+                              <TableCell className="text-right">₦{member.referral_earnings.toLocaleString()}</TableCell>
+                              <TableCell className="text-right">₦{member.mlm_earnings.toLocaleString()}</TableCell>
+                              <TableCell className="text-right font-medium">₦{member.total_bonus.toLocaleString()}</TableCell>
+                              <TableCell className="text-right text-muted-foreground">₦{member.withdrawn.toLocaleString()}</TableCell>
+                              <TableCell className="text-right">
+                                <Badge variant={member.available_balance > 0 ? "default" : "secondary"}>
+                                  ₦{member.available_balance.toLocaleString()}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <Button variant="ghost" size="sm">
+                                  <Info className="h-4 w-4 mr-1" />
+                                  Details
+                                  <ChevronRight className="h-4 w-4 ml-1" />
+                                </Button>
+                              </TableCell>
                             </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {memberSummaries.map((member) => (
-                              <TableRow 
-                                key={member.id} 
-                                className="cursor-pointer hover:bg-muted/50"
-                                onClick={() => fetchMemberDetail(member)}
-                              >
-                                <TableCell className="font-medium">{member.member_name}</TableCell>
-                                <TableCell>{member.member_number}</TableCell>
-                                <TableCell className="text-right">{member.referral_count}</TableCell>
-                                <TableCell className="text-right">₦{member.referral_earnings.toLocaleString()}</TableCell>
-                                <TableCell className="text-right">₦{member.mlm_earnings.toLocaleString()}</TableCell>
-                                <TableCell className="text-right font-medium">₦{member.total_bonus.toLocaleString()}</TableCell>
-                                <TableCell className="text-right text-muted-foreground">₦{member.withdrawn.toLocaleString()}</TableCell>
-                                <TableCell className="text-right">
-                                  <Badge variant={member.available_balance > 0 ? "default" : "secondary"}>
-                                    ₦{member.available_balance.toLocaleString()}
-                                  </Badge>
-                                </TableCell>
-                                <TableCell>
-                                  <Button variant="ghost" size="sm">
-                                    <Info className="h-4 w-4 mr-1" />
-                                    Details
-                                    <ChevronRight className="h-4 w-4 ml-1" />
-                                  </Button>
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                            {memberSummaries.length === 0 && (
-                              <TableRow>
-                                <TableCell colSpan={9} className="text-center text-muted-foreground">
-                                  No members with bonus data
-                                </TableCell>
-                              </TableRow>
-                            )}
-                          </TableBody>
-                        </Table>
-                      </div>
+                          ))}
+                          {memberSummaries.length === 0 && (
+                            <TableRow>
+                              <TableCell colSpan={9} className="text-center text-muted-foreground">
+                                No members with bonus data
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </TableBody>
+                      </Table>
                     </div>
                   </CardContent>
                 </Card>
@@ -663,225 +710,319 @@ export default function BonusDistribution() {
         </div>
       </div>
 
-      {/* Member Detail Dialog */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              Bonus Breakdown: {selectedMember?.member_name}
-            </DialogTitle>
-            <DialogDescription>
-              Member #{selectedMember?.member_number} - Complete bonus earnings breakdown
-            </DialogDescription>
-          </DialogHeader>
-
-          {detailLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      {/* Member Detail - Drawer on mobile, Dialog on desktop */}
+      {isMobile ? (
+        <Drawer open={dialogOpen} onOpenChange={setDialogOpen}>
+          <DrawerContent className="max-h-[85vh]">
+            <DrawerHeader className="text-left">
+              <DrawerTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                <span className="truncate">Bonus: {selectedMember?.member_name}</span>
+              </DrawerTitle>
+              <DrawerDescription>
+                #{selectedMember?.member_number} - Bonus breakdown
+              </DrawerDescription>
+            </DrawerHeader>
+            <div className="overflow-y-auto px-4 pb-6">
+              <MemberDetailContent 
+                detailLoading={detailLoading}
+                memberDetail={memberDetail}
+                isMobile={isMobile}
+              />
             </div>
-          ) : memberDetail ? (
-            <div className="space-y-6">
-              {/* Summary Cards */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <Card className="bg-primary/5">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-                      <Gift className="h-4 w-4" />
-                      Referral Bonus
-                    </div>
-                    <div className="text-xl font-bold text-primary">
-                      ₦{memberDetail.summary.totalReferralEarnings.toLocaleString()}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {memberDetail.summary.totalReferrals} invites × ₦1,000
-                    </div>
-                  </CardContent>
-                </Card>
+          </DrawerContent>
+        </Drawer>
+      ) : (
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Bonus Breakdown: {selectedMember?.member_name}
+              </DialogTitle>
+              <DialogDescription>
+                Member #{selectedMember?.member_number} - Complete bonus earnings breakdown
+              </DialogDescription>
+            </DialogHeader>
+            <MemberDetailContent 
+              detailLoading={detailLoading}
+              memberDetail={memberDetail}
+              isMobile={isMobile}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
+    </SidebarProvider>
+  );
+}
 
-                <Card className="bg-secondary/30">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-                      <Coins className="h-4 w-4" />
-                      MLM Bonus
-                    </div>
-                    <div className="text-xl font-bold">
-                      ₦{memberDetail.summary.totalMLMEarnings.toLocaleString()}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {memberDetail.mlmDistributions.length} pools × ₦30
-                    </div>
-                  </CardContent>
-                </Card>
+// Extracted component for member detail content
+function MemberDetailContent({ 
+  detailLoading, 
+  memberDetail,
+  isMobile
+}: { 
+  detailLoading: boolean; 
+  memberDetail: MemberBonusDetail | null;
+  isMobile: boolean;
+}) {
+  if (detailLoading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
-                <Card className="bg-destructive/10">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-                      <Wallet className="h-4 w-4" />
-                      Withdrawn
-                    </div>
-                    <div className="text-xl font-bold text-destructive">
-                      ₦{memberDetail.summary.totalWithdrawn.toLocaleString()}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {memberDetail.withdrawals.filter(w => w.status === 'approved').length} withdrawals
-                    </div>
-                  </CardContent>
-                </Card>
+  if (!memberDetail) return null;
 
-                <Card className="bg-accent/20">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-                      <DollarSign className="h-4 w-4" />
-                      Available
-                    </div>
-                    <div className="text-xl font-bold text-accent-foreground">
-                      ₦{memberDetail.summary.availableBalance.toLocaleString()}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      Current balance
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+  return (
+    <div className="space-y-4 md:space-y-6">
+      {/* Summary Cards */}
+      <div className="grid grid-cols-2 gap-2 md:gap-3">
+        <Card className="bg-primary/5">
+          <CardContent className="p-3 md:p-4">
+            <div className="flex items-center gap-1 md:gap-2 text-xs md:text-sm text-muted-foreground mb-1">
+              <Gift className="h-3 w-3 md:h-4 md:w-4" />
+              <span className="truncate">Referral</span>
+            </div>
+            <div className="text-lg md:text-xl font-bold text-primary">
+              ₦{memberDetail.summary.totalReferralEarnings.toLocaleString()}
+            </div>
+            <div className="text-[10px] md:text-xs text-muted-foreground">
+              {memberDetail.summary.totalReferrals} × ₦1,000
+            </div>
+          </CardContent>
+        </Card>
 
-              {/* Calculation Formula */}
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm">How This Balance Was Calculated</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="bg-muted/50 rounded-lg p-4 font-mono text-sm space-y-1">
-                    <div className="flex justify-between">
-                      <span>Referral Bonus ({memberDetail.summary.totalReferrals} × ₦1,000)</span>
-                      <span className="text-primary">+ ₦{memberDetail.summary.totalReferralEarnings.toLocaleString()}</span>
+        <Card className="bg-secondary/30">
+          <CardContent className="p-3 md:p-4">
+            <div className="flex items-center gap-1 md:gap-2 text-xs md:text-sm text-muted-foreground mb-1">
+              <Coins className="h-3 w-3 md:h-4 md:w-4" />
+              <span className="truncate">MLM</span>
+            </div>
+            <div className="text-lg md:text-xl font-bold">
+              ₦{memberDetail.summary.totalMLMEarnings.toLocaleString()}
+            </div>
+            <div className="text-[10px] md:text-xs text-muted-foreground">
+              {memberDetail.mlmDistributions.length} × ₦30
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-destructive/10">
+          <CardContent className="p-3 md:p-4">
+            <div className="flex items-center gap-1 md:gap-2 text-xs md:text-sm text-muted-foreground mb-1">
+              <Wallet className="h-3 w-3 md:h-4 md:w-4" />
+              <span className="truncate">Withdrawn</span>
+            </div>
+            <div className="text-lg md:text-xl font-bold text-destructive">
+              ₦{memberDetail.summary.totalWithdrawn.toLocaleString()}
+            </div>
+            <div className="text-[10px] md:text-xs text-muted-foreground">
+              {memberDetail.withdrawals.filter(w => w.status === 'approved').length} withdrawals
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-accent/20">
+          <CardContent className="p-3 md:p-4">
+            <div className="flex items-center gap-1 md:gap-2 text-xs md:text-sm text-muted-foreground mb-1">
+              <DollarSign className="h-3 w-3 md:h-4 md:w-4" />
+              <span className="truncate">Available</span>
+            </div>
+            <div className="text-lg md:text-xl font-bold text-accent-foreground">
+              ₦{memberDetail.summary.availableBalance.toLocaleString()}
+            </div>
+            <div className="text-[10px] md:text-xs text-muted-foreground">
+              Balance
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Calculation Formula */}
+      <Card>
+        <CardHeader className="pb-2 px-3 md:px-6 pt-3 md:pt-6">
+          <CardTitle className="text-xs md:text-sm">How This Balance Was Calculated</CardTitle>
+        </CardHeader>
+        <CardContent className="px-3 md:px-6 pb-3 md:pb-6">
+          <div className="bg-muted/50 rounded-lg p-3 md:p-4 font-mono text-xs md:text-sm space-y-1">
+            <div className="flex justify-between gap-2">
+              <span className="truncate">Referral ({memberDetail.summary.totalReferrals} × ₦1,000)</span>
+              <span className="text-primary whitespace-nowrap">+ ₦{memberDetail.summary.totalReferralEarnings.toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between gap-2">
+              <span className="truncate">MLM ({memberDetail.mlmDistributions.length} × ₦30)</span>
+              <span className="text-primary whitespace-nowrap">+ ₦{memberDetail.summary.totalMLMEarnings.toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between gap-2">
+              <span>Withdrawals</span>
+              <span className="text-destructive whitespace-nowrap">- ₦{memberDetail.summary.totalWithdrawn.toLocaleString()}</span>
+            </div>
+            <Separator className="my-2" />
+            <div className="flex justify-between font-bold gap-2">
+              <span>Available</span>
+              <span className="whitespace-nowrap">= ₦{memberDetail.summary.availableBalance.toLocaleString()}</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Referral Details */}
+      {memberDetail.referralCommissions.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2 px-3 md:px-6 pt-3 md:pt-6">
+            <CardTitle className="text-xs md:text-sm flex items-center gap-2">
+              <Gift className="h-3 w-3 md:h-4 md:w-4" />
+              Referral Commissions
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-3 md:px-6 pb-3 md:pb-6">
+            {isMobile ? (
+              <div className="space-y-2">
+                {memberDetail.referralCommissions.map((c) => (
+                  <div key={c.id} className="flex justify-between items-center py-2 border-b last:border-0">
+                    <div>
+                      <div className="font-medium text-sm">{c.invited_member_name}</div>
+                      <div className="text-xs text-muted-foreground">{new Date(c.created_at).toLocaleDateString()}</div>
                     </div>
-                    <div className="flex justify-between">
-                      <span>MLM Bonus ({memberDetail.mlmDistributions.length} × ₦30)</span>
-                      <span className="text-primary">+ ₦{memberDetail.summary.totalMLMEarnings.toLocaleString()}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Withdrawals</span>
-                      <span className="text-destructive">- ₦{memberDetail.summary.totalWithdrawn.toLocaleString()}</span>
-                    </div>
-                    <Separator className="my-2" />
-                    <div className="flex justify-between font-bold">
-                      <span>Available Balance</span>
-                      <span>= ₦{memberDetail.summary.availableBalance.toLocaleString()}</span>
+                    <div className="text-right">
+                      <div className="font-medium">₦{c.amount.toLocaleString()}</div>
+                      <Badge variant={c.status === 'approved' ? 'default' : 'secondary'} className="text-[10px]">
+                        {c.status}
+                      </Badge>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+                ))}
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Invited Member</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Amount</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {memberDetail.referralCommissions.map((c) => (
+                    <TableRow key={c.id}>
+                      <TableCell>{c.invited_member_name}</TableCell>
+                      <TableCell>{new Date(c.created_at).toLocaleDateString()}</TableCell>
+                      <TableCell>₦{c.amount.toLocaleString()}</TableCell>
+                      <TableCell>
+                        <Badge variant={c.status === 'approved' ? 'default' : 'secondary'}>
+                          {c.status}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
-              {/* Referral Details */}
-              {memberDetail.referralCommissions.length > 0 && (
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm flex items-center gap-2">
-                      <Gift className="h-4 w-4" />
-                      Referral Commissions Detail
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Invited Member</TableHead>
-                          <TableHead>Date</TableHead>
-                          <TableHead>Amount</TableHead>
-                          <TableHead>Status</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {memberDetail.referralCommissions.map((c) => (
-                          <TableRow key={c.id}>
-                            <TableCell>{c.invited_member_name}</TableCell>
-                            <TableCell>{new Date(c.created_at).toLocaleDateString()}</TableCell>
-                            <TableCell>₦{c.amount.toLocaleString()}</TableCell>
-                            <TableCell>
-                              <Badge variant={c.status === 'approved' ? 'default' : 'secondary'}>
-                                {c.status}
-                              </Badge>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </CardContent>
-                </Card>
-              )}
+      {/* MLM Details */}
+      {memberDetail.mlmDistributions.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2 px-3 md:px-6 pt-3 md:pt-6">
+            <CardTitle className="text-xs md:text-sm flex items-center gap-2">
+              <Coins className="h-3 w-3 md:h-4 md:w-4" />
+              MLM Distribution
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-3 md:px-6 pb-3 md:pb-6">
+            {isMobile ? (
+              <div className="space-y-2">
+                {memberDetail.mlmDistributions.map((d) => (
+                  <div key={d.id} className="flex justify-between items-center py-2 border-b last:border-0">
+                    <div>
+                      <div className="font-medium text-sm">{d.payment_month}</div>
+                      <div className="text-xs text-muted-foreground">{new Date(d.distribution_date).toLocaleDateString()}</div>
+                    </div>
+                    <div className="font-medium">₦{d.amount.toLocaleString()}</div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Payment Month</TableHead>
+                    <TableHead>Distribution Date</TableHead>
+                    <TableHead>Amount</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {memberDetail.mlmDistributions.map((d) => (
+                    <TableRow key={d.id}>
+                      <TableCell>{d.payment_month}</TableCell>
+                      <TableCell>{new Date(d.distribution_date).toLocaleDateString()}</TableCell>
+                      <TableCell>₦{d.amount.toLocaleString()}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
-              {/* MLM Details */}
-              {memberDetail.mlmDistributions.length > 0 && (
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm flex items-center gap-2">
-                      <Coins className="h-4 w-4" />
-                      MLM Distribution Detail
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Payment Month</TableHead>
-                          <TableHead>Distribution Date</TableHead>
-                          <TableHead>Amount</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {memberDetail.mlmDistributions.map((d) => (
-                          <TableRow key={d.id}>
-                            <TableCell>{d.payment_month}</TableCell>
-                            <TableCell>{new Date(d.distribution_date).toLocaleDateString()}</TableCell>
-                            <TableCell>₦{d.amount.toLocaleString()}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Withdrawal Details */}
-              {memberDetail.withdrawals.length > 0 && (
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm flex items-center gap-2">
-                      <Wallet className="h-4 w-4" />
-                      Withdrawal History
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Date</TableHead>
-                          <TableHead>Amount</TableHead>
-                          <TableHead>Status</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {memberDetail.withdrawals.map((w) => (
-                          <TableRow key={w.id}>
-                            <TableCell>{new Date(w.requested_at).toLocaleDateString()}</TableCell>
-                            <TableCell>₦{w.amount.toLocaleString()}</TableCell>
-                            <TableCell>
-                              <Badge variant={w.status === 'approved' ? 'default' : w.status === 'pending' ? 'secondary' : 'destructive'}>
-                                {w.status}
-                              </Badge>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-          ) : null}
-        </DialogContent>
-      </Dialog>
-    </SidebarProvider>
+      {/* Withdrawal Details */}
+      {memberDetail.withdrawals.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2 px-3 md:px-6 pt-3 md:pt-6">
+            <CardTitle className="text-xs md:text-sm flex items-center gap-2">
+              <Wallet className="h-3 w-3 md:h-4 md:w-4" />
+              Withdrawal History
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-3 md:px-6 pb-3 md:pb-6">
+            {isMobile ? (
+              <div className="space-y-2">
+                {memberDetail.withdrawals.map((w) => (
+                  <div key={w.id} className="flex justify-between items-center py-2 border-b last:border-0">
+                    <div>
+                      <div className="font-medium text-sm">{new Date(w.requested_at).toLocaleDateString()}</div>
+                      <Badge variant={w.status === 'approved' ? 'default' : w.status === 'pending' ? 'secondary' : 'destructive'} className="text-[10px]">
+                        {w.status}
+                      </Badge>
+                    </div>
+                    <div className="font-medium">₦{w.amount.toLocaleString()}</div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Amount</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {memberDetail.withdrawals.map((w) => (
+                    <TableRow key={w.id}>
+                      <TableCell>{new Date(w.requested_at).toLocaleDateString()}</TableCell>
+                      <TableCell>₦{w.amount.toLocaleString()}</TableCell>
+                      <TableCell>
+                        <Badge variant={w.status === 'approved' ? 'default' : w.status === 'pending' ? 'secondary' : 'destructive'}>
+                          {w.status}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+      )}
+    </div>
   );
 }

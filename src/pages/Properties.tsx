@@ -1,12 +1,34 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Building2, MapPin, DollarSign, Loader2 } from "lucide-react";
+import { Building2, MapPin, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
+// Helper function to get proper image URL
+const getPropertyImageUrl = (imageUrl: string | null): string | null => {
+  if (!imageUrl) return null;
+  
+  // If it's already a full URL, return as is
+  if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+    return imageUrl;
+  }
+  
+  // If it's a storage path, construct the public URL
+  // Handle both "bucket/path" and just "path" formats
+  const bucketName = 'property-images';
+  let filePath = imageUrl;
+  
+  // Remove bucket prefix if present
+  if (imageUrl.startsWith(`${bucketName}/`)) {
+    filePath = imageUrl.substring(bucketName.length + 1);
+  }
+  
+  const { data } = supabase.storage.from(bucketName).getPublicUrl(filePath);
+  return data.publicUrl;
+};
 const Properties = () => {
   const [properties, setProperties] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -98,9 +120,12 @@ const Properties = () => {
                     {property.image_url && (
                       <div className="aspect-video w-full overflow-hidden bg-muted">
                         <img
-                          src={property.image_url}
+                          src={getPropertyImageUrl(property.image_url) || ''}
                           alt={property.name}
                           className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = 'none';
+                          }}
                         />
                       </div>
                     )}

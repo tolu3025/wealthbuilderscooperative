@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Pencil, Trash2, Loader2, Building2 } from "lucide-react";
+import { Pencil, Trash2, Loader2, Building2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -15,6 +15,20 @@ import { AdminSidebar } from "@/components/AdminSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { FileUpload } from "@/components/FileUpload";
 
+// Helper function to get proper image URL
+const getPropertyImageUrl = (imageUrl: string | null): string | null => {
+  if (!imageUrl) return null;
+  if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+    return imageUrl;
+  }
+  const bucketName = 'property-images';
+  let filePath = imageUrl;
+  if (imageUrl.startsWith(`${bucketName}/`)) {
+    filePath = imageUrl.substring(bucketName.length + 1);
+  }
+  const { data } = supabase.storage.from(bucketName).getPublicUrl(filePath);
+  return data.publicUrl;
+};
 const Properties = () => {
   const [properties, setProperties] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -239,7 +253,7 @@ const Properties = () => {
                         />
                       )}
                       {formData.image_url && (
-                        <img src={formData.image_url} alt="Preview" className="mt-2 rounded-lg w-full h-32 object-cover" />
+                        <img src={getPropertyImageUrl(formData.image_url) || ''} alt="Preview" className="mt-2 rounded-lg w-full h-32 object-cover" />
                       )}
                     </div>
 

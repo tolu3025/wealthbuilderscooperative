@@ -149,9 +149,7 @@ const PropertyPlans = () => {
           <main className="flex-1 p-6 space-y-6 overflow-auto">
             <div>
               <h1 className="text-3xl font-bold mb-2">Investment Plans</h1>
-              <p className="text-muted-foreground">
-                Choose from our available property investment opportunities
-              </p>
+              <p className="text-muted-foreground">Choose from our available investment opportunities</p>
             </div>
 
             <div className="grid md:grid-cols-2 gap-6">

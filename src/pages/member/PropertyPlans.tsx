@@ -9,69 +9,60 @@ import { toast } from "sonner";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { MemberSidebar } from "@/components/MemberSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
-
 interface PropertyPlan {
   id: string;
   name: string;
   description: string;
   plan_type: string;
 }
-
 interface Enrollment {
   id: string;
   plan_id: string;
   enrolled_at: string;
   status: string;
 }
-
 const planIcons = {
   joint_ownership: Building2,
   individual_ownership: Users,
   property_business: Briefcase,
-  reseller: UserCheck,
+  reseller: UserCheck
 };
-
 const PropertyPlans = () => {
   const [plans, setPlans] = useState<PropertyPlan[]>([]);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [loading, setLoading] = useState(true);
   const [enrolling, setEnrolling] = useState<string | null>(null);
   const [userName, setUserName] = useState("");
-
   useEffect(() => {
     fetchData();
   }, []);
-
   const fetchData = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: {
+          user
+        }
+      } = await supabase.auth.getUser();
       if (!user) return;
 
       // Get profile
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('first_name, last_name, id')
-        .eq('user_id', user.id)
-        .single();
-
+      const {
+        data: profile
+      } = await supabase.from('profiles').select('first_name, last_name, id').eq('user_id', user.id).single();
       if (profile) {
         setUserName(`${profile.first_name} ${profile.last_name}`);
 
         // Fetch enrollments
-        const { data: enrollmentData } = await supabase
-          .from('plan_enrollments')
-          .select('*')
-          .eq('member_id', profile.id);
-
+        const {
+          data: enrollmentData
+        } = await supabase.from('plan_enrollments').select('*').eq('member_id', profile.id);
         setEnrollments(enrollmentData || []);
       }
 
       // Fetch plans
-      const { data: plansData } = await supabase
-        .from('property_plans')
-        .select('*')
-        .order('created_at');
-
+      const {
+        data: plansData
+      } = await supabase.from('property_plans').select('*').order('created_at');
       setPlans(plansData || []);
     } catch (error: any) {
       console.error('Error fetching data:', error);
@@ -80,31 +71,27 @@ const PropertyPlans = () => {
       setLoading(false);
     }
   };
-
   const handleEnroll = async (planId: string) => {
     setEnrolling(planId);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: {
+          user
+        }
+      } = await supabase.auth.getUser();
       if (!user) return;
-
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('user_id', user.id)
-        .single();
-
+      const {
+        data: profile
+      } = await supabase.from('profiles').select('id').eq('user_id', user.id).single();
       if (!profile) return;
-
-      const { error } = await supabase
-        .from('plan_enrollments')
-        .insert({
-          member_id: profile.id,
-          plan_id: planId,
-          status: 'active',
-        });
-
+      const {
+        error
+      } = await supabase.from('plan_enrollments').insert({
+        member_id: profile.id,
+        plan_id: planId,
+        status: 'active'
+      });
       if (error) throw error;
-
       toast.success("Successfully enrolled in plan!");
       fetchData();
     } catch (error: any) {
@@ -114,31 +101,26 @@ const PropertyPlans = () => {
       setEnrolling(null);
     }
   };
-
   const handleCancelInterest = async (planId: string) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: {
+          user
+        }
+      } = await supabase.auth.getUser();
       if (!user) return;
-
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('user_id', user.id)
-        .single();
-
+      const {
+        data: profile
+      } = await supabase.from('profiles').select('id').eq('user_id', user.id).single();
       if (!profile) return;
 
       // Find the enrollment to delete
       const enrollment = enrollments.find(e => e.plan_id === planId && e.status === 'active');
       if (!enrollment) return;
-
-      const { error } = await supabase
-        .from('plan_enrollments')
-        .delete()
-        .eq('id', enrollment.id);
-
+      const {
+        error
+      } = await supabase.from('plan_enrollments').delete().eq('id', enrollment.id);
       if (error) throw error;
-
       toast.success("Interest cancelled successfully!");
       fetchData();
     } catch (error: any) {
@@ -146,45 +128,37 @@ const PropertyPlans = () => {
       toast.error("Failed to cancel: " + error.message);
     }
   };
-
   const isEnrolled = (planId: string) => {
     return enrollments.some(e => e.plan_id === planId && e.status === 'active');
   };
-
   if (loading) {
-    return (
-      <SidebarProvider>
+    return <SidebarProvider>
         <div className="min-h-screen flex w-full">
           <MemberSidebar />
           <div className="flex-1 flex items-center justify-center">
             <Loader2 className="h-12 w-12 animate-spin text-primary" />
           </div>
         </div>
-      </SidebarProvider>
-    );
+      </SidebarProvider>;
   }
-
-  return (
-    <SidebarProvider defaultOpen={false}>
+  return <SidebarProvider defaultOpen={false}>
       <div className="min-h-screen flex w-full">
         <MemberSidebar />
         <div className="flex-1 flex flex-col min-w-0">
           <DashboardHeader userName={userName} />
           <main className="flex-1 p-6 space-y-6 overflow-auto">
             <div>
-              <h1 className="text-3xl font-bold mb-2">Property Investment Plans</h1>
+              <h1 className="text-3xl font-bold mb-2">Investment Plans</h1>
               <p className="text-muted-foreground">
                 Choose from our available property investment opportunities
               </p>
             </div>
 
             <div className="grid md:grid-cols-2 gap-6">
-              {plans.map((plan) => {
-                const Icon = planIcons[plan.plan_type as keyof typeof planIcons] || Building2;
-                const enrolled = isEnrolled(plan.id);
-
-                return (
-                  <Card key={plan.id} className="shadow-md hover:shadow-lg transition-shadow">
+              {plans.map(plan => {
+              const Icon = planIcons[plan.plan_type as keyof typeof planIcons] || Building2;
+              const enrolled = isEnrolled(plan.id);
+              return <Card key={plan.id} className="shadow-md hover:shadow-lg transition-shadow">
                     <CardHeader>
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3">
@@ -195,12 +169,10 @@ const PropertyPlans = () => {
                             <CardTitle className="text-xl">{plan.name}</CardTitle>
                           </div>
                         </div>
-                        {enrolled && (
-                          <Badge variant="default" className="gap-1">
+                        {enrolled && <Badge variant="default" className="gap-1">
                             <CheckCircle2 className="h-3 w-3" />
                             Enrolled
-                          </Badge>
-                        )}
+                          </Badge>}
                       </div>
                     </CardHeader>
                     <CardContent className="space-y-4">
@@ -208,36 +180,19 @@ const PropertyPlans = () => {
                         {plan.description}
                       </CardDescription>
                       
-                      {enrolled ? (
-                        <Button
-                          onClick={() => handleCancelInterest(plan.id)}
-                          variant="outline"
-                          className="w-full"
-                        >
+                      {enrolled ? <Button onClick={() => handleCancelInterest(plan.id)} variant="outline" className="w-full">
                           Cancel Interest
-                        </Button>
-                      ) : (
-                        <Button
-                          onClick={() => handleEnroll(plan.id)}
-                          disabled={enrolling === plan.id}
-                          className="w-full"
-                        >
-                          {enrolling === plan.id && (
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          )}
+                        </Button> : <Button onClick={() => handleEnroll(plan.id)} disabled={enrolling === plan.id} className="w-full">
+                          {enrolling === plan.id && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                           Enroll Now
-                        </Button>
-                      )}
+                        </Button>}
                     </CardContent>
-                  </Card>
-                );
-              })}
+                  </Card>;
+            })}
             </div>
           </main>
         </div>
       </div>
-    </SidebarProvider>
-  );
+    </SidebarProvider>;
 };
-
 export default PropertyPlans;

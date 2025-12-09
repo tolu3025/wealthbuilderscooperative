@@ -1,0 +1,1 @@
+UPDATE public.property_plans SET name = 'Joint Investment Plan', updated_at = now() WHERE name ILIKE '%joint%';

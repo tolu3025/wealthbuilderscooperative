@@ -79,9 +79,9 @@ const PlanEnrollments = () => {
           <DashboardHeader userName="Admin" />
           <main className="flex-1 p-6 space-y-6 overflow-auto">
             <div>
-              <h1 className="text-3xl font-bold mb-2">Plan Enrollments</h1>
+              <h1 className="text-3xl font-bold mb-2">Investment Plan Enrollments</h1>
               <p className="text-muted-foreground">
-                View all member enrollments in property investment plans
+                View all member enrollments in investment plans
               </p>
             </div>
 
@@ -89,7 +89,7 @@ const PlanEnrollments = () => {
               <CardHeader>
                 <CardTitle>All Enrollments ({enrollments.length})</CardTitle>
                 <CardDescription>
-                  Members who have enrolled in property investment plans
+                  Members who have enrolled in investment plans
                 </CardDescription>
               </CardHeader>
               <CardContent>

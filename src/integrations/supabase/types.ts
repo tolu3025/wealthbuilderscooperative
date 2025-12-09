@@ -1193,6 +1193,10 @@ export type Database = {
         Returns: undefined
       }
       find_available_mlm_parent: { Args: never; Returns: string }
+      find_available_parent_in_subtree: {
+        Args: { p_root_member_id: string }
+        Returns: string
+      }
       generate_invite_code: { Args: never; Returns: string }
       generate_member_number: { Args: never; Returns: string }
       generate_pin: { Args: never; Returns: string }

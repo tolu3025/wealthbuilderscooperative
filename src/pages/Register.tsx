@@ -33,7 +33,7 @@ const registerSchema = z.object({
   confirmPassword: z.string(),
   memberType: z.enum(["contributor", "acting_member"]),
   breakdownType: z.enum(["80_20", "100_capital"]),
-  inviteCode: z.string().optional(),
+  inviteCode: z.string().min(1, "Invite code is required to register"),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords do not match",
   path: ["confirmPassword"],
@@ -79,7 +79,24 @@ const Register = () => {
     setLoading(true);
     
     try {
-      // Create user account first
+      // First, validate the invite code exists
+      const { data: referrer, error: referrerError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('invite_code', data.inviteCode.toUpperCase())
+        .single();
+
+      if (referrerError || !referrer) {
+        toast({
+          title: "Invalid Invite Code",
+          description: "The invite code you entered does not exist. Please check and try again.",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Create user account
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
@@ -102,7 +119,7 @@ const Register = () => {
         // Wait for profile to be created
         await new Promise(resolve => setTimeout(resolve, 1000));
 
-        // Update profile with additional data and handle referrals
+        // Update profile with additional data and referral
         const { data: profile } = await supabase
           .from('profiles')
           .select('id')
@@ -110,28 +127,13 @@ const Register = () => {
           .single();
 
         if (profile) {
-          // Handle invite code if provided - only set invited_by
-          // Commissions are created by the database trigger when registration_fees.status='approved'
-          let invitedById = null;
-          if (data.inviteCode) {
-            const { data: referrer } = await supabase
-              .from('profiles')
-              .select('id')
-              .eq('invite_code', data.inviteCode.toUpperCase())
-              .single();
-
-            if (referrer) {
-              invitedById = referrer.id;
-            }
-          }
-
           await supabase
             .from('profiles')
             .update({
               address: data.address,
               member_type: data.memberType,
               breakdown_type: data.breakdownType,
-              invited_by: invitedById,
+              invited_by: referrer.id,
             })
             .eq('id', profile.id);
         }
@@ -425,14 +427,17 @@ const Register = () => {
                       name="inviteCode"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Invite Code (Optional)</FormLabel>
+                          <FormLabel>Invite Code *</FormLabel>
                           <FormControl>
                             <Input 
-                              placeholder="Enter invite code if you have one" 
+                              placeholder="Enter your invite code (required)" 
                               {...field}
                               onChange={(e) => field.onChange(e.target.value.toUpperCase())}
                             />
                           </FormControl>
+                          <FormDescription>
+                            You must have an invite code from an existing member to register
+                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}

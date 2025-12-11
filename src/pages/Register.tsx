@@ -96,7 +96,7 @@ const Register = () => {
         return;
       }
 
-      // Create user account
+      // Create user account - pass invited_by in metadata so it's available in handle_new_user trigger
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
@@ -109,6 +109,7 @@ const Register = () => {
             state: data.state,
             address: data.address,
             breakdown_type: data.breakdownType,
+            invited_by: referrer.id, // Pass referrer ID so MLM tree trigger has it immediately
           },
         },
       });

@@ -27,6 +27,7 @@ const Contribute = () => {
   const [contributionAmount, setContributionAmount] = useState<string>("5000");
   const [selectedBreakdown, setSelectedBreakdown] = useState<string>("80_20");
   const [projectSupportReceipt, setProjectSupportReceipt] = useState<string>("");
+  const [psfSubmitted, setPsfSubmitted] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -72,6 +73,19 @@ const Contribute = () => {
 
       if (contribError) throw contribError;
       setContributions(contribData || []);
+
+      // Check if PSF already submitted for current month
+      const currentMonth = new Date().toISOString().split('T')[0].substring(0, 7) + '-01';
+      const { data: psfData } = await supabase
+        .from('project_support_contributions')
+        .select('id')
+        .eq('member_id', profileData.id)
+        .eq('contribution_month', currentMonth)
+        .limit(1);
+      
+      if (psfData && psfData.length > 0) {
+        setPsfSubmitted(true);
+      }
 
     } catch (error: any) {
       toast({
@@ -173,6 +187,7 @@ const Contribute = () => {
       });
 
       setProjectSupportReceipt("");
+      setPsfSubmitted(true);
       fetchData();
 
     } catch (error: any) {
@@ -445,11 +460,11 @@ const Contribute = () => {
 
                 <Button
                   onClick={handleProjectSupportSubmit}
-                  disabled={!projectSupportReceipt || submitting}
-                  className="w-full bg-red-600 hover:bg-red-700"
+                  disabled={psfSubmitted || !projectSupportReceipt || submitting}
+                  className={`w-full ${psfSubmitted ? 'bg-green-600 hover:bg-green-600 cursor-not-allowed' : 'bg-red-600 hover:bg-red-700'}`}
                   size="lg"
                 >
-                  {submitting ? "Submitting..." : "Submit Mandatory Project Support"}
+                  {submitting ? "Submitting..." : psfSubmitted ? "✓ Submitted for This Month" : "Submit Mandatory Project Support"}
                 </Button>
               </CardContent>
             </Card>

@@ -52,6 +52,7 @@ import PropertyPlans from "./pages/member/PropertyPlans";
 import PlanEnrollments from "./pages/admin/PlanEnrollments";
 import ProjectSupportFund from "./pages/admin/ProjectSupportFund";
 import AccountUpgrades from "./pages/admin/AccountUpgrades";
+import ProjectSupport from "./pages/ProjectSupport";
 
 const queryClient = new QueryClient();
 
@@ -175,6 +176,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <ChangePassword />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/project-support"
+              element={
+                <ProtectedRoute>
+                  <ProjectSupport />
                 </ProtectedRoute>
               }
             />

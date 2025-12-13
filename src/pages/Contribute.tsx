@@ -8,7 +8,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { FileUpload } from "@/components/FileUpload";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { Wallet, Info, Loader2, CreditCard, Receipt } from "lucide-react";
+import { Info, Loader2, CreditCard, Receipt } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { CopyPhoneButton } from "@/components/CopyPhoneButton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -26,8 +26,6 @@ const Contribute = () => {
   const [contributions, setContributions] = useState<any[]>([]);
   const [contributionAmount, setContributionAmount] = useState<string>("5000");
   const [selectedBreakdown, setSelectedBreakdown] = useState<string>("80_20");
-  const [projectSupportReceipt, setProjectSupportReceipt] = useState<string>("");
-  const [psfSubmitted, setPsfSubmitted] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -73,19 +71,6 @@ const Contribute = () => {
 
       if (contribError) throw contribError;
       setContributions(contribData || []);
-
-      // Check if PSF already submitted for current month
-      const currentMonth = new Date().toISOString().split('T')[0].substring(0, 7) + '-01';
-      const { data: psfData } = await supabase
-        .from('project_support_contributions')
-        .select('id')
-        .eq('member_id', profileData.id)
-        .eq('contribution_month', currentMonth)
-        .limit(1);
-      
-      if (psfData && psfData.length > 0) {
-        setPsfSubmitted(true);
-      }
 
     } catch (error: any) {
       toast({
@@ -161,46 +146,6 @@ const Contribute = () => {
     }
   };
 
-  const handleProjectSupportSubmit = async () => {
-    if (!projectSupportReceipt || !profile) return;
-
-    setSubmitting(true);
-    try {
-      const currentMonth = new Date().toISOString().split('T')[0].substring(0, 7) + '-01';
-
-      // Insert project support contribution
-      const { error: projectError } = await supabase
-        .from('project_support_contributions')
-        .insert({
-          member_id: profile.id,
-          amount: 500,
-          receipt_url: projectSupportReceipt,
-          contribution_month: currentMonth,
-          payment_status: 'pending',
-        });
-
-      if (projectError) throw projectError;
-
-      toast({
-        title: "Project Support submitted",
-        description: "Your project support contribution has been submitted for admin approval",
-      });
-
-      setProjectSupportReceipt("");
-      setPsfSubmitted(true);
-      fetchData();
-
-    } catch (error: any) {
-      toast({
-        title: "Submission failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -210,23 +155,6 @@ const Contribute = () => {
   }
 
   const currentMonth = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-  
-  // Calculate last Thursday of current month
-  const getLastThursday = (date: Date) => {
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    const lastDay = new Date(year, month + 1, 0);
-    const dayOfWeek = lastDay.getDay();
-    const daysUntilThursday = (dayOfWeek + 3) % 7;
-    return new Date(year, month, lastDay.getDate() - daysUntilThursday);
-  };
-  
-  const lastThursday = getLastThursday(new Date());
-  const lastThursdayFormatted = lastThursday.toLocaleDateString('en-US', { 
-    month: 'long', 
-    day: 'numeric',
-    year: 'numeric'
-  });
   
   // Calculate live preview for contribution only
   const amount = parseFloat(contributionAmount) || 0;
@@ -396,79 +324,7 @@ const Contribute = () => {
             </CardContent>
           </Card>
 
-          {/* Project Support Fund - Mandatory Section */}
-          <div className="border-t-4 border-red-500 pt-6">
-            <Alert className="mb-4 border-red-500/50 bg-red-50 dark:bg-red-950/20">
-              <Info className="h-4 w-4 text-red-600" />
-              <AlertDescription className="text-red-900 dark:text-red-100">
-                <strong className="text-red-700 dark:text-red-300">⚠️ MANDATORY: Project Support Fund</strong>
-                <div className="mt-2 space-y-1 text-sm">
-                  <p>The ₦500 Project Support Fund is <strong>compulsory</strong> for all members.</p>
-                  <p className="font-semibold">⏰ Deadline: {lastThursdayFormatted} (Last Thursday of the month)</p>
-                  <p className="text-red-700 dark:text-red-300">
-                    ⚠️ Members who don't pay by the deadline will NOT receive Real Estate Bonus earnings for that month.
-                  </p>
-                </div>
-              </AlertDescription>
-            </Alert>
 
-            <Card className="border-2 border-red-500/30">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Wallet className="h-5 w-5 text-red-600" />
-                  Mandatory: Project Support Fund (₦500)
-                </CardTitle>
-                <CardDescription>
-                  Required monthly payment - pays before last Thursday to remain eligible for Real Estate Bonus
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="bg-red-50 dark:bg-red-950/20 p-4 rounded-lg space-y-3 border border-red-200 dark:border-red-800">
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-1">Bank Name</p>
-                    <p className="font-semibold">Alpha Morgan Bank</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-1">Account Number</p>
-                    <div className="flex items-center gap-2">
-                      <p className="font-semibold text-lg">2010006769</p>
-                      <CopyPhoneButton phoneNumber="2010006769" />
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-1">Account Name</p>
-                    <p className="font-semibold text-sm">WEALTH BUILDERS IN PROPERTIES MULTIPURPOSE COOPERATIVE LTD</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-1">Amount (Fixed)</p>
-                    <p className="font-semibold text-lg text-red-600">₦500</p>
-                  </div>
-                  <div className="text-xs text-red-600 dark:text-red-400 font-medium">
-                    * This is a separate mandatory payment from your monthly contribution
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Upload Project Support Receipt *</label>
-                  <FileUpload
-                    onUploadComplete={setProjectSupportReceipt}
-                    userId={user?.id || ""}
-                    fileType="project-support"
-                    bucket="payment-receipts"
-                  />
-                </div>
-
-                <Button
-                  onClick={handleProjectSupportSubmit}
-                  disabled={psfSubmitted || !projectSupportReceipt || submitting}
-                  className={`w-full ${psfSubmitted ? 'bg-green-600 hover:bg-green-600 cursor-not-allowed' : 'bg-red-600 hover:bg-red-700'}`}
-                  size="lg"
-                >
-                  {submitting ? "Submitting..." : psfSubmitted ? "✓ Submitted for This Month" : "Submit Mandatory Project Support"}
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
 
           <Card>
             <CardHeader>

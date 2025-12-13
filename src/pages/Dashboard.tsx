@@ -15,8 +15,6 @@ import {
   Copy
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { SidebarProvider } from "@/components/ui/sidebar";
-import { MemberSidebar } from "@/components/MemberSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { AnnouncementBanner } from "@/components/AnnouncementBanner";
 import { PaymentWarningBanner } from "@/components/PaymentWarningBanner";
@@ -283,39 +281,29 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <SidebarProvider>
-        <div className="min-h-screen flex w-full">
-          <MemberSidebar />
-          <div className="flex-1 flex flex-col">
-            <DashboardHeader userName={userName} avatarUrl={avatarUrl} />
-            <div className="flex-1 flex items-center justify-center bg-muted/30">
-              <div className="text-center">
-                <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
-                <p className="text-muted-foreground">Loading dashboard...</p>
-              </div>
-            </div>
+      <div className="min-h-screen flex flex-col w-full">
+        <DashboardHeader userName={userName} avatarUrl={avatarUrl} />
+        <div className="flex-1 flex items-center justify-center bg-muted/30">
+          <div className="text-center">
+            <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
+            <p className="text-muted-foreground">Loading dashboard...</p>
           </div>
         </div>
-      </SidebarProvider>
+      </div>
     );
   }
 
   if (!memberData) {
     return (
-      <SidebarProvider>
-        <div className="min-h-screen flex w-full">
-          <MemberSidebar />
-          <div className="flex-1 flex flex-col">
-            <DashboardHeader userName={userName} avatarUrl={avatarUrl} />
-            <div className="flex-1 flex items-center justify-center bg-muted/30">
-              <div className="text-center">
-                <p className="text-muted-foreground mb-4">No member data found</p>
-                <Button onClick={() => navigate('/register')}>Register Now</Button>
-              </div>
-            </div>
+      <div className="min-h-screen flex flex-col w-full">
+        <DashboardHeader userName={userName} avatarUrl={avatarUrl} />
+        <div className="flex-1 flex items-center justify-center bg-muted/30">
+          <div className="text-center">
+            <p className="text-muted-foreground mb-4">No member data found</p>
+            <Button onClick={() => navigate('/register')}>Register Now</Button>
           </div>
         </div>
-      </SidebarProvider>
+      </div>
     );
   }
 
@@ -330,12 +318,9 @@ const Dashboard = () => {
   };
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full">
-        <MemberSidebar />
-        <div className="flex-1 flex flex-col">
-          <DashboardHeader userName={userName} avatarUrl={avatarUrl} />
-          <main className="flex-1 p-6 bg-muted/30 overflow-auto">
+    <div className="min-h-screen flex flex-col w-full">
+      <DashboardHeader userName={userName} avatarUrl={avatarUrl} />
+      <main className="flex-1 p-6 bg-muted/30 overflow-auto">
             <AnnouncementBanner />
             <PaymentWarningBanner />
             
@@ -599,7 +584,7 @@ const Dashboard = () => {
                             <p className="text-sm text-muted-foreground">{transaction.date}</p>
                           </div>
                         </div>
-                        <div className="text-right">
+                          <div className="text-right">
                           <p className="font-semibold">₦{transaction.amount.toLocaleString()}</p>
                           <p className="text-xs text-green-600 capitalize">{transaction.status}</p>
                         </div>
@@ -610,9 +595,7 @@ const Dashboard = () => {
               </CardContent>
             </Card>
           </main>
-        </div>
-      </div>
-    </SidebarProvider>
+    </div>
   );
 };
 

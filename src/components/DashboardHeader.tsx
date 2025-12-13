@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { SidebarTrigger } from "@/components/ui/sidebar";
+import { MemberHamburgerMenu } from "@/components/MemberHamburgerMenu";
 import { NotificationBell } from "@/components/NotificationBell";
 import {
   DropdownMenu,
@@ -38,7 +38,7 @@ export function DashboardHeader({ userName = "User", avatarUrl }: DashboardHeade
   return (
     <header className="sticky top-0 z-40 flex h-14 sm:h-16 items-center gap-2 sm:gap-4 border-b bg-background px-3 sm:px-4 md:px-6">
       <div className="flex items-center gap-2">
-        <SidebarTrigger />
+        <MemberHamburgerMenu />
         <span className="font-bold text-sm sm:text-base md:text-lg hidden sm:inline">WealthBuilders</span>
       </div>
 

@@ -41,7 +41,6 @@ import MemberDividends from "./pages/member/Dividends";
 import Referrals from "./pages/member/Referrals";
 import Profile from "./pages/member/Profile";
 import ChangePassword from "./pages/member/ChangePassword";
-import ProjectSupportPayment from "./pages/member/ProjectSupportPayment";
 import StateRepDashboard from "./pages/StateRepDashboard";
 import DirectorDashboard from "./pages/DirectorDashboard";
 import MonthlySettlements from "./pages/admin/MonthlySettlements";
@@ -176,14 +175,6 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <ChangePassword />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/member/project-support"
-              element={
-                <ProtectedRoute>
-                  <ProjectSupportPayment />
                 </ProtectedRoute>
               }
             />

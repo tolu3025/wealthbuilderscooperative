@@ -284,8 +284,8 @@ const Dashboard = () => {
   if (loading) {
     return (
       <SidebarProvider>
-        <MemberSidebar />
         <div className="min-h-screen flex w-full">
+          <MemberSidebar />
           <div className="flex-1 flex flex-col">
             <DashboardHeader userName={userName} avatarUrl={avatarUrl} />
             <div className="flex-1 flex items-center justify-center bg-muted/30">
@@ -303,8 +303,8 @@ const Dashboard = () => {
   if (!memberData) {
     return (
       <SidebarProvider>
-        <MemberSidebar />
         <div className="min-h-screen flex w-full">
+          <MemberSidebar />
           <div className="flex-1 flex flex-col">
             <DashboardHeader userName={userName} avatarUrl={avatarUrl} />
             <div className="flex-1 flex items-center justify-center bg-muted/30">
@@ -331,8 +331,8 @@ const Dashboard = () => {
 
   return (
     <SidebarProvider>
-      <MemberSidebar />
       <div className="min-h-screen flex w-full">
+        <MemberSidebar />
         <div className="flex-1 flex flex-col">
           <DashboardHeader userName={userName} avatarUrl={avatarUrl} />
           <main className="flex-1 p-6 bg-muted/30 overflow-auto">

@@ -68,29 +68,20 @@ const Contributions = () => {
     }
   };
 
-  const approveContribution = async (contributionId: string, memberId: string, projectSupportPaymentId?: string) => {
+  const approveContribution = async (contributionId: string, memberId: string) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       
-      // Get member's user_id and admin profile id
+      // Get member's user_id
       const { data: profile } = await supabase
         .from('profiles')
-        .select('user_id, id')
+        .select('user_id')
         .eq('id', memberId)
         .single();
 
       if (!profile) throw new Error('Member not found');
-      
-      // Get admin profile id
-      const { data: adminProfile } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('user_id', user?.id)
-        .single();
-        
-      if (!adminProfile) throw new Error('Admin profile not found');
 
-      // Approve contribution
+      // Approve contribution ONLY - PSF must be approved separately
       const { error: updateError } = await supabase
         .from('contributions')
         .update({
@@ -101,22 +92,6 @@ const Contributions = () => {
         .eq('id', contributionId);
 
       if (updateError) throw updateError;
-
-      // If there's an associated project support payment, approve it too
-      if (projectSupportPaymentId) {
-        const { error: projectSupportError } = await supabase
-          .from('project_support_contributions')
-          .update({
-            payment_status: 'approved',
-            approved_at: new Date().toISOString(),
-            approved_by: adminProfile.id
-          })
-          .eq('id', projectSupportPaymentId);
-
-        if (projectSupportError) {
-          console.error('Error approving project support:', projectSupportError);
-        }
-      }
 
       // Send notification to member
       await supabase
@@ -138,7 +113,7 @@ const Contributions = () => {
     }
   };
 
-  const declineContribution = async (contributionId: string, memberId: string, projectSupportPaymentId?: string) => {
+  const declineContribution = async (contributionId: string, memberId: string) => {
     try {
       const { data: profile } = await supabase
         .from('profiles')
@@ -148,21 +123,13 @@ const Contributions = () => {
 
       if (!profile) throw new Error('Member not found');
 
-      // Decline contribution
+      // Decline contribution ONLY - PSF must be declined separately
       const { error: updateError } = await supabase
         .from('contributions')
         .update({ payment_status: 'declined' })
         .eq('id', contributionId);
 
       if (updateError) throw updateError;
-
-      // If there's an associated project support payment, decline it too
-      if (projectSupportPaymentId) {
-        await supabase
-          .from('project_support_contributions')
-          .update({ payment_status: 'declined' })
-          .eq('id', projectSupportPaymentId);
-      }
 
       // Send notification to member
       await supabase
@@ -352,33 +319,15 @@ const Contributions = () => {
                               <TableCell className="text-blue-600 font-medium">
                                 ₦{Number(contrib.savings_amount).toLocaleString()}
                               </TableCell>
-                               <TableCell>
+                              <TableCell>
                                 {hasPSFReceipt ? (
                                   <div className="flex flex-col gap-1">
                                     <Badge variant="outline" className="text-orange-600 border-orange-600 w-fit">
-                                      Paid - Pending Approval
+                                      ₦{Number(contrib.project_support_payment.amount).toLocaleString()} - Pending
                                     </Badge>
-                                    <span className="text-orange-600 font-medium text-sm">
-                                      ₦{Number(contrib.project_support_payment.amount).toLocaleString()}
+                                    <span className="text-xs text-muted-foreground">
+                                      Approve in PSF Management
                                     </span>
-                                    <div className="flex gap-1">
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={() => viewReceipt(contrib.project_support_payment.receipt_url)}
-                                      >
-                                        <Eye className="h-4 w-4 mr-1" />
-                                        View
-                                      </Button>
-                                      <Button
-                                        size="sm"
-                                        variant="ghost"
-                                        onClick={() => downloadReceipt(contrib.project_support_payment.receipt_url)}
-                                      >
-                                        <Download className="h-4 w-4 mr-1" />
-                                        Download
-                                      </Button>
-                                    </div>
                                   </div>
                                 ) : (
                                   <Badge variant="destructive" className="text-xs">Not Paid</Badge>
@@ -413,11 +362,7 @@ const Contributions = () => {
                                 <div className="flex gap-1 justify-end">
                                   <Button
                                     size="sm"
-                                    onClick={() => approveContribution(
-                                      contrib.id, 
-                                      contrib.member_id,
-                                      hasPSFReceipt ? contrib.project_support_payment.id : undefined
-                                    )}
+                                    onClick={() => approveContribution(contrib.id, contrib.member_id)}
                                   >
                                     <CheckCircle className="h-4 w-4 mr-1" />
                                     Approve
@@ -425,11 +370,7 @@ const Contributions = () => {
                                   <Button
                                     size="sm"
                                     variant="destructive"
-                                    onClick={() => declineContribution(
-                                      contrib.id, 
-                                      contrib.member_id,
-                                      hasPSFReceipt ? contrib.project_support_payment.id : undefined
-                                    )}
+                                    onClick={() => declineContribution(contrib.id, contrib.member_id)}
                                   >
                                     <XCircle className="h-4 w-4 mr-1" />
                                     Decline

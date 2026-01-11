@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/AdminSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
-import { WhatsAppCommunityBanner } from "@/components/WhatsAppCommunityBanner";
 
 interface DashboardStats {
   totalMembers: number;
@@ -110,10 +109,6 @@ const AdminDashboard = () => {
               <p className="text-sm sm:text-base text-muted-foreground">
                 Manage cooperative operations and finances
               </p>
-            </div>
-
-            <div className="mb-4 sm:mb-6">
-              <WhatsAppCommunityBanner />
             </div>
 
             <div className="grid gap-3 sm:gap-4 md:gap-6 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">

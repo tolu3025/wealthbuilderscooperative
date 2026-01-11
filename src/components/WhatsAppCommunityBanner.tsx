@@ -25,7 +25,7 @@ export function WhatsAppCommunityBanner() {
       {/* Close button */}
       <button
         onClick={handleDismiss}
-        className="absolute right-2 top-2 p-1.5 rounded-full bg-white/20 hover:bg-white/30 transition-colors"
+        className="absolute right-2 top-2 z-10 p-1.5 rounded-full bg-white/20 hover:bg-white/30 transition-colors"
         aria-label="Dismiss banner"
       >
         <X className="h-4 w-4 text-white" />

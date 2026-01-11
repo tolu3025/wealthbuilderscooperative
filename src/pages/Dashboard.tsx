@@ -19,6 +19,7 @@ import { DashboardHeader } from "@/components/DashboardHeader";
 import { AnnouncementBanner } from "@/components/AnnouncementBanner";
 import { PaymentWarningBanner } from "@/components/PaymentWarningBanner";
 import { MemberTypeUpgrade } from "@/components/MemberTypeUpgrade";
+import { WhatsAppCommunityBanner } from "@/components/WhatsAppCommunityBanner";
 
 interface MemberData {
   id: string;
@@ -323,6 +324,11 @@ const Dashboard = () => {
       <main className="flex-1 p-6 bg-muted/30 overflow-auto">
             <AnnouncementBanner />
             <PaymentWarningBanner />
+            
+            {/* WhatsApp Community Banner */}
+            <div className="mb-6">
+              <WhatsAppCommunityBanner />
+            </div>
             
             {/* Member Type Upgrade Section */}
             {memberData.memberType === 'acting_member' && (

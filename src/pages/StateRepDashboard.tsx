@@ -9,6 +9,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { MemberSidebar } from "@/components/MemberSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { AnnouncementBanner } from "@/components/AnnouncementBanner";
+import { WhatsAppCommunityBanner } from "@/components/WhatsAppCommunityBanner";
 import { format } from "date-fns";
 
 interface MonthlyData {
@@ -168,6 +169,10 @@ const StateRepDashboard = () => {
           <DashboardHeader userName={userName} />
           <main className="flex-1 p-6 bg-muted/30 overflow-auto">
             <AnnouncementBanner />
+            
+            <div className="mb-6">
+              <WhatsAppCommunityBanner />
+            </div>
             
             <div className="mb-6">
               <h1 className="text-3xl font-bold mb-2">State Representative Dashboard</h1>

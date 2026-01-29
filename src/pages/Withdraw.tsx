@@ -90,11 +90,33 @@ const Withdraw = () => {
       const totalDivs = balance?.total_dividends || 0;
       const totalBonus = balance?.total_commissions || 0;
       const months = balance?.months_contributed || 0;
+
+      // Fetch pending withdrawal requests to subtract from available balance
+      const { data: pendingWithdrawals } = await supabase
+        .from('withdrawal_requests')
+        .select('amount, withdrawal_type')
+        .eq('member_id', profileData.id)
+        .eq('status', 'pending');
+
+      // Calculate pending amounts per withdrawal type
+      const pendingSavings = pendingWithdrawals
+        ?.filter(w => w.withdrawal_type === 'savings')
+        .reduce((sum, w) => sum + Number(w.amount), 0) || 0;
+      const pendingCapital = pendingWithdrawals
+        ?.filter(w => w.withdrawal_type === 'capital')
+        .reduce((sum, w) => sum + Number(w.amount), 0) || 0;
+      const pendingDividends = pendingWithdrawals
+        ?.filter(w => w.withdrawal_type === 'dividend')
+        .reduce((sum, w) => sum + Number(w.amount), 0) || 0;
+      const pendingBonuses = pendingWithdrawals
+        ?.filter(w => w.withdrawal_type === 'bonus')
+        .reduce((sum, w) => sum + Number(w.amount), 0) || 0;
       
-      setTotalSavings(savings);
-      setTotalCapital(capital);
-      setTotalDividends(totalDivs);
-      setTotalBonuses(totalBonus);
+      // Set available balances (subtracting pending withdrawals)
+      setTotalSavings(savings - pendingSavings);
+      setTotalCapital(capital - pendingCapital);
+      setTotalDividends(totalDivs - pendingDividends);
+      setTotalBonuses(totalBonus - pendingBonuses);
       setMonthsContributed(months);
 
       // Fetch withdrawal requests

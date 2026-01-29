@@ -173,18 +173,43 @@ const Dashboard = () => {
 
         const totalDividendsEarned = allDividends?.reduce((sum, d) => sum + Number(d.amount), 0) || 0;
 
-        // Calculate total withdrawn dividends from withdrawal_requests
-        const { data: dividendWithdrawals } = await supabase
+        // Fetch ALL withdrawal requests (pending + approved + completed) to calculate available balances
+        const { data: allWithdrawals } = await supabase
           .from('withdrawal_requests')
-          .select('amount')
+          .select('amount, status, withdrawal_type')
           .eq('member_id', profile.id)
-          .eq('withdrawal_type', 'dividend')
-          .in('status', ['approved', 'completed']);
+          .in('status', ['pending', 'approved', 'completed']);
 
-        const totalWithdrawn = dividendWithdrawals?.reduce((sum, w) => sum + Number(w.amount), 0) || 0;
+        // Calculate pending and completed withdrawals per type
+        const pendingDividendWithdrawals = allWithdrawals
+          ?.filter(w => w.withdrawal_type === 'dividend' && w.status === 'pending')
+          .reduce((sum, w) => sum + Number(w.amount), 0) || 0;
+        const completedDividendWithdrawals = allWithdrawals
+          ?.filter(w => w.withdrawal_type === 'dividend' && ['approved', 'completed'].includes(w.status))
+          .reduce((sum, w) => sum + Number(w.amount), 0) || 0;
 
-        // Available dividend balance = earned - withdrawn
-        const totalDividends = totalDividendsEarned - totalWithdrawn;
+        // Available dividend balance = earned - completed - pending
+        const totalDividends = totalDividendsEarned - completedDividendWithdrawals - pendingDividendWithdrawals;
+
+        // Calculate pending bonus withdrawals for commission balance
+        const pendingBonusWithdrawals = allWithdrawals
+          ?.filter(w => w.withdrawal_type === 'bonus' && w.status === 'pending')
+          .reduce((sum, w) => sum + Number(w.amount), 0) || 0;
+        
+        // Calculate pending savings withdrawals
+        const pendingSavingsWithdrawals = allWithdrawals
+          ?.filter(w => w.withdrawal_type === 'savings' && w.status === 'pending')
+          .reduce((sum, w) => sum + Number(w.amount), 0) || 0;
+
+        // Calculate pending capital withdrawals
+        const pendingCapitalWithdrawals = allWithdrawals
+          ?.filter(w => w.withdrawal_type === 'capital' && w.status === 'pending')
+          .reduce((sum, w) => sum + Number(w.amount), 0) || 0;
+
+        // Adjust balances to account for pending withdrawals
+        const availableSavings = totalSavings - pendingSavingsWithdrawals;
+        const availableCapital = totalCapital - pendingCapitalWithdrawals;
+        const availableCommissions = totalCommissions - pendingBonusWithdrawals;
 
         // Fetch contributions for transactions
         const { data: contributions } = await supabase
@@ -220,8 +245,8 @@ const Dashboard = () => {
           id: profile.id,
           name: `${profile.first_name} ${profile.last_name}`,
           memberNumber: profile.member_number || 'Pending',
-          totalCapital,
-          totalSavings,
+          totalCapital: availableCapital,
+          totalSavings: availableSavings,
           monthlyContribution: profile.member_type === 'acting_member' ? 500 : 5500,
           eligibleForDividend,
           memberSince: new Date(profile.created_at).toLocaleDateString(),
@@ -229,7 +254,7 @@ const Dashboard = () => {
           invitedBy: profile.invited_by,
           state: profile.state || '',
           referralCount: referralCount || 0,
-          totalCommissions: totalCommissions,
+          totalCommissions: availableCommissions,
           recentDividends,
           dividendBalance: totalDividends,
           nextContributionDue: nextDue.toLocaleDateString(),

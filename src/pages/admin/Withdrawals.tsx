@@ -34,7 +34,7 @@ const Withdrawals = () => {
 
       if (error) throw error;
 
-      // Fetch balances for each member
+      // Fetch balances for each member including pending withdrawals
       const withdrawalsWithBalances = await Promise.all(
         (data || []).map(async (withdrawal: any) => {
           const memberId = withdrawal.profiles?.id;
@@ -46,16 +46,38 @@ const Withdrawals = () => {
             .eq('member_id', memberId)
             .single();
 
-          const bonusBalance = balance?.total_commissions || 0;
-          const dividendBalance = balance?.total_dividends || 0;
+          // Fetch ALL pending/approved withdrawals for this member to calculate true available balance
+          const { data: allMemberWithdrawals } = await supabase
+            .from('withdrawal_requests')
+            .select('amount, withdrawal_type')
+            .eq('member_id', memberId)
+            .in('status', ['pending', 'approved']);
 
+          // Calculate pending amounts per withdrawal type
+          const pendingSavings = allMemberWithdrawals
+            ?.filter(w => w.withdrawal_type === 'savings')
+            .reduce((sum, w) => sum + Number(w.amount), 0) || 0;
+          
+          const pendingCapital = allMemberWithdrawals
+            ?.filter(w => w.withdrawal_type === 'capital')
+            .reduce((sum, w) => sum + Number(w.amount), 0) || 0;
+          
+          const pendingDividends = allMemberWithdrawals
+            ?.filter(w => w.withdrawal_type === 'dividend')
+            .reduce((sum, w) => sum + Number(w.amount), 0) || 0;
+          
+          const pendingBonuses = allMemberWithdrawals
+            ?.filter(w => w.withdrawal_type === 'bonus')
+            .reduce((sum, w) => sum + Number(w.amount), 0) || 0;
+
+          // Calculate TRUE available balances (raw balance minus pending/approved withdrawals)
           return {
             ...withdrawal,
             balances: {
-              savings: balance?.total_savings || 0,
-              capital: balance?.total_capital || 0,
-              dividend: dividendBalance,
-              bonus: bonusBalance
+              savings: Math.max(0, (balance?.total_savings || 0) - pendingSavings),
+              capital: Math.max(0, (balance?.total_capital || 0) - pendingCapital),
+              dividend: Math.max(0, (balance?.total_dividends || 0) - pendingDividends),
+              bonus: Math.max(0, (balance?.total_commissions || 0) - pendingBonuses)
             }
           };
         })

@@ -91,12 +91,12 @@ const Withdraw = () => {
       const totalBonus = balance?.total_commissions || 0;
       const months = balance?.months_contributed || 0;
 
-      // Fetch pending withdrawal requests to subtract from available balance
+      // Fetch pending AND approved withdrawal requests to subtract from available balance
       const { data: pendingWithdrawals } = await supabase
         .from('withdrawal_requests')
         .select('amount, withdrawal_type')
         .eq('member_id', profileData.id)
-        .eq('status', 'pending');
+        .in('status', ['pending', 'approved']);
 
       // Calculate pending amounts per withdrawal type
       const pendingSavings = pendingWithdrawals

@@ -173,43 +173,41 @@ const Dashboard = () => {
 
         const totalDividendsEarned = allDividends?.reduce((sum, d) => sum + Number(d.amount), 0) || 0;
 
-        // Fetch ALL withdrawal requests (pending + approved + completed) to calculate available balances
+        // Fetch ALL withdrawal requests (pending + approved + paid) to calculate available balances
+        // 'paid' is included for safety in case any legacy status exists before normalization
         const { data: allWithdrawals } = await supabase
           .from('withdrawal_requests')
           .select('amount, status, withdrawal_type')
           .eq('member_id', profile.id)
-          .in('status', ['pending', 'approved', 'completed']);
+          .in('status', ['pending', 'approved', 'paid']);
 
-        // Calculate pending and completed withdrawals per type
-        const pendingDividendWithdrawals = allWithdrawals
-          ?.filter(w => w.withdrawal_type === 'dividend' && w.status === 'pending')
-          .reduce((sum, w) => sum + Number(w.amount), 0) || 0;
-        const completedDividendWithdrawals = allWithdrawals
-          ?.filter(w => w.withdrawal_type === 'dividend' && ['approved', 'completed'].includes(w.status))
+        // Calculate reserved withdrawals per type (pending + approved + paid = all reserved/in-progress)
+        const reservedDividendWithdrawals = allWithdrawals
+          ?.filter(w => w.withdrawal_type === 'dividend' && ['pending', 'approved', 'paid'].includes(w.status))
           .reduce((sum, w) => sum + Number(w.amount), 0) || 0;
 
-        // Available dividend balance = earned - completed - pending
-        const totalDividends = totalDividendsEarned - completedDividendWithdrawals - pendingDividendWithdrawals;
+        // Available dividend balance = earned - reserved (pending/approved/paid)
+        const totalDividends = totalDividendsEarned - reservedDividendWithdrawals;
 
-        // Calculate pending bonus withdrawals for commission balance
-        const pendingBonusWithdrawals = allWithdrawals
-          ?.filter(w => w.withdrawal_type === 'bonus' && w.status === 'pending')
+        // Calculate reserved bonus withdrawals for commission balance
+        const reservedBonusWithdrawals = allWithdrawals
+          ?.filter(w => w.withdrawal_type === 'bonus' && ['pending', 'approved', 'paid'].includes(w.status))
           .reduce((sum, w) => sum + Number(w.amount), 0) || 0;
         
-        // Calculate pending savings withdrawals
-        const pendingSavingsWithdrawals = allWithdrawals
-          ?.filter(w => w.withdrawal_type === 'savings' && w.status === 'pending')
+        // Calculate reserved savings withdrawals (pending + approved + paid)
+        const reservedSavingsWithdrawals = allWithdrawals
+          ?.filter(w => w.withdrawal_type === 'savings' && ['pending', 'approved', 'paid'].includes(w.status))
           .reduce((sum, w) => sum + Number(w.amount), 0) || 0;
 
-        // Calculate pending capital withdrawals
-        const pendingCapitalWithdrawals = allWithdrawals
-          ?.filter(w => w.withdrawal_type === 'capital' && w.status === 'pending')
+        // Calculate reserved capital withdrawals (pending + approved + paid)
+        const reservedCapitalWithdrawals = allWithdrawals
+          ?.filter(w => w.withdrawal_type === 'capital' && ['pending', 'approved', 'paid'].includes(w.status))
           .reduce((sum, w) => sum + Number(w.amount), 0) || 0;
 
-        // Adjust balances to account for pending withdrawals
-        const availableSavings = totalSavings - pendingSavingsWithdrawals;
-        const availableCapital = totalCapital - pendingCapitalWithdrawals;
-        const availableCommissions = totalCommissions - pendingBonusWithdrawals;
+        // Adjust balances to account for all reserved withdrawals
+        const availableSavings = totalSavings - reservedSavingsWithdrawals;
+        const availableCapital = totalCapital - reservedCapitalWithdrawals;
+        const availableCommissions = totalCommissions - reservedBonusWithdrawals;
 
         // Fetch contributions for transactions
         const { data: contributions } = await supabase

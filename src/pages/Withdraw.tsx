@@ -91,12 +91,13 @@ const Withdraw = () => {
       const totalBonus = balance?.total_commissions || 0;
       const months = balance?.months_contributed || 0;
 
-      // Fetch pending AND approved withdrawal requests to subtract from available balance
+      // Fetch pending, approved, AND paid withdrawal requests to subtract from available balance
+      // 'paid' is included for safety in case any legacy status exists before normalization
       const { data: pendingWithdrawals } = await supabase
         .from('withdrawal_requests')
         .select('amount, withdrawal_type')
         .eq('member_id', profileData.id)
-        .in('status', ['pending', 'approved']);
+        .in('status', ['pending', 'approved', 'paid']);
 
       // Calculate pending amounts per withdrawal type
       const pendingSavings = pendingWithdrawals
@@ -509,11 +510,14 @@ const Withdraw = () => {
                         <TableCell>{request.bank_name}</TableCell>
                         <TableCell>
                           <Badge variant={
+                            request.status === 'completed' ? 'default' :
                             request.status === 'paid' ? 'default' :
                             request.status === 'approved' ? 'secondary' :
                             'outline'
                           }>
-                            {request.status}
+                            {request.status === 'completed' ? 'Paid' : 
+                             request.status === 'paid' ? 'Paid' : 
+                             request.status}
                           </Badge>
                         </TableCell>
                       </TableRow>

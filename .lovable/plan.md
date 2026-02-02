@@ -1,101 +1,142 @@
 
-# Fix: Inconsistent Balance Display Between Dashboard and Referrals Page
 
-## Problem Identified
-The Dashboard and Referrals page are using **different calculation methods** for the same balance:
+# Fix: Admin Withdrawal Approval Validation + Data Cleanup
 
-| Page | What It Shows | Calculation |
-|------|--------------|-------------|
-| Dashboard | ₦0 | `member_balances.total_commissions - pending/approved withdrawals` (with Math.max(0)) |
-| Referrals | ₦7,480 | `member_balances.total_commissions` (raw, no deductions) |
+## Summary of Findings
 
-This creates confusion because users see different numbers on different pages for the same "Available Balance."
+### 1. Members with Duplicate Approved Withdrawals (6 total)
 
-## Root Cause
-The Referrals page (`src/pages/member/Referrals.tsx`) directly uses the database value without accounting for reserved (pending/approved) withdrawals:
+| Member | Member # | Stored Balance | Request 1 | Request 2 | Total Reserved | Overdraft |
+|--------|----------|----------------|-----------|-----------|----------------|-----------|
+| Eniolade Funmi | WB2557648 | ₦7,480 | ₦7,000 (Jan 27) | ₦7,000 (Jan 30) | ₦14,000 | **-₦6,520** |
+| Abimbola Afeola | WB2594160 | ₦4,150 | ₦4,150 (Jan 27) | ₦4,150 (Jan 30) | ₦8,300 | **-₦4,150** |
+| Joshua Dele Dipe | WB2538289 | ₦1,180 | ₦1,100 (Jan 27) | ₦1,180 (Jan 30) | ₦2,280 | **-₦1,100** |
+| Oluwafunke Dipe | WB2545551 | ₦1,120 | ₦1,100 (Jan 27) | ₦1,120 (Jan 30) | ₦2,220 | **-₦1,100** |
+| Joshua Okiki Adigun | WB2514861 | ₦1,090 | ₦1,000 (Jan 27) | ₦1,090 (Jan 30) | ₦2,090 | **-₦1,000** |
+| James Juwon Adigun | WB2531850 | ₦1,060 | ₦1,000 (Jan 27) | ₦1,060 (Jan 30) | ₦2,060 | **-₦1,000** |
+
+### 2. Root Cause in Admin Code
+
+The current `approveWithdrawal` function in `src/pages/admin/Withdrawals.tsx` validates against **raw database balance** without accounting for other pending/approved withdrawals:
 
 ```typescript
-// Current code in Referrals.tsx (line 146)
-setAvailableBalance(balance?.total_commissions || 0);
+// Current problematic code (lines 117-138)
+if (withdrawalType === 'bonus') {
+  if (amount > bonusBalance) {  // bonusBalance = raw total_commissions
+    throw new Error('Insufficient bonus balance');
+  }
+}
 ```
 
-Meanwhile, the Dashboard correctly subtracts reserved withdrawals:
-```typescript
-// Dashboard.tsx (lines 194-196, 212)
-const reservedBonusWithdrawals = allWithdrawals
-  ?.filter(w => w.withdrawal_type === 'bonus' && ['pending', 'approved', 'paid'].includes(w.status))
-  .reduce((sum, w) => sum + Number(w.amount), 0) || 0;
+This allows approving multiple requests that together exceed the balance.
 
-const availableCommissions = Math.max(0, totalCommissions - reservedBonusWithdrawals);
+## Solution - Two Parts
+
+### Part A: Fix Admin Validation Logic
+
+Update the `approveWithdrawal` function to check the **true available balance** (raw balance minus already pending/approved withdrawals for that type):
+
+```text
+File: src/pages/admin/Withdrawals.tsx
+
+1. Fetch all pending/approved withdrawals for the member (same type)
+2. Calculate: trueAvailable = rawBalance - sumOfOtherPendingApproved
+3. Validate: if (amount > trueAvailable) throw error
 ```
 
-## Solution
+This prevents admins from approving a withdrawal if the total would exceed the balance.
 
-Update the Referrals page to match the Dashboard's calculation by:
-1. Fetching pending/approved/paid bonus withdrawals
-2. Subtracting them from the raw balance
-3. Using `Math.max(0, ...)` to prevent negative display
+### Part B: Manual Data Cleanup
+
+The admin needs to reject the duplicate withdrawal requests. Based on the data, these are the requests that should be rejected (the second/later request for each member):
+
+| Member | Request ID to REJECT | Amount |
+|--------|---------------------|--------|
+| Eniolade Funmi | `09d0e853-bb0e-42c5-9b3c-c101de7e33be` | ₦7,000 |
+| Abimbola Afeola | `6b05778c-8b46-4d5c-9683-62e234bcd706` | ₦4,150 |
+| Joshua Dele Dipe | `3ff8bfc1-5460-47a5-9782-76da52c51aee` | ₦1,180 |
+| Oluwafunke Dipe | `cb9b2a86-07d8-4a55-b5aa-f4bad12b8b03` | ₦1,120 |
+| Joshua Okiki Adigun | `e9d7290f-3a55-47c6-b5ee-a74a07460962` | ₦1,090 |
+| James Juwon Adigun | `6e819617-c141-4f6a-81dd-b1710629f516` | ₦1,060 |
+
+I can provide a database migration to reject these duplicate requests (change status from 'approved' to 'rejected'), OR the admin can manually go to the Admin Withdrawals page and use a "Reject" button (if available) or run a query.
+
+## Implementation Details
 
 ### File Changes
 
-**File: `src/pages/member/Referrals.tsx`**
+**File: `src/pages/admin/Withdrawals.tsx`**
 
-Update the `fetchReferralData` function to subtract reserved withdrawals from the available balance:
+Update the `approveWithdrawal` function to validate against true available balance:
 
 ```typescript
-// After getting withdrawalData, update the query to include ALL reserved statuses
-const { data: withdrawalData } = await supabase
-  .from('withdrawal_requests')
-  .select('amount, status')
-  .eq('member_id', profile.id)
-  .eq('withdrawal_type', 'bonus')
-  .in('status', ['pending', 'approved', 'paid', 'completed']);
+const approveWithdrawal = async (withdrawalId: string, memberId: string, amount: number, withdrawalType: string = 'savings') => {
+  try {
+    // ... existing profile fetch ...
 
-// Calculate reserved withdrawals (pending + approved + paid - not yet permanently deducted)
-const reservedWithdrawals = withdrawalData
-  ?.filter(w => ['pending', 'approved', 'paid'].includes(w.status))
-  .reduce((sum, w) => sum + Number(w.amount), 0) || 0;
+    const { data: balance } = await supabase
+      .from('member_balances')
+      .select('total_savings, total_capital, total_commissions, total_dividends, months_contributed')
+      .eq('member_id', memberId)
+      .single();
 
-// Get raw balance from database
-const { data: balance } = await supabase
-  .from('member_balances')
-  .select('total_commissions')
-  .eq('member_id', profile.id)
-  .maybeSingle();
+    if (!balance) throw new Error('Member balance not found');
 
-// Calculate available balance = raw balance - reserved withdrawals
-const rawBalance = balance?.total_commissions || 0;
-setAvailableBalance(Math.max(0, rawBalance - reservedWithdrawals));
+    // NEW: Fetch all OTHER pending/approved withdrawals for this member and type
+    // (excluding the current request being approved)
+    const { data: otherReservedWithdrawals } = await supabase
+      .from('withdrawal_requests')
+      .select('amount')
+      .eq('member_id', memberId)
+      .eq('withdrawal_type', withdrawalType)
+      .in('status', ['pending', 'approved', 'paid'])
+      .neq('id', withdrawalId);  // Exclude the current request
+
+    const otherReserved = otherReservedWithdrawals?.reduce((sum, w) => sum + Number(w.amount), 0) || 0;
+
+    // Calculate TRUE available balance
+    let rawBalance = 0;
+    if (withdrawalType === 'savings') rawBalance = balance.total_savings || 0;
+    else if (withdrawalType === 'capital') rawBalance = balance.total_capital || 0;
+    else if (withdrawalType === 'dividend') rawBalance = balance.total_dividends || 0;
+    else if (withdrawalType === 'bonus') rawBalance = balance.total_commissions || 0;
+
+    const trueAvailable = rawBalance - otherReserved;
+
+    // Validate against TRUE available balance
+    if (amount > trueAvailable) {
+      throw new Error(`Insufficient ${withdrawalType} balance. Available: ₦${trueAvailable.toLocaleString()}, Requested: ₦${amount.toLocaleString()}`);
+    }
+
+    // Additional capital minimum check
+    if (withdrawalType === 'capital') {
+      if (trueAvailable - amount < 50000) {
+        throw new Error('Cannot approve: Withdrawal would drop capital below ₦50,000 minimum');
+      }
+    }
+
+    // ... rest of approval logic ...
+  }
+}
 ```
 
-## Expected Result
-After this fix:
-- Both the Dashboard and Referrals page will show the same "Available Balance" value
-- Reserved funds (pending/approved withdrawals) will be correctly subtracted on both pages
-- Users will see consistent information across the application
+### Optional: Database Migration to Reject Duplicate Requests
 
-## Technical Details
+If you prefer to auto-fix the data, I can create a migration that:
+1. Sets status = 'rejected' for the duplicate withdrawal requests listed above
+2. This will immediately fix the negative balance display
 
-### Current Flow (Broken)
-```
-member_balances.total_commissions = ₦7,480
-Reserved bonus withdrawals = ₦7,000 + ₦7,000 = ₦14,000
+## Expected Results After Fix
 
-Dashboard: Math.max(0, 7480 - 14000) = ₦0
-Referrals: 7480 (raw) = ₦7,480  ← WRONG
-```
+1. Dashboard and Referrals page will show correct available balances (not negative)
+2. Admins cannot approve withdrawals that would exceed available balance
+3. The 6 affected members will see their correct available balance after duplicates are rejected
 
-### After Fix
-```
-member_balances.total_commissions = ₦7,480
-Reserved bonus withdrawals = ₦14,000
+## Files to Modify
 
-Dashboard: Math.max(0, 7480 - 14000) = ₦0
-Referrals: Math.max(0, 7480 - 14000) = ₦0  ← CORRECT
-```
+- `src/pages/admin/Withdrawals.tsx` - Update `approveWithdrawal` validation logic
 
-## Testing Checklist
-After implementation:
-1. Verify Dashboard and Referrals page show the same available balance
-2. Verify a member with no pending withdrawals sees their full balance on both pages
-3. Verify a member with pending withdrawals sees the reduced balance on both pages
+## Optional Database Cleanup
+
+If you want me to include a migration to reject the duplicate requests, let me know. Otherwise, the admin can manually reject them from the Withdrawals page (if a reject option exists) or via Supabase dashboard.
+

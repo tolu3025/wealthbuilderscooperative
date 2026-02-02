@@ -1,57 +1,101 @@
 
-# Fix: Negative Balance Display Issue
+# Fix: Inconsistent Balance Display Between Dashboard and Referrals Page
 
 ## Problem Identified
-The negative balances are **NOT caused by the migration**. They're caused by **duplicate bonus withdrawal requests** that were approved by admin even though the totals exceed the member's actual balance.
+The Dashboard and Referrals page are using **different calculation methods** for the same balance:
 
-### Evidence from Database Analysis
+| Page | What It Shows | Calculation |
+|------|--------------|-------------|
+| Dashboard | ₦0 | `member_balances.total_commissions - pending/approved withdrawals` (with Math.max(0)) |
+| Referrals | ₦7,480 | `member_balances.total_commissions` (raw, no deductions) |
 
-| Member | Stored Balance | Reserved Withdrawals | Displayed Balance |
-|--------|---------------|---------------------|-------------------|
-| Eniolade Funmi | ₦7,480 | ₦14,000 (2×₦7,000) | **₦-6,520** |
-| Abimbola Afeola | ₦4,150 | ₦8,300 (2×₦4,150) | **₦-4,150** |
-| Joshua Dele Dipe | ₦1,180 | ₦2,280 | **₦-1,100** |
-| Oluwafunke Dipe | ₦1,120 | ₦2,220 | **₦-1,100** |
-| Joshua Okiki Adigun | ₦1,090 | ₦2,090 | **₦-1,000** |
-| James Juwon Adigun | ₦1,060 | ₦2,060 | **₦-1,000** |
+This creates confusion because users see different numbers on different pages for the same "Available Balance."
 
-### Root Cause
-Each of these members submitted **two withdrawal requests** for roughly the same amount, and the admin approved both. Since neither has been marked as "completed" (paid out), the system correctly treats both as "reserved" funds, causing the negative display.
+## Root Cause
+The Referrals page (`src/pages/member/Referrals.tsx`) directly uses the database value without accounting for reserved (pending/approved) withdrawals:
 
-## Solution - Two Parts
-
-### Part A: Immediate Data Fix (Database)
-Delete or reject the **duplicate withdrawal requests** that were approved in error. For each affected member, one of the duplicate requests needs to be:
-- Either marked as "rejected" (if not yet paid)
-- Or deleted entirely
-
-### Part B: Prevent Future Occurrences (Code Change)
-1. **Member Withdrawal Page**: Add a check that prevents submitting a new request if it would result in a negative available balance
-2. **Admin Approval Page**: Add a warning/blocker when approving a request that would exceed the member's actual balance
-3. **Display Fix**: Use `Math.max(0, balance)` to prevent negative values from displaying (cosmetic fix while data is being cleaned)
-
-## Implementation Details
-
-### Database Fix (Manual Admin Action)
-The admin needs to review and clean up the duplicate approved requests. Here are the duplicates:
-
-```text
-Eniolade Funmi:
-- Request 1: ₦7,000 (Jan 27) - status: approved
-- Request 2: ₦7,000 (Jan 30) - status: approved ← REJECT THIS ONE
-
-Similar duplicates exist for the other 5 members listed above.
+```typescript
+// Current code in Referrals.tsx (line 146)
+setAvailableBalance(balance?.total_commissions || 0);
 ```
 
-### Code Changes
+Meanwhile, the Dashboard correctly subtracts reserved withdrawals:
+```typescript
+// Dashboard.tsx (lines 194-196, 212)
+const reservedBonusWithdrawals = allWithdrawals
+  ?.filter(w => w.withdrawal_type === 'bonus' && ['pending', 'approved', 'paid'].includes(w.status))
+  .reduce((sum, w) => sum + Number(w.amount), 0) || 0;
 
-**File: `src/pages/Withdraw.tsx`**
-- Add validation to prevent new requests if pending+approved would exceed balance
-- Show `Math.max(0, balance)` for display to avoid confusing users with negative numbers
+const availableCommissions = Math.max(0, totalCommissions - reservedBonusWithdrawals);
+```
 
-**File: `src/pages/admin/Withdrawals.tsx`**
-- Add a warning when approving a request that would cause overdraft
-- Show the member's actual available balance (accounting for other pending/approved requests)
+## Solution
 
-### Summary
-The migration did NOT cause this issue. The duplicate approved withdrawals existed before. The code changes we made earlier (subtracting pending AND approved withdrawals) actually **revealed** the data problem that was always there. The fix is to clean up the bad data and add safeguards to prevent it from happening again.
+Update the Referrals page to match the Dashboard's calculation by:
+1. Fetching pending/approved/paid bonus withdrawals
+2. Subtracting them from the raw balance
+3. Using `Math.max(0, ...)` to prevent negative display
+
+### File Changes
+
+**File: `src/pages/member/Referrals.tsx`**
+
+Update the `fetchReferralData` function to subtract reserved withdrawals from the available balance:
+
+```typescript
+// After getting withdrawalData, update the query to include ALL reserved statuses
+const { data: withdrawalData } = await supabase
+  .from('withdrawal_requests')
+  .select('amount, status')
+  .eq('member_id', profile.id)
+  .eq('withdrawal_type', 'bonus')
+  .in('status', ['pending', 'approved', 'paid', 'completed']);
+
+// Calculate reserved withdrawals (pending + approved + paid - not yet permanently deducted)
+const reservedWithdrawals = withdrawalData
+  ?.filter(w => ['pending', 'approved', 'paid'].includes(w.status))
+  .reduce((sum, w) => sum + Number(w.amount), 0) || 0;
+
+// Get raw balance from database
+const { data: balance } = await supabase
+  .from('member_balances')
+  .select('total_commissions')
+  .eq('member_id', profile.id)
+  .maybeSingle();
+
+// Calculate available balance = raw balance - reserved withdrawals
+const rawBalance = balance?.total_commissions || 0;
+setAvailableBalance(Math.max(0, rawBalance - reservedWithdrawals));
+```
+
+## Expected Result
+After this fix:
+- Both the Dashboard and Referrals page will show the same "Available Balance" value
+- Reserved funds (pending/approved withdrawals) will be correctly subtracted on both pages
+- Users will see consistent information across the application
+
+## Technical Details
+
+### Current Flow (Broken)
+```
+member_balances.total_commissions = ₦7,480
+Reserved bonus withdrawals = ₦7,000 + ₦7,000 = ₦14,000
+
+Dashboard: Math.max(0, 7480 - 14000) = ₦0
+Referrals: 7480 (raw) = ₦7,480  ← WRONG
+```
+
+### After Fix
+```
+member_balances.total_commissions = ₦7,480
+Reserved bonus withdrawals = ₦14,000
+
+Dashboard: Math.max(0, 7480 - 14000) = ₦0
+Referrals: Math.max(0, 7480 - 14000) = ₦0  ← CORRECT
+```
+
+## Testing Checklist
+After implementation:
+1. Verify Dashboard and Referrals page show the same available balance
+2. Verify a member with no pending withdrawals sees their full balance on both pages
+3. Verify a member with pending withdrawals sees the reduced balance on both pages

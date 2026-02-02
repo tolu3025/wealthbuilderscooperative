@@ -46,12 +46,13 @@ const Withdrawals = () => {
             .eq('member_id', memberId)
             .single();
 
-          // Fetch ALL pending/approved withdrawals for this member to calculate true available balance
+          // Fetch ALL pending/approved withdrawals for this member EXCEPT the current one
           const { data: allMemberWithdrawals } = await supabase
             .from('withdrawal_requests')
             .select('amount, withdrawal_type')
             .eq('member_id', memberId)
-            .in('status', ['pending', 'approved']);
+            .in('status', ['pending', 'approved'])
+            .neq('id', withdrawal.id);
 
           // Calculate pending amounts per withdrawal type
           const pendingSavings = allMemberWithdrawals

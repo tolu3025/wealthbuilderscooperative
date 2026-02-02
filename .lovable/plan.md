@@ -1,54 +1,57 @@
 
-Goal
-- ✅ Ensure members never see withdrawn funds "come back" on the Withdraw page.
-- ✅ Ensure the system uses one consistent "paid-out" status so balances update correctly and consistently across member + admin views.
-- ✅ Correct historical cases where withdrawals were paid out but balances were not reduced.
+# Fix: Negative Balance Display Issue
 
-## COMPLETED CHANGES
+## Problem Identified
+The negative balances are **NOT caused by the migration**. They're caused by **duplicate bonus withdrawal requests** that were approved by admin even though the totals exceed the member's actual balance.
 
-### A) Database fixes (migration) ✅
+### Evidence from Database Analysis
 
-1) ✅ Removed duplicate trigger
-- Dropped `trigger_update_balance_on_withdrawal` 
-- Kept only `update_balance_on_withdrawal` trigger on `public.withdrawal_requests`
+| Member | Stored Balance | Reserved Withdrawals | Displayed Balance |
+|--------|---------------|---------------------|-------------------|
+| Eniolade Funmi | ₦7,480 | ₦14,000 (2×₦7,000) | **₦-6,520** |
+| Abimbola Afeola | ₦4,150 | ₦8,300 (2×₦4,150) | **₦-4,150** |
+| Joshua Dele Dipe | ₦1,180 | ₦2,280 | **₦-1,100** |
+| Oluwafunke Dipe | ₦1,120 | ₦2,220 | **₦-1,100** |
+| Joshua Okiki Adigun | ₦1,090 | ₦2,090 | **₦-1,000** |
+| James Juwon Adigun | ₦1,060 | ₦2,060 | **₦-1,000** |
 
-2) ✅ Normalized historical status values
-- Converted all `status = 'paid'` to `status = 'completed'` in `withdrawal_requests` table
-- Trigger ran during migration to deduct balances properly
+### Root Cause
+Each of these members submitted **two withdrawal requests** for roughly the same amount, and the admin approved both. Since neither has been marked as "completed" (paid out), the system correctly treats both as "reserved" funds, causing the negative display.
 
-3) ✅ Made DB logic tolerant to "paid" going forward
-- Updated `update_member_balance_on_withdrawal()` to treat `NEW.status IN ('completed','paid')` as "paid-out"
-- Updated bonus recalculation queries to subtract withdrawals where `status IN ('completed','paid')`
-- Updated `recalculate_member_commission_balances()` to also handle both statuses
+## Solution - Two Parts
 
-### B) Frontend fixes ✅
+### Part A: Immediate Data Fix (Database)
+Delete or reject the **duplicate withdrawal requests** that were approved in error. For each affected member, one of the duplicate requests needs to be:
+- Either marked as "rejected" (if not yet paid)
+- Or deleted entirely
 
-1) ✅ Updated reserved-withdrawal subtraction logic in `src/pages/Withdraw.tsx`
-- Changed from: `['pending','approved']`
-- To: `['pending', 'approved', 'paid']`
-- This prevents "funds coming back" if any row ends up with status 'paid'
+### Part B: Prevent Future Occurrences (Code Change)
+1. **Member Withdrawal Page**: Add a check that prevents submitting a new request if it would result in a negative available balance
+2. **Admin Approval Page**: Add a warning/blocker when approving a request that would exceed the member's actual balance
+3. **Display Fix**: Use `Math.max(0, balance)` to prevent negative values from displaying (cosmetic fix while data is being cleaned)
 
-2) ✅ Fixed status badge mapping in `src/pages/Withdraw.tsx`
-- 'completed' now displays as "Paid" in the UI
-- 'paid' (legacy) also displays as "Paid"
+## Implementation Details
 
-3) ✅ Updated `src/pages/Dashboard.tsx` for consistency
-- Changed from pending-only subtraction to `['pending', 'approved', 'paid']` for all balance types
-- Savings, Capital, Dividends, and Commissions all now consistently reserve funds
+### Database Fix (Manual Admin Action)
+The admin needs to review and clean up the duplicate approved requests. Here are the duplicates:
 
-## Expected Result
+```text
+Eniolade Funmi:
+- Request 1: ₦7,000 (Jan 27) - status: approved
+- Request 2: ₦7,000 (Jan 30) - status: approved ← REJECT THIS ONE
 
-After these fixes:
-- ✅ Available balances accurately reflect all reserved funds (pending + approved + paid)
-- ✅ Once a withdrawal is paid out, the member's available balance does not "come back" after refresh
-- ✅ Historical cases where funds "came back" are corrected by status normalization
-- ✅ Both 'completed' and 'paid' statuses are handled consistently
+Similar duplicates exist for the other 5 members listed above.
+```
 
-## Testing Checklist
+### Code Changes
 
-Test these scenarios to verify:
+**File: `src/pages/Withdraw.tsx`**
+- Add validation to prevent new requests if pending+approved would exceed balance
+- Show `Math.max(0, balance)` for display to avoid confusing users with negative numbers
 
-1. **Reserved funds scenario**: Request a withdrawal → available balance should immediately decrease
-2. **Approval scenario**: Admin approves → member's balance stays reduced
-3. **Paid-out scenario**: Admin marks as completed → balance remains correct, status shows "Paid"
-4. **Refresh test**: Refresh the page → withdrawn funds do NOT come back
+**File: `src/pages/admin/Withdrawals.tsx`**
+- Add a warning when approving a request that would cause overdraft
+- Show the member's actual available balance (accounting for other pending/approved requests)
+
+### Summary
+The migration did NOT cause this issue. The duplicate approved withdrawals existed before. The code changes we made earlier (subtracting pending AND approved withdrawals) actually **revealed** the data problem that was always there. The fix is to clean up the bad data and add safeguards to prevent it from happening again.

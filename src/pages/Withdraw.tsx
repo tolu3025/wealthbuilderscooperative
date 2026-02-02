@@ -114,10 +114,11 @@ const Withdraw = () => {
         .reduce((sum, w) => sum + Number(w.amount), 0) || 0;
       
       // Set available balances (subtracting pending withdrawals)
-      setTotalSavings(savings - pendingSavings);
-      setTotalCapital(capital - pendingCapital);
-      setTotalDividends(totalDivs - pendingDividends);
-      setTotalBonuses(totalBonus - pendingBonuses);
+      // Use Math.max(0, ...) to prevent negative display while data is being cleaned
+      setTotalSavings(Math.max(0, savings - pendingSavings));
+      setTotalCapital(Math.max(0, capital - pendingCapital));
+      setTotalDividends(Math.max(0, totalDivs - pendingDividends));
+      setTotalBonuses(Math.max(0, totalBonus - pendingBonuses));
       setMonthsContributed(months);
 
       // Fetch withdrawal requests

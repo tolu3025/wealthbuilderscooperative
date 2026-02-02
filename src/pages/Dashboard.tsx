@@ -187,7 +187,8 @@ const Dashboard = () => {
           .reduce((sum, w) => sum + Number(w.amount), 0) || 0;
 
         // Available dividend balance = earned - reserved (pending/approved/paid)
-        const totalDividends = totalDividendsEarned - reservedDividendWithdrawals;
+        // Use Math.max(0, ...) to prevent negative display
+        const totalDividends = Math.max(0, totalDividendsEarned - reservedDividendWithdrawals);
 
         // Calculate reserved bonus withdrawals for commission balance
         const reservedBonusWithdrawals = allWithdrawals
@@ -205,9 +206,10 @@ const Dashboard = () => {
           .reduce((sum, w) => sum + Number(w.amount), 0) || 0;
 
         // Adjust balances to account for all reserved withdrawals
-        const availableSavings = totalSavings - reservedSavingsWithdrawals;
-        const availableCapital = totalCapital - reservedCapitalWithdrawals;
-        const availableCommissions = totalCommissions - reservedBonusWithdrawals;
+        // Use Math.max(0, ...) to prevent negative display while data is being cleaned
+        const availableSavings = Math.max(0, totalSavings - reservedSavingsWithdrawals);
+        const availableCapital = Math.max(0, totalCapital - reservedCapitalWithdrawals);
+        const availableCommissions = Math.max(0, totalCommissions - reservedBonusWithdrawals);
 
         // Fetch contributions for transactions
         const { data: contributions } = await supabase

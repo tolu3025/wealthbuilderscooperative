@@ -119,42 +119,29 @@ const Referrals = () => {
 
         const mlmEarnings = mlmData?.reduce((sum, m) => sum + Number(m.amount), 0) || 0;
 
-        // Get approved withdrawals (bonus type covers both invite and MLM bonuses)
+        // Get ALL reserved withdrawals (pending, approved, paid - not yet permanently deducted)
         const { data: withdrawalData } = await supabase
           .from('withdrawal_requests')
-          .select('amount')
+          .select('amount, status')
           .eq('member_id', profile.id)
           .eq('withdrawal_type', 'bonus')
-          .eq('status', 'approved');
+          .in('status', ['pending', 'approved', 'paid']);
 
-        const withdrawnAmount = withdrawalData?.reduce((sum, w) => sum + Number(w.amount), 0) || 0;
+        const reservedWithdrawals = withdrawalData?.reduce((sum, w) => sum + Number(w.amount), 0) || 0;
 
         // Total earned from invites (what members see here) comes ONLY from referral commissions
         setTotalEarned(referralCommissionEarnings);
 
-        // Available balance = total commissions (from balances table) already accounts for MLM + withdrawals
-        const calculatedBalance = referralCommissionEarnings + mlmEarnings - withdrawnAmount;
-
-        // Get balance from member_balances table
+        // Get raw balance from member_balances table
         const { data: balance } = await supabase
           .from('member_balances')
           .select('total_commissions')
           .eq('member_id', profile.id)
           .maybeSingle();
         
-        // Use database balance (which should match calculated balance after fix)
-        setAvailableBalance(balance?.total_commissions || 0);
-
-        // Log for debugging if there's a mismatch
-        if (balance && Math.abs(balance.total_commissions - calculatedBalance) > 0.01) {
-          console.warn('Balance mismatch detected:', {
-            database: balance.total_commissions,
-            calculated: calculatedBalance,
-            referralOnly: referralCommissionEarnings,
-            mlm: mlmEarnings,
-            withdrawn: withdrawnAmount
-          });
-        }
+        // Available balance = raw balance - reserved withdrawals (matching Dashboard logic)
+        const rawBalance = balance?.total_commissions || 0;
+        setAvailableBalance(Math.max(0, rawBalance - reservedWithdrawals));
       }
     } catch (error: any) {
       console.error('Error fetching referral data:', error);

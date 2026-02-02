@@ -111,29 +111,36 @@ const Withdrawals = () => {
 
       if (!balance) throw new Error('Member balance not found');
 
-      const bonusBalance = balance.total_commissions || 0;
-      const dividendBalance = balance.total_dividends || 0;
+      // Fetch all OTHER pending/approved/paid withdrawals for this member and type
+      // (excluding the current request being approved)
+      const { data: otherReservedWithdrawals } = await supabase
+        .from('withdrawal_requests')
+        .select('amount')
+        .eq('member_id', memberId)
+        .eq('withdrawal_type', withdrawalType)
+        .in('status', ['pending', 'approved', 'paid'])
+        .neq('id', withdrawalId);
 
-      // Validate based on withdrawal type
-      if (withdrawalType === 'savings') {
-        if (amount > balance.total_savings) {
-          throw new Error('Insufficient savings balance');
-        }
-      } else if (withdrawalType === 'capital') {
-        if (amount > balance.total_capital) {
-          throw new Error('Insufficient capital balance');
-        }
-        // Check minimum capital requirement for capital withdrawals only
-        if (balance.total_capital - amount < 50000) {
+      const otherReserved = otherReservedWithdrawals?.reduce((sum, w) => sum + Number(w.amount), 0) || 0;
+
+      // Calculate TRUE available balance (raw balance minus already reserved)
+      let rawBalance = 0;
+      if (withdrawalType === 'savings') rawBalance = balance.total_savings || 0;
+      else if (withdrawalType === 'capital') rawBalance = balance.total_capital || 0;
+      else if (withdrawalType === 'dividend') rawBalance = balance.total_dividends || 0;
+      else if (withdrawalType === 'bonus') rawBalance = balance.total_commissions || 0;
+
+      const trueAvailable = rawBalance - otherReserved;
+
+      // Validate against TRUE available balance
+      if (amount > trueAvailable) {
+        throw new Error(`Insufficient ${withdrawalType} balance. Available: ₦${trueAvailable.toLocaleString()}, Requested: ₦${amount.toLocaleString()}`);
+      }
+
+      // Additional capital minimum check
+      if (withdrawalType === 'capital') {
+        if (trueAvailable - amount < 50000) {
           throw new Error('Cannot approve: Withdrawal would drop capital below ₦50,000 minimum');
-        }
-      } else if (withdrawalType === 'dividend') {
-        if (amount > dividendBalance) {
-          throw new Error('Insufficient dividend balance');
-        }
-      } else if (withdrawalType === 'bonus') {
-        if (amount > bonusBalance) {
-          throw new Error('Insufficient bonus balance');
         }
       }
 

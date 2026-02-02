@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Loader2, AlertCircle, FileDown, FileSpreadsheet } from "lucide-react";
+import { CheckCircle, Loader2, AlertCircle, FileDown, FileSpreadsheet, XCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import jsPDF from 'jspdf';
@@ -325,6 +325,47 @@ const Withdrawals = () => {
     }
   };
 
+  const rejectWithdrawal = async (withdrawalId: string, memberId: string, amount: number, withdrawalType: string) => {
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('id', memberId)
+        .single();
+
+      if (!profile) throw new Error('Member not found');
+
+      // Update status to rejected
+      const { error: updateError } = await supabase
+        .from('withdrawal_requests')
+        .update({
+          status: 'rejected',
+          processed_at: new Date().toISOString()
+        })
+        .eq('id', withdrawalId);
+
+      if (updateError) throw updateError;
+
+      // Send notification to member
+      const { error: notifError } = await supabase
+        .from('notifications')
+        .insert({
+          user_id: profile.user_id,
+          title: 'Withdrawal Rejected',
+          message: `Your ${withdrawalType} withdrawal request of ₦${amount.toLocaleString()} has been rejected. Please contact support if you have questions.`,
+          type: 'withdrawal_status',
+          related_id: withdrawalId
+        });
+
+      if (notifError) console.error('Failed to send notification:', notifError);
+      
+      toast.success("Withdrawal rejected and member notified");
+      fetchPendingWithdrawals();
+    } catch (error: any) {
+      toast.error(error.message);
+    }
+  };
+
   const completeWithdrawal = async (withdrawalId: string, memberId: string) => {
     try {
       const { data: profile } = await supabase
@@ -482,27 +523,49 @@ const Withdrawals = () => {
                              </div>
                            </TableCell>
                            <TableCell>{new Date(withdrawal.requested_at).toLocaleDateString()}</TableCell>
-                            <TableCell className="text-right space-x-2">
-                             {withdrawal.status === 'pending' && (
-                               <Button
-                                 size="sm"
-                                 onClick={() => approveWithdrawal(withdrawal.id, withdrawal.member_id, withdrawal.amount, withdrawalType)}
-                                 disabled={!hasSufficientBalance}
-                               >
-                                 <CheckCircle className="h-4 w-4 mr-1" />
-                                 Approve
-                               </Button>
-                             )}
-                             {withdrawal.status === 'approved' && (
-                               <Button
-                                 size="sm"
-                                 variant="default"
-                                 onClick={() => completeWithdrawal(withdrawal.id, withdrawal.member_id)}
-                               >
-                                 <CheckCircle className="h-4 w-4 mr-1" />
-                                 Mark as Paid
-                               </Button>
-                             )}
+                            <TableCell className="text-right">
+                              <div className="flex justify-end gap-2">
+                                {withdrawal.status === 'pending' && (
+                                  <>
+                                    <Button
+                                      size="sm"
+                                      onClick={() => approveWithdrawal(withdrawal.id, withdrawal.member_id, withdrawal.amount, withdrawalType)}
+                                      disabled={!hasSufficientBalance}
+                                    >
+                                      <CheckCircle className="h-4 w-4 mr-1" />
+                                      Approve
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="destructive"
+                                      onClick={() => rejectWithdrawal(withdrawal.id, withdrawal.member_id, withdrawal.amount, withdrawalType)}
+                                    >
+                                      <XCircle className="h-4 w-4 mr-1" />
+                                      Reject
+                                    </Button>
+                                  </>
+                                )}
+                                {withdrawal.status === 'approved' && (
+                                  <>
+                                    <Button
+                                      size="sm"
+                                      variant="default"
+                                      onClick={() => completeWithdrawal(withdrawal.id, withdrawal.member_id)}
+                                    >
+                                      <CheckCircle className="h-4 w-4 mr-1" />
+                                      Mark as Paid
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="destructive"
+                                      onClick={() => rejectWithdrawal(withdrawal.id, withdrawal.member_id, withdrawal.amount, withdrawalType)}
+                                    >
+                                      <XCircle className="h-4 w-4 mr-1" />
+                                      Reject
+                                    </Button>
+                                  </>
+                                )}
+                              </div>
                            </TableCell>
                          </TableRow>
                         );
